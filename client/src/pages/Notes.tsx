@@ -1,152 +1,96 @@
+import { useNotes } from "@/hooks/use-notes";
+import { Plus, Trash2, StickyNote } from "lucide-react";
 import { useState } from "react";
-import { useNotes, useCreateNote, useDeleteNote } from "@/hooks/use-notes";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { format } from "date-fns";
-import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Plus, 
-  Trash2, 
-  Search, 
-  FileText, 
-  Calendar 
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
 
 export default function Notes() {
-  const { data: notes, isLoading } = useNotes();
-  const createNote = useCreateNote();
-  const deleteNote = useDeleteNote();
-  
-  const [search, setSearch] = useState("");
+  const { notes, createNote, deleteNote, isCreating } = useNotes();
   const [isOpen, setIsOpen] = useState(false);
   const [newNote, setNewNote] = useState({ title: "", content: "", category: "General" });
 
-  const filteredNotes = notes?.filter(note => 
-    note.title.toLowerCase().includes(search.toLowerCase()) || 
-    note.content.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const handleCreate = async () => {
-    if (!newNote.title || !newNote.content) return;
-    await createNote.mutateAsync(newNote);
-    setIsOpen(false);
-    setNewNote({ title: "", content: "", category: "General" });
+  const handleCreate = () => {
+    createNote(newNote, {
+      onSuccess: () => {
+        setIsOpen(false);
+        setNewNote({ title: "", content: "", category: "General" });
+      }
+    });
   };
 
   return (
-    <div className="max-w-6xl mx-auto h-full flex flex-col">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-display font-bold">Notes</h1>
-          <p className="text-muted-foreground">Save your calculations and thoughts.</p>
+           <h1 className="text-3xl font-display font-bold text-yellow-200">My Notes</h1>
+           <p className="text-muted-foreground">Save calculations and important data.</p>
         </div>
-        
-        <div className="flex gap-2">
-          <div className="relative w-full md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search notes..." 
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 bg-background"
-            />
-          </div>
-          
-          <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2 bg-primary text-primary-foreground shadow-lg shadow-primary/25">
-                <Plus className="w-4 h-4" />
-                New Note
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create Note</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 mt-4">
-                <Input
-                  placeholder="Title"
-                  value={newNote.title}
-                  onChange={(e) => setNewNote({ ...newNote, title: e.target.value })}
-                />
-                <Textarea
-                  placeholder="Write your note here..."
-                  className="min-h-[150px]"
-                  value={newNote.content}
-                  onChange={(e) => setNewNote({ ...newNote, content: e.target.value })}
-                />
-                <Button onClick={handleCreate} disabled={createNote.isPending} className="w-full">
-                  {createNote.isPending ? "Creating..." : "Save Note"}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogTrigger asChild>
+            <button className="flex items-center gap-2 bg-yellow-500 text-black px-4 py-2 rounded-xl font-semibold hover:bg-yellow-400 transition-colors">
+              <Plus className="w-5 h-5" /> New Note
+            </button>
+          </DialogTrigger>
+          <DialogContent className="bg-card border-border">
+            <DialogHeader>
+              <DialogTitle>Create New Note</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 mt-4">
+              <input
+                placeholder="Title"
+                className="w-full bg-muted border border-border rounded-lg p-3 outline-none focus:border-yellow-500"
+                value={newNote.title}
+                onChange={e => setNewNote({...newNote, title: e.target.value})}
+              />
+              <textarea
+                placeholder="Content..."
+                className="w-full bg-muted border border-border rounded-lg p-3 min-h-[150px] outline-none focus:border-yellow-500"
+                value={newNote.content}
+                onChange={e => setNewNote({...newNote, content: e.target.value})}
+              />
+              <button 
+                onClick={handleCreate}
+                disabled={isCreating}
+                className="w-full bg-yellow-500 text-black font-semibold py-3 rounded-lg hover:bg-yellow-400 disabled:opacity-50"
+              >
+                {isCreating ? "Saving..." : "Save Note"}
+              </button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-48 bg-muted/20 rounded-2xl animate-pulse" />
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-min">
-          <AnimatePresence>
-            {filteredNotes?.map((note) => (
-              <motion.div
-                key={note.id}
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className="group relative bg-card hover:bg-muted/30 border border-border/50 rounded-2xl p-6 transition-all hover:shadow-lg hover:-translate-y-1 flex flex-col"
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {notes.map((note) => (
+          <div key={note.id} className="group bg-card border border-border rounded-2xl p-6 hover:border-yellow-500/50 transition-all shadow-lg hover:shadow-yellow-500/5 relative">
+            <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button 
+                onClick={() => deleteNote(note.id)}
+                className="p-2 hover:bg-red-500/20 hover:text-red-500 rounded-lg text-muted-foreground"
               >
-                <div className="flex justify-between items-start mb-3">
-                  <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                    <FileText className="w-5 h-5" />
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => deleteNote.mutate(note.id)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10 hover:text-destructive"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-                
-                <h3 className="text-xl font-bold font-display mb-2 line-clamp-1">{note.title}</h3>
-                <p className="text-muted-foreground text-sm line-clamp-4 flex-1 mb-4 leading-relaxed">
-                  {note.content}
-                </p>
-                
-                <div className="flex items-center gap-2 text-xs text-muted-foreground pt-4 border-t border-border/30">
-                  <Calendar className="w-3 h-3" />
-                  {note.createdAt && format(new Date(note.createdAt), 'MMM d, yyyy')}
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-          
-          {filteredNotes?.length === 0 && (
-            <div className="col-span-full py-20 text-center text-muted-foreground">
-              <div className="inline-block p-4 rounded-full bg-muted mb-4">
-                <FileText className="w-8 h-8 opacity-50" />
-              </div>
-              <p>No notes found. Create one to get started!</p>
+                <Trash2 className="w-4 h-4" />
+              </button>
             </div>
-          )}
-        </div>
-      )}
+            <div className="flex items-center gap-2 mb-3">
+               <StickyNote className="w-5 h-5 text-yellow-500" />
+               <span className="text-xs font-medium px-2 py-1 bg-yellow-500/10 text-yellow-500 rounded-md uppercase tracking-wider">
+                 {note.category}
+               </span>
+            </div>
+            <h3 className="text-lg font-bold font-display mb-2 truncate pr-8">{note.title}</h3>
+            <p className="text-sm text-muted-foreground line-clamp-3 mb-4">{note.content}</p>
+            <div className="text-xs text-muted-foreground border-t border-white/5 pt-4">
+              {note.createdAt && format(new Date(note.createdAt), "PPP")}
+            </div>
+          </div>
+        ))}
+        {notes.length === 0 && (
+          <div className="col-span-full py-12 text-center text-muted-foreground bg-muted/10 rounded-3xl border border-dashed border-white/10">
+            <StickyNote className="w-12 h-12 mx-auto mb-4 opacity-20" />
+            <p>No notes yet. Create one to get started!</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
