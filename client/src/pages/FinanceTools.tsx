@@ -1,141 +1,243 @@
 import { useState } from "react";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { motion } from "framer-motion";
-import { Banknote, Percent, TrendingUp } from "lucide-react";
+import { Banknote, Percent, TrendingUp, Receipt, PiggyBank, CreditCard } from "lucide-react";
+import { ToolCard, InputField, ResultDisplay, ToolButton } from "@/components/ToolCard";
+
+type ToolType = "emi" | "compound" | "tip" | "roi";
 
 export default function FinanceTools() {
-  const [amount, setAmount] = useState(10000);
-  const [rate, setRate] = useState(5);
-  const [years, setYears] = useState(3);
+  const [activeTool, setActiveTool] = useState<ToolType>("emi");
 
-  const calculateInterest = () => {
-    const interest = (amount * rate * years) / 100;
-    return {
-      principal: amount,
-      interest: interest,
-      total: amount + interest,
-    };
-  };
-
-  const data = [
-    { name: "Principal", value: amount, color: "#3b82f6" }, // blue-500
-    { name: "Interest", value: calculateInterest().interest, color: "#10b981" }, // emerald-500
+  const tools = [
+    { id: "emi" as ToolType, label: "Loan EMI", icon: CreditCard },
+    { id: "compound" as ToolType, label: "Compound", icon: TrendingUp },
+    { id: "tip" as ToolType, label: "Tip Calc", icon: Receipt },
+    { id: "roi" as ToolType, label: "ROI", icon: PiggyBank },
   ];
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-8 pb-24">
-      <div className="text-center md:text-left">
-        <h1 className="text-3xl font-bold font-display text-foreground">Finance Tools</h1>
-        <p className="text-muted-foreground mt-2">Simple Interest, EMI, and Loan Calculators</p>
+    <div className="flex flex-col h-full bg-[#0f172a] overflow-hidden">
+      {/* Header */}
+      <div className="px-4 py-4 border-b border-slate-800">
+        <h1 className="text-2xl font-bold text-white">Finance Tools</h1>
+        <p className="text-slate-400 text-sm mt-1">Calculate loans, interest, tips and more</p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-8">
-        {/* Input Section */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-card border border-border/50 p-6 rounded-2xl shadow-lg space-y-6"
-        >
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
-              <Banknote className="w-5 h-5 text-emerald-500" />
-            </div>
-            <h2 className="text-xl font-semibold">Simple Interest</h2>
-          </div>
+      {/* Tool Tabs */}
+      <div className="px-4 py-3 border-b border-slate-800/50">
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+          {tools.map((tool) => (
+            <button
+              key={tool.id}
+              onClick={() => setActiveTool(tool.id)}
+              data-testid={`tab-${tool.id}`}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+                activeTool === tool.id
+                  ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
+                  : "bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-700/50"
+              }`}
+            >
+              <tool.icon className="w-4 h-4" />
+              {tool.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-muted-foreground mb-1 block">Principal Amount ($)</label>
-              <input
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(Number(e.target.value))}
-                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
-              />
+      {/* Tool Content */}
+      <div className="flex-1 overflow-y-auto p-4 pb-8">
+        {activeTool === "emi" && <LoanEMICalculator />}
+        {activeTool === "compound" && <CompoundInterestCalculator />}
+        {activeTool === "tip" && <TipCalculator />}
+        {activeTool === "roi" && <ROICalculator />}
+      </div>
+    </div>
+  );
+}
+
+function LoanEMICalculator() {
+  const [principal, setPrincipal] = useState("100000");
+  const [rate, setRate] = useState("8.5");
+  const [tenure, setTenure] = useState("12");
+  const [result, setResult] = useState<{ emi: number; totalInterest: number; totalPayment: number } | null>(null);
+
+  const calculate = () => {
+    const p = parseFloat(principal);
+    const r = parseFloat(rate) / 12 / 100;
+    const n = parseInt(tenure);
+    
+    if (p && r && n) {
+      const emi = (p * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+      const totalPayment = emi * n;
+      const totalInterest = totalPayment - p;
+      setResult({ emi, totalInterest, totalPayment });
+    }
+  };
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Loan EMI Calculator" icon={CreditCard} iconColor="bg-emerald-500">
+        <div className="space-y-4">
+          <InputField label="Loan Amount" value={principal} onChange={setPrincipal} type="number" suffix="$" />
+          <InputField label="Interest Rate (Annual)" value={rate} onChange={setRate} type="number" suffix="%" step={0.1} />
+          <InputField label="Loan Tenure (Months)" value={tenure} onChange={setTenure} type="number" />
+          <ToolButton onClick={calculate} variant="success">Calculate EMI</ToolButton>
+        </div>
+      </ToolCard>
+
+      {result && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+          <ToolCard title="Results" icon={Banknote} iconColor="bg-blue-500">
+            <div className="space-y-3">
+              <ResultDisplay label="Monthly EMI" value={`$${result.emi.toFixed(2)}`} highlight color="text-emerald-400" />
+              <ResultDisplay label="Total Interest" value={`$${result.totalInterest.toFixed(2)}`} color="text-orange-400" />
+              <ResultDisplay label="Total Payment" value={`$${result.totalPayment.toFixed(2)}`} />
             </div>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground mb-1 block">Interest Rate (% per year)</label>
-              <input
-                type="number"
-                value={rate}
-                onChange={(e) => setRate(Number(e.target.value))}
-                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground mb-1 block">Time Period (Years)</label>
-              <input
-                type="number"
-                value={years}
-                onChange={(e) => setYears(Number(e.target.value))}
-                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
-              />
-              <input 
-                type="range" 
-                min="1" max="30" 
-                value={years} 
-                onChange={(e) => setYears(Number(e.target.value))}
-                className="w-full mt-2 accent-emerald-500"
-              />
-            </div>
-          </div>
+          </ToolCard>
         </motion.div>
+      )}
+    </div>
+  );
+}
 
-        {/* Result Section */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-card border border-border/50 p-6 rounded-2xl shadow-lg flex flex-col"
-        >
-          <h2 className="text-xl font-semibold mb-6">Breakdown</h2>
+function CompoundInterestCalculator() {
+  const [principal, setPrincipal] = useState("10000");
+  const [rate, setRate] = useState("7");
+  const [years, setYears] = useState("5");
+  const [frequency, setFrequency] = useState("12");
+  const [result, setResult] = useState<{ amount: number; interest: number } | null>(null);
+
+  const calculate = () => {
+    const p = parseFloat(principal);
+    const r = parseFloat(rate) / 100;
+    const t = parseInt(years);
+    const n = parseInt(frequency);
+    
+    if (p && r && t && n) {
+      const amount = p * Math.pow(1 + r / n, n * t);
+      setResult({ amount, interest: amount - p });
+    }
+  };
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Compound Interest" icon={TrendingUp} iconColor="bg-blue-500">
+        <div className="space-y-4">
+          <InputField label="Principal Amount" value={principal} onChange={setPrincipal} type="number" suffix="$" />
+          <InputField label="Interest Rate (Annual)" value={rate} onChange={setRate} type="number" suffix="%" />
+          <InputField label="Time Period (Years)" value={years} onChange={setYears} type="number" />
+          <div>
+            <label className="text-sm font-medium text-slate-400 mb-1.5 block">Compound Frequency</label>
+            <select
+              value={frequency}
+              onChange={(e) => setFrequency(e.target.value)}
+              className="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+              data-testid="select-frequency"
+            >
+              <option value="1">Annually</option>
+              <option value="2">Semi-Annually</option>
+              <option value="4">Quarterly</option>
+              <option value="12">Monthly</option>
+              <option value="365">Daily</option>
+            </select>
+          </div>
+          <ToolButton onClick={calculate}>Calculate</ToolButton>
+        </div>
+      </ToolCard>
+
+      {result && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+          <ToolCard title="Results" icon={PiggyBank} iconColor="bg-emerald-500">
+            <div className="space-y-3">
+              <ResultDisplay label="Final Amount" value={`$${result.amount.toFixed(2)}`} highlight color="text-emerald-400" />
+              <ResultDisplay label="Total Interest Earned" value={`$${result.interest.toFixed(2)}`} color="text-blue-400" />
+            </div>
+          </ToolCard>
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
+function TipCalculator() {
+  const [billAmount, setBillAmount] = useState("50");
+  const [tipPercent, setTipPercent] = useState("15");
+  const [people, setPeople] = useState("1");
+
+  const tip = (parseFloat(billAmount) || 0) * (parseFloat(tipPercent) || 0) / 100;
+  const total = (parseFloat(billAmount) || 0) + tip;
+  const perPerson = total / (parseInt(people) || 1);
+
+  const quickTips = [10, 15, 18, 20, 25];
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Tip Calculator" icon={Receipt} iconColor="bg-orange-500">
+        <div className="space-y-4">
+          <InputField label="Bill Amount" value={billAmount} onChange={setBillAmount} type="number" suffix="$" />
           
-          <div className="h-48 mb-6">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={data}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
+          <div>
+            <label className="text-sm font-medium text-slate-400 mb-2 block">Tip Percentage</label>
+            <div className="flex gap-2 flex-wrap mb-2">
+              {quickTips.map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setTipPercent(t.toString())}
+                  data-testid={`button-tip-${t}`}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    tipPercent === t.toString()
+                      ? "bg-orange-500 text-white"
+                      : "bg-slate-700/50 text-slate-300 hover:bg-slate-600/50"
+                  }`}
                 >
-                  {data.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#1e293b', borderRadius: '8px', border: 'none' }}
-                  itemStyle={{ color: '#fff' }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+                  {t}%
+                </button>
+              ))}
+            </div>
+            <InputField label="" value={tipPercent} onChange={setTipPercent} type="number" suffix="%" />
           </div>
 
-          <div className="space-y-4 mt-auto">
-            <div className="flex justify-between items-center p-3 rounded-lg bg-background/50">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-blue-500" />
-                <span className="text-muted-foreground">Principal</span>
-              </div>
-              <span className="font-bold">${amount.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between items-center p-3 rounded-lg bg-background/50">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-emerald-500" />
-                <span className="text-muted-foreground">Total Interest</span>
-              </div>
-              <span className="font-bold text-emerald-500">+${calculateInterest().interest.toLocaleString()}</span>
-            </div>
-            <div className="pt-4 border-t border-border/50 flex justify-between items-center">
-              <span className="text-lg font-semibold">Total Payable</span>
-              <span className="text-2xl font-bold font-display">${calculateInterest().total.toLocaleString()}</span>
-            </div>
-          </div>
-        </motion.div>
-      </div>
+          <InputField label="Split Between" value={people} onChange={setPeople} type="number" min={1} />
+        </div>
+      </ToolCard>
+
+      <ToolCard title="Summary" icon={Banknote} iconColor="bg-emerald-500">
+        <div className="space-y-3">
+          <ResultDisplay label="Tip Amount" value={`$${tip.toFixed(2)}`} color="text-orange-400" />
+          <ResultDisplay label="Total Bill" value={`$${total.toFixed(2)}`} />
+          {parseInt(people) > 1 && (
+            <ResultDisplay label="Per Person" value={`$${perPerson.toFixed(2)}`} highlight color="text-emerald-400" />
+          )}
+        </div>
+      </ToolCard>
+    </div>
+  );
+}
+
+function ROICalculator() {
+  const [investment, setInvestment] = useState("10000");
+  const [returns, setReturns] = useState("15000");
+
+  const invested = parseFloat(investment) || 0;
+  const returned = parseFloat(returns) || 0;
+  const profit = returned - invested;
+  const roi = invested > 0 ? (profit / invested) * 100 : 0;
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="ROI Calculator" icon={PiggyBank} iconColor="bg-purple-500">
+        <div className="space-y-4">
+          <InputField label="Initial Investment" value={investment} onChange={setInvestment} type="number" suffix="$" />
+          <InputField label="Final Value" value={returns} onChange={setReturns} type="number" suffix="$" />
+        </div>
+      </ToolCard>
+
+      <ToolCard title="Results" icon={Percent} iconColor="bg-emerald-500">
+        <div className="space-y-3">
+          <ResultDisplay label="Profit/Loss" value={`$${profit.toFixed(2)}`} color={profit >= 0 ? "text-emerald-400" : "text-red-400"} />
+          <ResultDisplay label="ROI" value={`${roi.toFixed(2)}%`} highlight color={roi >= 0 ? "text-emerald-400" : "text-red-400"} />
+        </div>
+      </ToolCard>
     </div>
   );
 }
