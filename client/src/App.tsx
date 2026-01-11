@@ -3,7 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Layout } from "@/components/ui/Layout";
+import { Layout } from "@/components/Layout";
 import NotFound from "@/pages/not-found";
 
 // Page Imports
@@ -25,6 +25,8 @@ function Router() {
       <Route path="/date-time" component={DateTimeTools} />
       <Route path="/ai-tools" component={AiTools} />
       <Route path="/notes" component={Notes} />
+      {/* Redirect /health to /calculator or Dashboard for now as it wasn't explicitly requested but linked */}
+      <Route path="/health" component={Dashboard} /> 
       <Route component={NotFound} />
     </Switch>
   );

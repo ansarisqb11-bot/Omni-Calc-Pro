@@ -1,13 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, buildUrl } from "@shared/routes";
-import { type InsertHistory, type HistoryItem } from "@shared/schema";
-import { useToast } from "@/hooks/use-toast";
+import { api, type InsertHistory } from "@shared/routes";
 
 export function useHistory() {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
-  const query = useQuery({
+  return useQuery({
     queryKey: [api.history.list.path],
     queryFn: async () => {
       const res = await fetch(api.history.list.path);
@@ -15,8 +10,11 @@ export function useHistory() {
       return api.history.list.responses[200].parse(await res.json());
     },
   });
+}
 
-  const createMutation = useMutation({
+export function useAddToHistory() {
+  const queryClient = useQueryClient();
+  return useMutation({
     mutationFn: async (data: InsertHistory) => {
       const res = await fetch(api.history.create.path, {
         method: api.history.create.method,
@@ -26,28 +24,17 @@ export function useHistory() {
       if (!res.ok) throw new Error("Failed to save history");
       return api.history.create.responses[201].parse(await res.json());
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [api.history.list.path] });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [api.history.list.path] }),
   });
+}
 
-  const clearMutation = useMutation({
+export function useClearHistory() {
+  const queryClient = useQueryClient();
+  return useMutation({
     mutationFn: async () => {
-      const res = await fetch(api.history.clear.path, {
-        method: api.history.clear.method,
-      });
+      const res = await fetch(api.history.clear.path, { method: api.history.clear.method });
       if (!res.ok) throw new Error("Failed to clear history");
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [api.history.list.path] });
-      toast({ title: "History Cleared", description: "All calculations have been removed." });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [api.history.list.path] }),
   });
-
-  return {
-    history: query.data ?? [],
-    isLoading: query.isLoading,
-    addHistory: createMutation.mutate,
-    clearHistory: clearMutation.mutate,
-  };
 }

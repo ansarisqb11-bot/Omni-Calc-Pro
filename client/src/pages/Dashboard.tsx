@@ -1,97 +1,100 @@
-import { Link } from "wouter";
-import { 
-  Calculator, 
-  Coins, 
-  Ruler, 
-  Calendar, 
-  BrainCircuit, 
-  StickyNote, 
-  Activity, 
-  Shapes,
-  ArrowRight,
-  Search
-} from "lucide-react";
+import { Search, Wallet, Calculator, Heart, Compass, Activity, Banknote, Percent } from "lucide-react";
+import { CategoryCard } from "@/components/CategoryCard";
+import { RecentToolCard } from "@/components/RecentToolCard";
 import { motion } from "framer-motion";
-import { useState } from "react";
-
-const TOOLS = [
-  { id: "calc", name: "Calculator", desc: "Basic, Scientific, Programmer", icon: Calculator, href: "/calculator", color: "text-blue-400", bg: "bg-blue-400/10" },
-  { id: "finance", name: "Finance", desc: "Loan, EMI, Currency, ROI", icon: Coins, href: "/finance", color: "text-emerald-400", bg: "bg-emerald-400/10" },
-  { id: "units", name: "Converter", desc: "Length, Weight, Volume, Temp", icon: Ruler, href: "/units", color: "text-amber-400", bg: "bg-amber-400/10" },
-  { id: "date", name: "Date & Time", desc: "Age, Diff, Stopwatch", icon: Calendar, href: "/date-time", color: "text-purple-400", bg: "bg-purple-400/10" },
-  { id: "ai", name: "AI Tools", desc: "Ask questions, get explanations", icon: BrainCircuit, href: "/ai-tools", color: "text-pink-400", bg: "bg-pink-400/10" },
-  { id: "notes", name: "Notes", desc: "Save calculations & ideas", icon: StickyNote, href: "/notes", color: "text-yellow-200", bg: "bg-yellow-400/10" },
-  { id: "health", name: "Health", desc: "BMI, Calories, Water", icon: Activity, href: "/calculator", color: "text-teal-400", bg: "bg-teal-400/10" },
-  { id: "geometry", name: "Geometry", desc: "Area, Volume, Angles", icon: Shapes, href: "/calculator", color: "text-red-400", bg: "bg-red-400/10" },
-];
 
 export default function Dashboard() {
-  const [search, setSearch] = useState("");
+  const categories = [
+    { title: "Finance", subtitle: "Loans, Interest, ROI", count: 42, icon: Wallet, color: "bg-emerald-500", href: "/finance" },
+    { title: "Math & Algebra", subtitle: "Algebra, Geometry", count: 38, icon: Calculator, color: "bg-orange-500", href: "/calculator" },
+    { title: "Health & Fitness", subtitle: "BMI, BMR, Macros", count: 15, icon: Heart, color: "bg-pink-500", href: "/health" },
+    { title: "Engineering", subtitle: "Concrete, Tiles, Beam", count: 27, icon: Compass, color: "bg-amber-500", href: "/units" },
+    { title: "Date & Time", subtitle: "Age, Duration, Zones", count: 12, icon: Activity, color: "bg-purple-500", href: "/date-time" },
+    { title: "Unit Converters", subtitle: "Length, Mass, Speed", count: 54, icon: Ruler, color: "bg-blue-500", href: "/units" },
+  ];
 
-  const filteredTools = TOOLS.filter(t => 
-    t.name.toLowerCase().includes(search.toLowerCase()) || 
-    t.desc.toLowerCase().includes(search.toLowerCase())
-  );
+  const recentTools = [
+    { title: "BMI Calc", subtitle: "Health", icon: Heart, color: "bg-pink-500", href: "/health" },
+    { title: "Loan EMI", subtitle: "Finance", icon: Banknote, color: "bg-emerald-500", href: "/finance" },
+    { title: "Tip Calc", subtitle: "Everyday", icon: Percent, color: "bg-orange-500", href: "/calculator" },
+    { title: "Age Calc", subtitle: "Date", icon: Activity, color: "bg-purple-500", href: "/date-time" },
+  ];
 
   return (
-    <div className="space-y-8">
-      {/* Header Section */}
-      <div className="relative py-12 px-6 rounded-3xl bg-gradient-to-br from-primary/20 via-background to-background border border-white/5 overflow-hidden">
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-primary/20 rounded-full blur-3xl opacity-50" />
-        
-        <div className="relative z-10 max-w-2xl">
-          <h1 className="text-4xl md:text-5xl font-display font-bold mb-4 tracking-tight">
-            What do you want to <span className="text-primary bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-300">calculate</span>?
-          </h1>
-          <p className="text-muted-foreground text-lg mb-8">Access 300+ professional tools for engineering, finance, and daily life.</p>
+    <div className="flex flex-col h-full bg-background md:bg-transparent">
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto pb-20 md:pb-6">
+        <div className="p-6 space-y-8 max-w-5xl mx-auto w-full">
           
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
-            <input 
-              type="text"
-              placeholder="Search for tools like 'EMI', 'BMI', or 'Scientific'..."
-              className="w-full h-14 pl-12 pr-4 rounded-xl bg-background/50 border border-white/10 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all outline-none text-lg backdrop-blur-md shadow-xl"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {filteredTools.map((tool) => (
-          <Link key={tool.id} href={tool.href}>
-            <motion.div 
-              whileHover={{ y: -4 }}
-              className="group cursor-pointer p-6 rounded-2xl bg-card border border-border hover:border-primary/30 transition-colors shadow-lg shadow-black/5"
-            >
-              <div className={`w-12 h-12 rounded-xl ${tool.bg} flex items-center justify-center mb-4 transition-transform group-hover:scale-110 duration-300`}>
-                <tool.icon className={`w-6 h-6 ${tool.color}`} />
-              </div>
-              <h3 className="text-lg font-bold font-display mb-1 text-foreground group-hover:text-primary transition-colors">{tool.name}</h3>
-              <p className="text-sm text-muted-foreground">{tool.desc}</p>
-            </motion.div>
-          </Link>
-        ))}
-      </div>
-
-      {/* Quick Access / Recents */}
-      <div className="mt-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-display font-semibold">Recommended for you</h2>
-          <button className="text-sm text-primary hover:underline flex items-center gap-1">
-            View all <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {['GST Calculator', 'Age Calculator', 'Currency Converter', 'Discount'].map((item) => (
-            <div key={item} className="p-4 rounded-xl bg-muted/30 border border-white/5 hover:bg-muted/50 transition-colors cursor-pointer">
-              <span className="font-medium text-sm">{item}</span>
+          {/* Header Section */}
+          <section className="space-y-6 pt-4">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
+                Good Morning, User
+              </h1>
+              <p className="text-muted-foreground text-lg">
+                What would you like to calculate today?
+              </p>
             </div>
-          ))}
+
+            {/* Search Bar */}
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+              </div>
+              <input
+                type="text"
+                className="block w-full pl-11 pr-4 py-4 rounded-2xl bg-card border border-border/50 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm group-hover:shadow-md"
+                placeholder="Search 300+ calculators..."
+              />
+            </div>
+          </section>
+
+          {/* Recently Used */}
+          <section>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-foreground">Recently Used</h2>
+              <button className="text-sm text-primary hover:text-primary/80 font-medium">Clear</button>
+            </div>
+            <div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 scrollbar-hide">
+              {recentTools.map((tool, i) => (
+                <motion.div
+                  key={tool.title}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                >
+                  <RecentToolCard {...tool} iconColor={tool.color} />
+                </motion.div>
+              ))}
+            </div>
+          </section>
+
+          {/* All Categories */}
+          <section>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-foreground">All Categories</h2>
+              <button className="text-sm text-primary hover:text-primary/80 font-medium">Sort A-Z</button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {categories.map((cat, i) => (
+                <motion.div
+                  key={cat.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                >
+                  <CategoryCard colorClass={cat.color} {...cat} />
+                </motion.div>
+              ))}
+            </div>
+          </section>
+
         </div>
       </div>
     </div>
   );
 }
+
+// Icon import helper
+import { Ruler } from "lucide-react";

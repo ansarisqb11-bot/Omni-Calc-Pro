@@ -1,11 +1,11 @@
 ## Packages
-framer-motion | Smooth animations for page transitions and calculator keypresses
-mathjs | Robust mathematical evaluation for scientific and programmer calculators
-date-fns | Date manipulation for age and date difference calculators
-recharts | Charts for financial tools (EMI amortization, etc.)
-clsx | Utility for constructing className strings conditionally
-tailwind-merge | Utility for merging Tailwind CSS classes without conflicts
-lucide-react | Beautiful, consistent icons for the UI
+framer-motion | Smooth page transitions and button animations
+lucide-react | Consistent iconography for categories and tools
+mathjs | Mathematical evaluation for calculator logic
+date-fns | Date manipulation for age and date difference tools
+recharts | Charts for financial calculators (EMI, etc.)
+clsx | Conditional class names utility
+tailwind-merge | Tailwind class merging utility
 
 ## Notes
 Tailwind Config - extend fontFamily:
