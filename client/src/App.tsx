@@ -6,8 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Layout } from "@/components/Layout";
 import NotFound from "@/pages/not-found";
 
-// Page Imports
-import Dashboard from "@/pages/Dashboard";
+import Home from "@/pages/Home";
+import Categories from "@/pages/Categories";
 import CalculatorTools from "@/pages/CalculatorTools";
 import FinanceTools from "@/pages/FinanceTools";
 import UnitConverter from "@/pages/UnitConverter";
@@ -18,15 +18,14 @@ import Notes from "@/pages/Notes";
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Dashboard} />
+      <Route path="/" component={Home} />
+      <Route path="/categories" component={Categories} />
       <Route path="/calculator" component={CalculatorTools} />
       <Route path="/finance" component={FinanceTools} />
       <Route path="/units" component={UnitConverter} />
       <Route path="/date-time" component={DateTimeTools} />
       <Route path="/ai-tools" component={AiTools} />
       <Route path="/notes" component={Notes} />
-      {/* Redirect /health to /calculator or Dashboard for now as it wasn't explicitly requested but linked */}
-      <Route path="/health" component={Dashboard} /> 
       <Route component={NotFound} />
     </Switch>
   );
