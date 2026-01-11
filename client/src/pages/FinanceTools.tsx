@@ -108,14 +108,16 @@ function CompoundInterestCalculator() {
   const [result, setResult] = useState<{ amount: number; interest: number } | null>(null);
 
   const calculate = () => {
-    const p = parseFloat(principal);
-    const r = parseFloat(rate) / 100;
-    const t = parseInt(years);
-    const n = parseInt(frequency);
+    const p = parseFloat(principal) || 0;
+    const r = parseFloat(rate) / 100 || 0;
+    const t = parseInt(years) || 0;
+    const n = parseInt(frequency) || 1;
     
-    if (p && r && t && n) {
+    if (p > 0 && r > 0 && t > 0 && n > 0) {
       const amount = p * Math.pow(1 + r / n, n * t);
       setResult({ amount, interest: amount - p });
+    } else {
+      setResult(null);
     }
   };
 

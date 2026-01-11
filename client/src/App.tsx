@@ -12,6 +12,7 @@ import CalculatorTools from "@/pages/CalculatorTools";
 import FinanceTools from "@/pages/FinanceTools";
 import UnitConverter from "@/pages/UnitConverter";
 import DateTimeTools from "@/pages/DateTimeTools";
+import HealthTools from "@/pages/HealthTools";
 import AiTools from "@/pages/AiTools";
 import Notes from "@/pages/Notes";
 
@@ -24,6 +25,7 @@ function Router() {
       <Route path="/finance" component={FinanceTools} />
       <Route path="/units" component={UnitConverter} />
       <Route path="/date-time" component={DateTimeTools} />
+      <Route path="/health" component={HealthTools} />
       <Route path="/ai-tools" component={AiTools} />
       <Route path="/notes" component={Notes} />
       <Route component={NotFound} />

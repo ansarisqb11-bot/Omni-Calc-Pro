@@ -1,19 +1,27 @@
 import { useState, useRef, useEffect } from "react";
 import { evaluate } from "mathjs";
-import { CalculatorKeypad } from "@/components/CalculatorKeypad";
-import { useAddToHistory } from "@/hooks/use-history";
 import { motion, AnimatePresence } from "framer-motion";
-import { History, Share2, Maximize2 } from "lucide-react";
+import { Calculator, FlaskConical, Percent, History, Delete, Divide, X, Minus, Plus, Equal, Pi, SquareRoot, Parentheses } from "lucide-react";
+import { useAddToHistory } from "@/hooks/use-history";
+
+type TabType = "Basic" | "Scientific" | "Percentage";
 
 export default function CalculatorTools() {
+  const [activeTab, setActiveTab] = useState<TabType>("Basic");
   const [expression, setExpression] = useState("");
   const [result, setResult] = useState("0");
-  const [activeTab, setActiveTab] = useState<"Basic" | "Scientific">("Basic");
+  const [history, setHistory] = useState<{ expr: string; result: string }[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
   const historyMutation = useAddToHistory();
   const displayRef = useRef<HTMLDivElement>(null);
 
+  const tabs: { id: TabType; label: string; icon: typeof Calculator }[] = [
+    { id: "Basic", label: "Basic", icon: Calculator },
+    { id: "Scientific", label: "Scientific", icon: FlaskConical },
+    { id: "Percentage", label: "Percentage", icon: Percent },
+  ];
+
   useEffect(() => {
-    // Auto scroll display to end
     if (displayRef.current) {
       displayRef.current.scrollTop = displayRef.current.scrollHeight;
     }
@@ -26,27 +34,59 @@ export default function CalculatorTools() {
       return;
     }
 
+    if (key === "CE") {
+      setExpression("");
+      setResult("0");
+      return;
+    }
+
     if (key === "backspace") {
       setExpression((prev) => prev.slice(0, -1));
+      if (expression.length <= 1) {
+        setResult("0");
+      }
       return;
     }
 
     if (key === "=") {
       try {
-        const evalResult = evaluate(expression).toString();
+        let expr = expression;
+        expr = expr.replace(/×/g, "*").replace(/÷/g, "/").replace(/π/g, "pi").replace(/√/g, "sqrt");
+        const evalResult = evaluate(expr).toString();
         setResult(evalResult);
-        
-        // Save to history
+        setHistory((prev) => [...prev.slice(-9), { expr: expression, result: evalResult }]);
         historyMutation.mutate({
           expression,
           result: evalResult,
           category: activeTab
         });
-        
-        // Prepare for next calculation
         setExpression(evalResult);
-      } catch (error) {
+      } catch {
         setResult("Error");
+      }
+      return;
+    }
+
+    if (key === "%") {
+      if (!expression || expression === "0") {
+        return;
+      }
+      try {
+        let expr = expression.replace(/×/g, "*").replace(/÷/g, "/");
+        const evalResult = (evaluate(expr) / 100).toString();
+        setResult(evalResult);
+        setExpression(evalResult);
+      } catch {
+        setResult("Error");
+      }
+      return;
+    }
+
+    if (key === "±") {
+      if (expression.startsWith("-")) {
+        setExpression(expression.slice(1));
+      } else if (expression) {
+        setExpression("-" + expression);
       }
       return;
     }
@@ -54,85 +94,160 @@ export default function CalculatorTools() {
     setExpression((prev) => prev + key);
   };
 
+  const basicButtons = [
+    { label: "C", value: "C", className: "bg-slate-700" },
+    { label: <Delete className="w-5 h-5" />, value: "backspace", className: "bg-slate-700" },
+    { label: "%", value: "%", className: "bg-slate-700" },
+    { label: <Divide className="w-5 h-5" />, value: "÷", className: "bg-amber-600" },
+    { label: "7", value: "7", className: "bg-slate-600" },
+    { label: "8", value: "8", className: "bg-slate-600" },
+    { label: "9", value: "9", className: "bg-slate-600" },
+    { label: <X className="w-5 h-5" />, value: "×", className: "bg-amber-600" },
+    { label: "4", value: "4", className: "bg-slate-600" },
+    { label: "5", value: "5", className: "bg-slate-600" },
+    { label: "6", value: "6", className: "bg-slate-600" },
+    { label: <Minus className="w-5 h-5" />, value: "-", className: "bg-amber-600" },
+    { label: "1", value: "1", className: "bg-slate-600" },
+    { label: "2", value: "2", className: "bg-slate-600" },
+    { label: "3", value: "3", className: "bg-slate-600" },
+    { label: <Plus className="w-5 h-5" />, value: "+", className: "bg-amber-600" },
+    { label: "±", value: "±", className: "bg-slate-600" },
+    { label: "0", value: "0", className: "bg-slate-600" },
+    { label: ".", value: ".", className: "bg-slate-600" },
+    { label: <Equal className="w-5 h-5" />, value: "=", className: "bg-emerald-500" },
+  ];
+
+  const scientificButtons = [
+    { label: "sin", value: "sin(", className: "bg-slate-700 text-sm" },
+    { label: "cos", value: "cos(", className: "bg-slate-700 text-sm" },
+    { label: "tan", value: "tan(", className: "bg-slate-700 text-sm" },
+    { label: "log", value: "log10(", className: "bg-slate-700 text-sm" },
+    { label: "ln", value: "log(", className: "bg-slate-700 text-sm" },
+    { label: "(", value: "(", className: "bg-slate-700" },
+    { label: ")", value: ")", className: "bg-slate-700" },
+    { label: "^", value: "^", className: "bg-slate-700" },
+    { label: <Pi className="w-4 h-4" />, value: "π", className: "bg-slate-700" },
+    { label: "√", value: "√(", className: "bg-slate-700" },
+    ...basicButtons,
+  ];
+
+  const percentageButtons = basicButtons;
+
+  const getButtons = () => {
+    switch (activeTab) {
+      case "Scientific":
+        return scientificButtons;
+      case "Percentage":
+        return percentageButtons;
+      default:
+        return basicButtons;
+    }
+  };
+
+  const gridCols = activeTab === "Scientific" ? "grid-cols-5" : "grid-cols-4";
+
   return (
-    <div className="flex flex-col h-full bg-background relative">
-      {/* Header/Tabs */}
-      <div className="p-4 flex items-center justify-between border-b border-border/50">
-        <div className="flex bg-secondary/50 p-1 rounded-xl">
-          {["Basic", "Scientific"].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab as any)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                activeTab === tab 
-                  ? "bg-primary text-primary-foreground shadow-md" 
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-        <div className="flex gap-2">
-           <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-full">
+    <div className="flex flex-col h-full bg-[#0f172a] overflow-hidden">
+      {/* Header with Tabs */}
+      <div className="px-4 py-3 border-b border-slate-800/50">
+        <div className="flex items-center justify-between">
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                data-testid={`tab-${tab.id.toLowerCase()}`}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+                  activeTab === tab.id
+                    ? "bg-primary text-white shadow-lg shadow-primary/30"
+                    : "bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-700/50"
+                }`}
+              >
+                <tab.icon className="w-4 h-4" />
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => setShowHistory(!showHistory)}
+            className={`p-2 rounded-lg transition-all ${showHistory ? "bg-primary text-white" : "text-slate-400 hover:bg-slate-800"}`}
+            data-testid="button-toggle-history"
+          >
             <History className="w-5 h-5" />
           </button>
-          <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-full">
-            <Share2 className="w-5 h-5" />
-          </button>
         </div>
       </div>
 
+      {/* History Panel */}
+      <AnimatePresence>
+        {showHistory && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="bg-slate-900/50 border-b border-slate-800/50 overflow-hidden"
+          >
+            <div className="p-4 max-h-40 overflow-y-auto">
+              {history.length === 0 ? (
+                <p className="text-slate-500 text-sm text-center">No history yet</p>
+              ) : (
+                <div className="space-y-2">
+                  {history.slice().reverse().map((item, i) => (
+                    <div
+                      key={i}
+                      onClick={() => {
+                        setExpression(item.result);
+                        setResult(item.result);
+                      }}
+                      className="flex justify-between text-sm bg-slate-800/50 px-3 py-2 rounded-lg cursor-pointer hover:bg-slate-700/50"
+                    >
+                      <span className="text-slate-400 truncate">{item.expr}</span>
+                      <span className="text-white font-mono">{item.result}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Display */}
-      <div 
-        ref={displayRef}
-        className="flex-1 p-6 flex flex-col items-end justify-end space-y-2 overflow-y-auto min-h-[160px]"
-      >
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-muted-foreground text-2xl font-light tracking-wider"
-        >
-          {expression || "0"}
-        </motion.div>
-        <motion.div 
-          key={result}
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="text-foreground text-6xl font-bold tracking-tight font-display break-all text-right"
-        >
-          {result}
-        </motion.div>
+      <div ref={displayRef} className="flex-1 flex flex-col justify-end px-6 py-4 min-h-[120px]">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={expression + result}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-right"
+          >
+            {expression && (
+              <div className="text-slate-500 text-lg mb-1 font-mono truncate">
+                {expression}
+              </div>
+            )}
+            <div className="text-white text-5xl md:text-6xl font-bold font-mono tracking-tight">
+              {result}
+            </div>
+          </motion.div>
+        </AnimatePresence>
       </div>
 
-      {/* Keypad Area */}
-      <div className="bg-card border-t border-border/50 rounded-t-3xl shadow-2xl p-4 md:p-6 pb-20 md:pb-6 z-10">
-        <AnimatePresence mode="wait">
-          {activeTab === "Basic" ? (
-            <motion.div
-              key="basic"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
+      {/* Keypad */}
+      <div className="bg-slate-900/50 rounded-t-3xl p-4 pb-6">
+        <div className={`grid ${gridCols} gap-2 max-w-md mx-auto`}>
+          {getButtons().map((btn, index) => (
+            <motion.button
+              key={index}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => handlePress(btn.value)}
+              data-testid={`button-calc-${btn.value}`}
+              className={`${btn.className} h-14 rounded-xl text-lg font-semibold text-white flex items-center justify-center transition-all hover:brightness-110 active:brightness-90 shadow-lg shadow-black/20`}
             >
-              <CalculatorKeypad onPress={handlePress} />
-            </motion.div>
-          ) : (
-             <motion.div
-              key="scientific"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="p-8 text-center text-muted-foreground"
-            >
-              Scientific Mode Layout Placeholder
-              {/* Add Scientific Keypad here if needed */}
-              <div className="mt-4">
-                 <CalculatorKeypad onPress={handlePress} />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              {btn.label}
+            </motion.button>
+          ))}
+        </div>
       </div>
     </div>
   );

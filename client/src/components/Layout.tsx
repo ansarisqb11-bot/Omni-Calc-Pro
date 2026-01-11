@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import {
   Menu, Moon, Sun, X,
   LayoutDashboard, Calculator, Wallet,
-  Ruler, Calendar, MessageSquare, StickyNote, Grid3X3
+  Ruler, Calendar, MessageSquare, StickyNote, Grid3X3, Heart
 } from "lucide-react";
 import { clsx } from "clsx";
 import { motion, AnimatePresence } from "framer-motion";
@@ -26,6 +26,7 @@ export function Layout({ children }: { children: ReactNode }) {
     { label: "Categories", icon: Grid3X3, href: "/categories" },
     { label: "Calculator", icon: Calculator, href: "/calculator" },
     { label: "Finance", icon: Wallet, href: "/finance" },
+    { label: "Health", icon: Heart, href: "/health" },
     { label: "Units", icon: Ruler, href: "/units" },
     { label: "Date & Time", icon: Calendar, href: "/date-time" },
     { label: "AI Assistant", icon: MessageSquare, href: "/ai-tools" },
