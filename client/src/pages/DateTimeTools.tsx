@@ -3,6 +3,7 @@ import { Calendar as CalendarIcon, Clock, Timer, Hourglass, Play, Pause, RotateC
 import { motion } from "framer-motion";
 import { differenceInDays, differenceInYears, differenceInMonths, differenceInHours, differenceInMinutes, addDays, format } from "date-fns";
 import { ToolCard, InputField, ResultDisplay, ToolButton } from "@/components/ToolCard";
+import { PageWrapper } from "@/components/PageWrapper";
 
 type ToolType = "age" | "difference" | "stopwatch" | "countdown" | "worldclock" | "pomodoro" | "workdays";
 
@@ -10,55 +11,32 @@ export default function DateTimeTools() {
   const [activeTool, setActiveTool] = useState<ToolType>("age");
 
   const tools = [
-    { id: "age" as ToolType, label: "Age Calc", icon: CalendarIcon },
-    { id: "difference" as ToolType, label: "Date Diff", icon: Hourglass },
-    { id: "stopwatch" as ToolType, label: "Stopwatch", icon: Clock },
-    { id: "countdown" as ToolType, label: "Countdown", icon: Timer },
-    { id: "worldclock" as ToolType, label: "World Clock", icon: Globe },
-    { id: "pomodoro" as ToolType, label: "Pomodoro", icon: Target },
-    { id: "workdays" as ToolType, label: "Work Days", icon: Briefcase },
+    { id: "age", label: "Age Calc", icon: CalendarIcon },
+    { id: "difference", label: "Date Diff", icon: Hourglass },
+    { id: "stopwatch", label: "Stopwatch", icon: Clock },
+    { id: "countdown", label: "Countdown", icon: Timer },
+    { id: "worldclock", label: "World Clock", icon: Globe },
+    { id: "pomodoro", label: "Pomodoro", icon: Target },
+    { id: "workdays", label: "Work Days", icon: Briefcase },
   ];
 
   return (
-    <div className="flex flex-col h-full bg-[#0f172a] overflow-hidden">
-      {/* Header */}
-      <div className="px-4 py-4 border-b border-slate-800">
-        <h1 className="text-2xl font-bold text-white">Date & Time</h1>
-        <p className="text-slate-400 text-sm mt-1">Age calculator, timers, and date tools</p>
-      </div>
-
-      {/* Tool Tabs */}
-      <div className="px-4 py-3 border-b border-slate-800/50">
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-          {tools.map((tool) => (
-            <button
-              key={tool.id}
-              onClick={() => setActiveTool(tool.id)}
-              data-testid={`tab-${tool.id}`}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
-                activeTool === tool.id
-                  ? "bg-purple-500 text-white shadow-lg shadow-purple-500/30"
-                  : "bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-700/50"
-              }`}
-            >
-              <tool.icon className="w-4 h-4" />
-              {tool.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Tool Content */}
-      <div className="flex-1 overflow-y-auto p-4 pb-8">
-        {activeTool === "age" && <AgeCalculator />}
-        {activeTool === "difference" && <DateDifference />}
-        {activeTool === "stopwatch" && <Stopwatch />}
-        {activeTool === "countdown" && <CountdownTimer />}
-        {activeTool === "worldclock" && <WorldClock />}
-        {activeTool === "pomodoro" && <PomodoroTimer />}
-        {activeTool === "workdays" && <WorkDaysCalculator />}
-      </div>
-    </div>
+    <PageWrapper
+      title="Date & Time"
+      subtitle="Age calculator, timers, and date tools"
+      accentColor="bg-purple-500"
+      tools={tools}
+      activeTool={activeTool}
+      onToolChange={(id) => setActiveTool(id as ToolType)}
+    >
+      {activeTool === "age" && <AgeCalculator />}
+      {activeTool === "difference" && <DateDifference />}
+      {activeTool === "stopwatch" && <Stopwatch />}
+      {activeTool === "countdown" && <CountdownTimer />}
+      {activeTool === "worldclock" && <WorldClock />}
+      {activeTool === "pomodoro" && <PomodoroTimer />}
+      {activeTool === "workdays" && <WorkDaysCalculator />}
+    </PageWrapper>
   );
 }
 
@@ -109,15 +87,15 @@ function AgeCalculator() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
           <ToolCard title="Your Age" icon={Clock} iconColor="bg-blue-500">
             <div className="text-center py-4">
-              <div className="text-5xl font-bold text-white mb-2">
+              <div className="text-5xl font-bold text-foreground mb-2">
                 {result.years}
-                <span className="text-xl text-slate-400 ml-2">years</span>
+                <span className="text-xl text-muted-foreground ml-2">years</span>
               </div>
               <div className="text-xl text-purple-400">
                 {result.months} months, {result.days} days
               </div>
-              <div className="text-slate-500 mt-4">
-                That's <span className="text-white font-medium">{result.totalDays.toLocaleString()}</span> days!
+              <div className="text-muted-foreground mt-4">
+                That's <span className="text-foreground font-medium">{result.totalDays.toLocaleString()}</span> days!
               </div>
             </div>
           </ToolCard>
@@ -214,7 +192,7 @@ function Stopwatch() {
     <div className="space-y-4 max-w-lg mx-auto">
       <ToolCard title="Stopwatch" icon={Clock} iconColor="bg-cyan-500">
         <div className="text-center py-8">
-          <div className="text-6xl font-mono font-bold text-white mb-8">
+          <div className="text-6xl font-mono font-bold text-foreground mb-8">
             {formatTime(time)}
           </div>
           <div className="flex justify-center gap-4">
@@ -222,7 +200,7 @@ function Stopwatch() {
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsRunning(!isRunning)}
               data-testid="button-start-stop"
-              className={`p-4 rounded-full ${isRunning ? "bg-red-500" : "bg-emerald-500"} text-white shadow-lg`}
+              className={`p-4 rounded-full ${isRunning ? "bg-red-500" : "bg-emerald-500"} text-foreground shadow-lg`}
             >
               {isRunning ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
             </motion.button>
@@ -230,7 +208,7 @@ function Stopwatch() {
               whileTap={{ scale: 0.95 }}
               onClick={reset}
               data-testid="button-reset"
-              className="p-4 rounded-full bg-slate-700 text-white"
+              className="p-4 rounded-full bg-muted text-foreground"
             >
               <RotateCcw className="w-6 h-6" />
             </motion.button>
@@ -239,7 +217,7 @@ function Stopwatch() {
                 whileTap={{ scale: 0.95 }}
                 onClick={addLap}
                 data-testid="button-lap"
-                className="p-4 rounded-full bg-blue-500 text-white"
+                className="p-4 rounded-full bg-blue-500 text-foreground"
               >
                 Lap
               </motion.button>
@@ -248,13 +226,13 @@ function Stopwatch() {
         </div>
 
         {laps.length > 0 && (
-          <div className="mt-6 border-t border-slate-700/50 pt-4">
-            <h3 className="text-sm font-medium text-slate-400 mb-3">Laps</h3>
+          <div className="mt-6 border-t border-border pt-4">
+            <h3 className="text-sm font-medium text-muted-foreground mb-3">Laps</h3>
             <div className="space-y-2 max-h-40 overflow-y-auto">
               {laps.map((lap, i) => (
-                <div key={i} className="flex justify-between text-sm bg-slate-900/50 px-3 py-2 rounded-lg">
-                  <span className="text-slate-400">Lap {i + 1}</span>
-                  <span className="text-white font-mono">{formatTime(lap)}</span>
+                <div key={i} className="flex justify-between text-sm bg-muted/50 px-3 py-2 rounded-lg">
+                  <span className="text-muted-foreground">Lap {i + 1}</span>
+                  <span className="text-foreground font-mono">{formatTime(lap)}</span>
                 </div>
               ))}
             </div>
@@ -326,7 +304,7 @@ function CountdownTimer() {
           </div>
         ) : (
           <div className="text-center py-8">
-            <div className={`text-6xl font-mono font-bold mb-8 ${timeLeft === 0 ? "text-rose-500 animate-pulse" : "text-white"}`}>
+            <div className={`text-6xl font-mono font-bold mb-8 ${timeLeft === 0 ? "text-rose-500 animate-pulse" : "text-foreground"}`}>
               {formatTime(timeLeft)}
             </div>
             {timeLeft === 0 && (
@@ -338,7 +316,7 @@ function CountdownTimer() {
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setIsRunning(!isRunning)}
                   data-testid="button-pause-resume"
-                  className={`p-4 rounded-full ${isRunning ? "bg-yellow-500" : "bg-emerald-500"} text-white shadow-lg`}
+                  className={`p-4 rounded-full ${isRunning ? "bg-yellow-500" : "bg-emerald-500"} text-foreground shadow-lg`}
                 >
                   {isRunning ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
                 </motion.button>
@@ -347,7 +325,7 @@ function CountdownTimer() {
                 whileTap={{ scale: 0.95 }}
                 onClick={reset}
                 data-testid="button-reset-countdown"
-                className="p-4 rounded-full bg-slate-700 text-white"
+                className="p-4 rounded-full bg-muted text-foreground"
               >
                 <RotateCcw className="w-6 h-6" />
               </motion.button>
@@ -451,7 +429,7 @@ function PomodoroTimer() {
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsRunning(!isRunning)}
               data-testid="button-pomodoro-toggle"
-              className={`p-4 rounded-full ${isRunning ? "bg-yellow-500" : "bg-emerald-500"} text-white shadow-lg`}
+              className={`p-4 rounded-full ${isRunning ? "bg-yellow-500" : "bg-emerald-500"} text-foreground shadow-lg`}
             >
               {isRunning ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
             </motion.button>
@@ -459,12 +437,12 @@ function PomodoroTimer() {
               whileTap={{ scale: 0.95 }}
               onClick={reset}
               data-testid="button-pomodoro-reset"
-              className="p-4 rounded-full bg-slate-700 text-white"
+              className="p-4 rounded-full bg-muted text-foreground"
             >
               <RotateCcw className="w-6 h-6" />
             </motion.button>
           </div>
-          <p className="mt-6 text-muted-foreground">Sessions completed: <span className="text-white font-bold">{sessions}</span></p>
+          <p className="mt-6 text-muted-foreground">Sessions completed: <span className="text-foreground font-bold">{sessions}</span></p>
         </div>
       </ToolCard>
     </div>

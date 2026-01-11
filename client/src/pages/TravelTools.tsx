@@ -30,7 +30,7 @@ export default function TravelTools() {
               data-testid={`tab-${tool.id}`}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
                 activeTool === tool.id
-                  ? "bg-sky-500 text-white shadow-lg shadow-sky-500/30"
+                  ? "bg-sky-500 text-foreground shadow-lg shadow-sky-500/30"
                   : "bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted"
               }`}
             >
@@ -170,7 +170,7 @@ function ClothingSizeConverter() {
                   onClick={() => setUsSize(size)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     usSize === size
-                      ? "bg-purple-500 text-white"
+                      ? "bg-purple-500 text-foreground"
                       : "bg-muted text-muted-foreground hover:bg-muted/80"
                   }`}
                   data-testid={`button-size-${size}`}

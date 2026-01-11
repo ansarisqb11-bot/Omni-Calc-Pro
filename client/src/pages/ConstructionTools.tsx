@@ -30,7 +30,7 @@ export default function ConstructionTools() {
               data-testid={`tab-${tool.id}`}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
                 activeTool === tool.id
-                  ? "bg-amber-500 text-white shadow-lg shadow-amber-500/30"
+                  ? "bg-amber-500 text-foreground shadow-lg shadow-amber-500/30"
                   : "bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted"
               }`}
             >
@@ -234,7 +234,7 @@ function SteelBarCalculator() {
       <ToolCard title="Weight" icon={Calculator} iconColor="bg-emerald-500">
         <div className="space-y-3">
           <ResultDisplay label="Weight per meter" value={`${weightPerMeter.toFixed(3)} kg/m`} />
-          <ResultDisplay label="Total Weight" value={`${totalWeight.toFixed(2)} kg`} highlight color="text-slate-300" />
+          <ResultDisplay label="Total Weight" value={`${totalWeight.toFixed(2)} kg`} highlight color="text-foreground" />
         </div>
       </ToolCard>
     </div>

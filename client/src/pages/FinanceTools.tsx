@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Banknote, Percent, TrendingUp, Receipt, PiggyBank, CreditCard, Building2, BadgePercent, LineChart, Coins } from "lucide-react";
 import { ToolCard, InputField, ResultDisplay, ToolButton } from "@/components/ToolCard";
+import { PageWrapper } from "@/components/PageWrapper";
 
 type ToolType = "emi" | "compound" | "tip" | "roi" | "gst" | "sip" | "salary" | "discount";
 
@@ -9,57 +10,34 @@ export default function FinanceTools() {
   const [activeTool, setActiveTool] = useState<ToolType>("emi");
 
   const tools = [
-    { id: "emi" as ToolType, label: "Loan EMI", icon: CreditCard },
-    { id: "compound" as ToolType, label: "Compound", icon: TrendingUp },
-    { id: "sip" as ToolType, label: "SIP", icon: LineChart },
-    { id: "gst" as ToolType, label: "GST/VAT", icon: Building2 },
-    { id: "tip" as ToolType, label: "Tip", icon: Receipt },
-    { id: "roi" as ToolType, label: "ROI", icon: PiggyBank },
-    { id: "salary" as ToolType, label: "Salary", icon: Coins },
-    { id: "discount" as ToolType, label: "Discount", icon: BadgePercent },
+    { id: "emi", label: "Loan EMI", icon: CreditCard },
+    { id: "compound", label: "Compound", icon: TrendingUp },
+    { id: "sip", label: "SIP", icon: LineChart },
+    { id: "gst", label: "GST/VAT", icon: Building2 },
+    { id: "tip", label: "Tip", icon: Receipt },
+    { id: "roi", label: "ROI", icon: PiggyBank },
+    { id: "salary", label: "Salary", icon: Coins },
+    { id: "discount", label: "Discount", icon: BadgePercent },
   ];
 
   return (
-    <div className="flex flex-col h-full bg-[#0f172a] overflow-hidden">
-      {/* Header */}
-      <div className="px-4 py-4 border-b border-slate-800">
-        <h1 className="text-2xl font-bold text-white">Finance Tools</h1>
-        <p className="text-slate-400 text-sm mt-1">Calculate loans, interest, tips and more</p>
-      </div>
-
-      {/* Tool Tabs */}
-      <div className="px-4 py-3 border-b border-slate-800/50">
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-          {tools.map((tool) => (
-            <button
-              key={tool.id}
-              onClick={() => setActiveTool(tool.id)}
-              data-testid={`tab-${tool.id}`}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
-                activeTool === tool.id
-                  ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
-                  : "bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-700/50"
-              }`}
-            >
-              <tool.icon className="w-4 h-4" />
-              {tool.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Tool Content */}
-      <div className="flex-1 overflow-y-auto p-4 pb-8">
-        {activeTool === "emi" && <LoanEMICalculator />}
-        {activeTool === "compound" && <CompoundInterestCalculator />}
-        {activeTool === "sip" && <SIPCalculator />}
-        {activeTool === "gst" && <GSTCalculator />}
-        {activeTool === "tip" && <TipCalculator />}
-        {activeTool === "roi" && <ROICalculator />}
-        {activeTool === "salary" && <SalaryConverter />}
-        {activeTool === "discount" && <DiscountCalculator />}
-      </div>
-    </div>
+    <PageWrapper
+      title="Finance Tools"
+      subtitle="Calculate loans, interest, tips and more"
+      accentColor="bg-emerald-500"
+      tools={tools}
+      activeTool={activeTool}
+      onToolChange={(id) => setActiveTool(id as ToolType)}
+    >
+      {activeTool === "emi" && <LoanEMICalculator />}
+      {activeTool === "compound" && <CompoundInterestCalculator />}
+      {activeTool === "sip" && <SIPCalculator />}
+      {activeTool === "gst" && <GSTCalculator />}
+      {activeTool === "tip" && <TipCalculator />}
+      {activeTool === "roi" && <ROICalculator />}
+      {activeTool === "salary" && <SalaryConverter />}
+      {activeTool === "discount" && <DiscountCalculator />}
+    </PageWrapper>
   );
 }
 
@@ -137,11 +115,11 @@ function CompoundInterestCalculator() {
           <InputField label="Interest Rate (Annual)" value={rate} onChange={setRate} type="number" suffix="%" />
           <InputField label="Time Period (Years)" value={years} onChange={setYears} type="number" />
           <div>
-            <label className="text-sm font-medium text-slate-400 mb-1.5 block">Compound Frequency</label>
+            <label className="text-sm font-medium text-muted-foreground mb-1.5 block">Compound Frequency</label>
             <select
               value={frequency}
               onChange={(e) => setFrequency(e.target.value)}
-              className="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+              className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
               data-testid="select-frequency"
             >
               <option value="1">Annually</option>
@@ -187,7 +165,7 @@ function TipCalculator() {
           <InputField label="Bill Amount" value={billAmount} onChange={setBillAmount} type="number" suffix="$" />
           
           <div>
-            <label className="text-sm font-medium text-slate-400 mb-2 block">Tip Percentage</label>
+            <label className="text-sm font-medium text-muted-foreground mb-2 block">Tip Percentage</label>
             <div className="flex gap-2 flex-wrap mb-2">
               {quickTips.map((t) => (
                 <button
@@ -196,8 +174,8 @@ function TipCalculator() {
                   data-testid={`button-tip-${t}`}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     tipPercent === t.toString()
-                      ? "bg-orange-500 text-white"
-                      : "bg-slate-700/50 text-slate-300 hover:bg-slate-600/50"
+                      ? "bg-orange-500 text-foreground"
+                      : "bg-muted/80 text-foreground hover:bg-muted/70"
                   }`}
                 >
                   {t}%
@@ -304,14 +282,14 @@ function GSTCalculator() {
           <div className="flex gap-2">
             <button
               onClick={() => setMode("add")}
-              className={`flex-1 py-2 rounded-lg text-sm font-medium ${mode === "add" ? "bg-teal-500 text-white" : "bg-muted text-muted-foreground"}`}
+              className={`flex-1 py-2 rounded-lg text-sm font-medium ${mode === "add" ? "bg-teal-500 text-foreground" : "bg-muted text-muted-foreground"}`}
               data-testid="button-gst-add"
             >
               Add GST
             </button>
             <button
               onClick={() => setMode("remove")}
-              className={`flex-1 py-2 rounded-lg text-sm font-medium ${mode === "remove" ? "bg-teal-500 text-white" : "bg-muted text-muted-foreground"}`}
+              className={`flex-1 py-2 rounded-lg text-sm font-medium ${mode === "remove" ? "bg-teal-500 text-foreground" : "bg-muted text-muted-foreground"}`}
               data-testid="button-gst-remove"
             >
               Remove GST
@@ -325,7 +303,7 @@ function GSTCalculator() {
                 <button
                   key={r}
                   onClick={() => setGstRate(r.toString())}
-                  className={`px-4 py-2 rounded-lg text-sm ${gstRate === r.toString() ? "bg-teal-500 text-white" : "bg-muted text-muted-foreground"}`}
+                  className={`px-4 py-2 rounded-lg text-sm ${gstRate === r.toString() ? "bg-teal-500 text-foreground" : "bg-muted text-muted-foreground"}`}
                   data-testid={`button-gst-rate-${r}`}
                 >
                   {r}%

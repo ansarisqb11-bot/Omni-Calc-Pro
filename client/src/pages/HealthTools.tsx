@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Heart, Activity, Flame, Scale, Dumbbell, Footprints, Moon, UtensilsCrossed, Clock } from "lucide-react";
 import { ToolCard, InputField, ResultDisplay, ToolButton } from "@/components/ToolCard";
+import { PageWrapper } from "@/components/PageWrapper";
 
 type ToolType = "bmi" | "bmr" | "calories" | "water" | "bodyfat" | "sleep" | "cooking";
 
@@ -9,55 +10,32 @@ export default function HealthTools() {
   const [activeTool, setActiveTool] = useState<ToolType>("bmi");
 
   const tools = [
-    { id: "bmi" as ToolType, label: "BMI", icon: Scale },
-    { id: "bmr" as ToolType, label: "BMR", icon: Flame },
-    { id: "calories" as ToolType, label: "Calories", icon: Activity },
-    { id: "water" as ToolType, label: "Water", icon: Dumbbell },
-    { id: "bodyfat" as ToolType, label: "Body Fat", icon: Footprints },
-    { id: "sleep" as ToolType, label: "Sleep", icon: Moon },
-    { id: "cooking" as ToolType, label: "Cooking", icon: UtensilsCrossed },
+    { id: "bmi", label: "BMI", icon: Scale },
+    { id: "bmr", label: "BMR", icon: Flame },
+    { id: "calories", label: "Calories", icon: Activity },
+    { id: "water", label: "Water", icon: Dumbbell },
+    { id: "bodyfat", label: "Body Fat", icon: Footprints },
+    { id: "sleep", label: "Sleep", icon: Moon },
+    { id: "cooking", label: "Cooking", icon: UtensilsCrossed },
   ];
 
   return (
-    <div className="flex flex-col h-full bg-[#0f172a] overflow-hidden">
-      {/* Header */}
-      <div className="px-4 py-4 border-b border-slate-800">
-        <h1 className="text-2xl font-bold text-white">Health & Fitness</h1>
-        <p className="text-slate-400 text-sm mt-1">BMI, BMR, Calorie and nutrition calculators</p>
-      </div>
-
-      {/* Tool Tabs */}
-      <div className="px-4 py-3 border-b border-slate-800/50">
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-          {tools.map((tool) => (
-            <button
-              key={tool.id}
-              onClick={() => setActiveTool(tool.id)}
-              data-testid={`tab-${tool.id}`}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
-                activeTool === tool.id
-                  ? "bg-pink-500 text-white shadow-lg shadow-pink-500/30"
-                  : "bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-700/50"
-              }`}
-            >
-              <tool.icon className="w-4 h-4" />
-              {tool.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Tool Content */}
-      <div className="flex-1 overflow-y-auto p-4 pb-8">
-        {activeTool === "bmi" && <BMICalculator />}
-        {activeTool === "bmr" && <BMRCalculator />}
-        {activeTool === "calories" && <CalorieCalculator />}
-        {activeTool === "water" && <WaterIntake />}
-        {activeTool === "bodyfat" && <BodyFatCalculator />}
-        {activeTool === "sleep" && <SleepCycleCalculator />}
-        {activeTool === "cooking" && <CookingConverter />}
-      </div>
-    </div>
+    <PageWrapper
+      title="Health & Fitness"
+      subtitle="BMI, BMR, Calorie and nutrition calculators"
+      accentColor="bg-pink-500"
+      tools={tools}
+      activeTool={activeTool}
+      onToolChange={(id) => setActiveTool(id as ToolType)}
+    >
+      {activeTool === "bmi" && <BMICalculator />}
+      {activeTool === "bmr" && <BMRCalculator />}
+      {activeTool === "calories" && <CalorieCalculator />}
+      {activeTool === "water" && <WaterIntake />}
+      {activeTool === "bodyfat" && <BodyFatCalculator />}
+      {activeTool === "sleep" && <SleepCycleCalculator />}
+      {activeTool === "cooking" && <CookingConverter />}
+    </PageWrapper>
   );
 }
 
@@ -99,7 +77,7 @@ function BMICalculator() {
                 onClick={() => setUnit(u as "metric" | "imperial")}
                 data-testid={`button-unit-${u}`}
                 className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
-                  unit === u ? "bg-pink-500 text-white" : "bg-slate-700/50 text-slate-400"
+                  unit === u ? "bg-pink-500 text-foreground" : "bg-muted/80 text-muted-foreground"
                 }`}
               >
                 {u === "metric" ? "Metric (kg/cm)" : "Imperial (lbs/in)"}
@@ -128,9 +106,9 @@ function BMICalculator() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
           <ToolCard title="Your BMI" icon={Heart} iconColor="bg-pink-500">
             <div className="text-center py-4">
-              <div className="text-5xl font-bold text-white mb-2">{result.bmi.toFixed(1)}</div>
+              <div className="text-5xl font-bold text-foreground mb-2">{result.bmi.toFixed(1)}</div>
               <div className={`text-xl font-medium ${result.color}`}>{result.category}</div>
-              <div className="mt-6 bg-slate-900/50 rounded-xl p-4">
+              <div className="mt-6 bg-muted/50 rounded-xl p-4">
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-blue-400">Underweight</span>
                   <span className="text-emerald-400">Normal</span>
@@ -143,7 +121,7 @@ function BMICalculator() {
                     style={{ left: `${Math.min(Math.max((result.bmi - 15) / 25 * 100, 0), 100)}%` }}
                   />
                 </div>
-                <div className="flex justify-between text-xs text-slate-500 mt-1">
+                <div className="flex justify-between text-xs text-muted-foreground mt-1">
                   <span>15</span>
                   <span>18.5</span>
                   <span>25</span>
@@ -193,7 +171,7 @@ function BMRCalculator() {
                 onClick={() => setGender(g as "male" | "female")}
                 data-testid={`button-gender-${g}`}
                 className={`flex-1 py-2 rounded-lg text-sm font-medium capitalize transition-all ${
-                  gender === g ? "bg-orange-500 text-white" : "bg-slate-700/50 text-slate-400"
+                  gender === g ? "bg-orange-500 text-foreground" : "bg-muted/80 text-muted-foreground"
                 }`}
               >
                 {g}
@@ -213,11 +191,11 @@ function BMRCalculator() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
           <ToolCard title="Your BMR" icon={Activity} iconColor="bg-emerald-500">
             <div className="text-center py-4">
-              <div className="text-5xl font-bold text-white mb-2">
+              <div className="text-5xl font-bold text-foreground mb-2">
                 {result}
-                <span className="text-xl text-slate-400 ml-2">cal/day</span>
+                <span className="text-xl text-muted-foreground ml-2">cal/day</span>
               </div>
-              <p className="text-slate-400 text-sm">Calories burned at rest</p>
+              <p className="text-muted-foreground text-sm">Calories burned at rest</p>
             </div>
             <div className="space-y-2 mt-4">
               <ResultDisplay label="Sedentary (little exercise)" value={`${Math.round(result * 1.2)} cal`} />
@@ -258,7 +236,7 @@ function CalorieCalculator() {
       <ToolCard title="Calorie Burn" icon={Flame} iconColor="bg-red-500">
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium text-slate-400 mb-2 block">Activity</label>
+            <label className="text-sm font-medium text-muted-foreground mb-2 block">Activity</label>
             <div className="grid grid-cols-2 gap-2">
               {activities.map((a) => (
                 <button
@@ -267,8 +245,8 @@ function CalorieCalculator() {
                   data-testid={`button-activity-${a.name.toLowerCase()}`}
                   className={`py-2 px-3 rounded-lg text-sm font-medium transition-all ${
                     activity === a.name
-                      ? "bg-red-500 text-white"
-                      : "bg-slate-700/50 text-slate-400 hover:bg-slate-600/50"
+                      ? "bg-red-500 text-foreground"
+                      : "bg-muted/80 text-muted-foreground hover:bg-muted/70"
                   }`}
                 >
                   {a.name}
@@ -287,9 +265,9 @@ function CalorieCalculator() {
             <div className="text-center py-6">
               <div className="text-5xl font-bold text-red-400 mb-2">
                 {calories}
-                <span className="text-xl text-slate-400 ml-2">cal</span>
+                <span className="text-xl text-muted-foreground ml-2">cal</span>
               </div>
-              <p className="text-slate-400">
+              <p className="text-muted-foreground">
                 {activity} for {duration} minutes
               </p>
             </div>
@@ -315,7 +293,7 @@ function WaterIntake() {
         <div className="space-y-4">
           <InputField label="Your Weight (kg)" value={weight} onChange={setWeight} type="number" />
           <div>
-            <label className="text-sm font-medium text-slate-400 mb-2 block">Activity Level</label>
+            <label className="text-sm font-medium text-muted-foreground mb-2 block">Activity Level</label>
             <div className="flex gap-2">
               {(["low", "moderate", "high"] as const).map((level) => (
                 <button
@@ -324,8 +302,8 @@ function WaterIntake() {
                   data-testid={`button-activity-${level}`}
                   className={`flex-1 py-2 rounded-lg text-sm font-medium capitalize transition-all ${
                     activity === level
-                      ? "bg-cyan-500 text-white"
-                      : "bg-slate-700/50 text-slate-400"
+                      ? "bg-cyan-500 text-foreground"
+                      : "bg-muted/80 text-muted-foreground"
                   }`}
                 >
                   {level}
@@ -340,10 +318,10 @@ function WaterIntake() {
         <div className="text-center py-6">
           <div className="text-5xl font-bold text-cyan-400 mb-2">
             {recommended}
-            <span className="text-xl text-slate-400 ml-2">L</span>
+            <span className="text-xl text-muted-foreground ml-2">L</span>
           </div>
-          <p className="text-slate-400">
-            That's about <span className="text-white font-medium">{glasses} glasses</span> of water
+          <p className="text-muted-foreground">
+            That's about <span className="text-foreground font-medium">{glasses} glasses</span> of water
           </p>
         </div>
       </ToolCard>
@@ -377,8 +355,8 @@ function BodyFatCalculator() {
       <ToolCard title="Body Fat Calculator" icon={Footprints} iconColor="bg-orange-500">
         <div className="space-y-4">
           <div className="flex gap-2">
-            <button onClick={() => setGender("male")} className={`flex-1 py-2 rounded-lg ${gender === "male" ? "bg-orange-500 text-white" : "bg-muted text-muted-foreground"}`} data-testid="button-gender-male">Male</button>
-            <button onClick={() => setGender("female")} className={`flex-1 py-2 rounded-lg ${gender === "female" ? "bg-orange-500 text-white" : "bg-muted text-muted-foreground"}`} data-testid="button-gender-female">Female</button>
+            <button onClick={() => setGender("male")} className={`flex-1 py-2 rounded-lg ${gender === "male" ? "bg-orange-500 text-foreground" : "bg-muted text-muted-foreground"}`} data-testid="button-gender-male">Male</button>
+            <button onClick={() => setGender("female")} className={`flex-1 py-2 rounded-lg ${gender === "female" ? "bg-orange-500 text-foreground" : "bg-muted text-muted-foreground"}`} data-testid="button-gender-female">Female</button>
           </div>
           <InputField label="Waist (cm)" value={waist} onChange={setWaist} type="number" />
           <InputField label="Neck (cm)" value={neck} onChange={setNeck} type="number" />
@@ -390,7 +368,7 @@ function BodyFatCalculator() {
       <ToolCard title="Body Fat Percentage" icon={Activity} iconColor="bg-emerald-500">
         <div className="text-center py-4">
           <div className="text-5xl font-bold text-orange-400">{bodyFat.toFixed(1)}%</div>
-          <p className="text-muted-foreground mt-2">Category: <span className="text-white font-medium">{category}</span></p>
+          <p className="text-muted-foreground mt-2">Category: <span className="text-foreground font-medium">{category}</span></p>
         </div>
       </ToolCard>
     </div>
@@ -467,7 +445,7 @@ function CookingConverter() {
                 <button
                   key={u}
                   onClick={() => setFromUnit(u)}
-                  className={`px-3 py-2 rounded-lg text-sm ${fromUnit === u ? "bg-amber-500 text-white" : "bg-muted text-muted-foreground"}`}
+                  className={`px-3 py-2 rounded-lg text-sm ${fromUnit === u ? "bg-amber-500 text-foreground" : "bg-muted text-muted-foreground"}`}
                   data-testid={`button-unit-${u}`}
                 >
                   {u}

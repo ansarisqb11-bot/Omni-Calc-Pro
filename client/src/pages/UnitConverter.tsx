@@ -200,15 +200,15 @@ export default function UnitConverter() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#0f172a] overflow-hidden">
+    <div className="flex flex-col h-full bg-background overflow-hidden">
       {/* Header */}
-      <div className="px-4 py-4 border-b border-slate-800">
-        <h1 className="text-2xl font-bold text-white">Unit Converter</h1>
-        <p className="text-slate-400 text-sm mt-1">Convert between common units of measurement</p>
+      <div className="px-4 py-4 border-b border-border">
+        <h1 className="text-2xl font-bold text-foreground">Unit Converter</h1>
+        <p className="text-muted-foreground text-sm mt-1">Convert between common units of measurement</p>
       </div>
 
       {/* Category Tabs */}
-      <div className="px-4 py-3 border-b border-slate-800/50">
+      <div className="px-4 py-3 border-b border-border/50">
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
           {categories.map((cat) => (
             <button
@@ -217,8 +217,8 @@ export default function UnitConverter() {
               data-testid={`tab-${cat.id}`}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
                 category.id === cat.id
-                  ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
-                  : "bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-700/50"
+                  ? "bg-amber-500 text-white shadow-lg shadow-amber-500/30"
+                  : "bg-card border border-border text-muted-foreground hover:text-foreground hover:bg-muted"
               }`}
             >
               <cat.icon className="w-4 h-4" />
@@ -235,19 +235,19 @@ export default function UnitConverter() {
             <div className="space-y-5">
               {/* From Section */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-400">From</label>
+                <label className="text-sm font-medium text-muted-foreground">From</label>
                 <input
                   type="number"
                   value={value}
                   onChange={(e) => setValue(e.target.value)}
                   placeholder="Enter value"
-                  className="w-full text-3xl font-bold bg-transparent border-none text-white placeholder:text-slate-600 focus:outline-none"
+                  className="w-full text-3xl font-bold bg-transparent border-none text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
                   data-testid="input-from-value"
                 />
                 <select
                   value={fromUnit}
                   onChange={(e) => setFromUnit(e.target.value)}
-                  className="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                   data-testid="select-from-unit"
                 >
                   {category.units.map((u) => (
@@ -263,7 +263,7 @@ export default function UnitConverter() {
                 <motion.button
                   whileTap={{ scale: 0.95, rotate: 180 }}
                   onClick={handleSwap}
-                  className="p-4 rounded-full bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 transition-colors"
+                  className="p-4 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground transition-colors"
                   data-testid="button-swap"
                 >
                   <ArrowRightLeft className="w-5 h-5" />
@@ -272,14 +272,14 @@ export default function UnitConverter() {
 
               {/* To Section */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-400">To</label>
+                <label className="text-sm font-medium text-muted-foreground">To</label>
                 <div className="text-3xl font-bold text-primary py-2">
                   {convert(parseFloat(value) || 0)}
                 </div>
                 <select
                   value={toUnit}
                   onChange={(e) => setToUnit(e.target.value)}
-                  className="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                   data-testid="select-to-unit"
                 >
                   {category.units.map((u) => (
@@ -293,12 +293,12 @@ export default function UnitConverter() {
           </ToolCard>
 
           {/* Quick Reference */}
-          <ToolCard title="Quick Reference" icon={Ruler} iconColor="bg-slate-500">
+          <ToolCard title="Quick Reference" icon={Ruler} iconColor="bg-muted">
             <div className="space-y-2 text-sm">
               {category.units.slice(0, 5).map((unit) => (
-                <div key={unit.name} className="flex justify-between text-slate-400">
+                <div key={unit.name} className="flex justify-between text-muted-foreground">
                   <span>1 {fromUnit}</span>
-                  <span className="text-white">
+                  <span className="text-foreground">
                     {category.id === "temp"
                       ? convertTemperature(1, fromUnit, unit.name).toFixed(2)
                       : (

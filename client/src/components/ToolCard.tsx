@@ -16,15 +16,15 @@ export function ToolCard({ title, description, icon: Icon, iconColor, children, 
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`bg-slate-800/50 border border-slate-700/50 rounded-2xl p-5 shadow-lg ${className}`}
+      className={`bg-card border border-border rounded-2xl p-5 shadow-lg ${className}`}
     >
       <div className="flex items-center gap-3 mb-5">
         <div className={`w-10 h-10 rounded-xl ${iconColor} bg-opacity-20 flex items-center justify-center`}>
           <Icon className={`w-5 h-5 ${iconColor.replace("bg-", "text-")}`} />
         </div>
         <div>
-          <h2 className="text-lg font-semibold text-white">{title}</h2>
-          {description && <p className="text-sm text-slate-400">{description}</p>}
+          <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+          {description && <p className="text-sm text-muted-foreground">{description}</p>}
         </div>
       </div>
       {children}
@@ -47,7 +47,7 @@ interface InputFieldProps {
 export function InputField({ label, value, onChange, type = "text", placeholder, suffix, min, max, step }: InputFieldProps) {
   return (
     <div>
-      <label className="text-sm font-medium text-slate-400 mb-1.5 block">{label}</label>
+      <label className="text-sm font-medium text-muted-foreground mb-1.5 block">{label}</label>
       <div className="relative">
         <input
           type={type}
@@ -57,11 +57,11 @@ export function InputField({ label, value, onChange, type = "text", placeholder,
           min={min}
           max={max}
           step={step}
-          className="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-3 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all"
+          className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all"
           data-testid={`input-${label.toLowerCase().replace(/\s+/g, "-")}`}
         />
         {suffix && (
-          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500">{suffix}</span>
+          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">{suffix}</span>
         )}
       </div>
     </div>
@@ -77,9 +77,9 @@ interface ResultDisplayProps {
 
 export function ResultDisplay({ label, value, highlight, color }: ResultDisplayProps) {
   return (
-    <div className={`flex justify-between items-center p-3 rounded-xl ${highlight ? "bg-slate-700/50" : "bg-slate-900/30"}`}>
-      <span className="text-slate-400">{label}</span>
-      <span className={`font-bold ${color || (highlight ? "text-white text-xl" : "text-white")}`}>
+    <div className={`flex justify-between items-center p-3 rounded-xl ${highlight ? "bg-muted/50" : "bg-muted/30"}`}>
+      <span className="text-muted-foreground">{label}</span>
+      <span className={`font-bold ${color || (highlight ? "text-foreground text-xl" : "text-foreground")}`}>
         {value}
       </span>
     </div>
@@ -97,8 +97,8 @@ interface ButtonProps {
 
 export function ToolButton({ children, onClick, variant = "primary", disabled, className = "", type = "button" }: ButtonProps) {
   const variantClasses = {
-    primary: "bg-primary hover:bg-primary/90 text-white",
-    secondary: "bg-slate-700 hover:bg-slate-600 text-white",
+    primary: "bg-primary hover:bg-primary/90 text-primary-foreground",
+    secondary: "bg-muted hover:bg-muted/80 text-foreground",
     success: "bg-emerald-500 hover:bg-emerald-600 text-white",
     danger: "bg-red-500 hover:bg-red-600 text-white",
   };

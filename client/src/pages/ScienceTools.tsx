@@ -30,7 +30,7 @@ export default function ScienceTools() {
               data-testid={`tab-${tool.id}`}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
                 activeTool === tool.id
-                  ? "bg-violet-500 text-white shadow-lg shadow-violet-500/30"
+                  ? "bg-violet-500 text-foreground shadow-lg shadow-violet-500/30"
                   : "bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted"
               }`}
             >

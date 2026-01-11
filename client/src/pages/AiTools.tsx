@@ -35,15 +35,15 @@ export default function AiTools() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#0f172a] overflow-hidden">
+    <div className="flex flex-col h-full bg-background overflow-hidden">
       {/* Header */}
-      <div className="px-4 py-4 border-b border-slate-800 flex items-center gap-3">
+      <div className="px-4 py-4 border-b border-border flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center">
           <Sparkles className="w-5 h-5 text-violet-500" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-white">AI Calculator</h1>
-          <p className="text-sm text-slate-400">Ask anything about math, finance, or conversions</p>
+          <h1 className="text-xl font-bold text-foreground">AI Calculator</h1>
+          <p className="text-sm text-muted-foreground">Ask anything about math, finance, or conversions</p>
         </div>
       </div>
 
@@ -55,14 +55,14 @@ export default function AiTools() {
               <div className="w-16 h-16 rounded-2xl bg-violet-500/20 flex items-center justify-center mx-auto mb-4">
                 <Bot className="w-8 h-8 text-violet-400" />
               </div>
-              <h2 className="text-xl font-semibold text-white mb-2">How can I help?</h2>
-              <p className="text-slate-400 text-sm max-w-sm">
+              <h2 className="text-xl font-semibold text-foreground mb-2">How can I help?</h2>
+              <p className="text-muted-foreground text-sm max-w-sm">
                 I can help with calculations, unit conversions, financial formulas, and more.
               </p>
             </div>
 
             <div className="w-full max-w-md space-y-3">
-              <p className="text-sm text-slate-500 text-center mb-3">Try asking:</p>
+              <p className="text-sm text-muted-foreground text-center mb-3">Try asking:</p>
               {quickPrompts.map((prompt, i) => (
                 <motion.button
                   key={i}
@@ -71,12 +71,12 @@ export default function AiTools() {
                   transition={{ delay: i * 0.1 }}
                   onClick={() => handleQuickPrompt(prompt.text)}
                   data-testid={`quick-prompt-${i}`}
-                  className="w-full flex items-center gap-3 p-3 bg-slate-800/50 border border-slate-700/50 rounded-xl text-left hover:bg-slate-700/50 transition-all group"
+                  className="w-full flex items-center gap-3 p-3 bg-muted border border-border rounded-xl text-left hover:bg-muted/80 transition-all group"
                 >
                   <div className={`w-8 h-8 rounded-lg ${prompt.color} bg-opacity-20 flex items-center justify-center`}>
                     <prompt.icon className={`w-4 h-4 ${prompt.color.replace("bg-", "text-")}`} />
                   </div>
-                  <span className="text-sm text-slate-300 group-hover:text-white transition-colors flex-1">
+                  <span className="text-sm text-foreground group-hover:text-foreground transition-colors flex-1">
                     {prompt.text}
                   </span>
                 </motion.button>
@@ -99,7 +99,7 @@ export default function AiTools() {
                 }`}
               >
                 {msg.role === "user" ? (
-                  <User className="w-4 h-4 text-white" />
+                  <User className="w-4 h-4 text-foreground" />
                 ) : (
                   <Bot className="w-4 h-4 text-violet-400" />
                 )}
@@ -108,8 +108,8 @@ export default function AiTools() {
               <div
                 className={`max-w-[80%] rounded-2xl p-4 ${
                   msg.role === "user"
-                    ? "bg-primary text-white rounded-tr-none"
-                    : "bg-slate-800/50 border border-slate-700/50 rounded-tl-none"
+                    ? "bg-primary text-foreground rounded-tr-none"
+                    : "bg-muted border border-border rounded-tl-none"
                 }`}
               >
                 <p className="text-sm leading-relaxed whitespace-pre-wrap">
@@ -128,20 +128,20 @@ export default function AiTools() {
       </div>
 
       {/* Input Area */}
-      <div className="p-4 border-t border-slate-800">
+      <div className="p-4 border-t border-border">
         <form onSubmit={handleSubmit} className="relative max-w-2xl mx-auto">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask me anything..."
-            className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl py-4 pl-5 pr-14 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all"
+            className="w-full bg-muted border border-border rounded-xl py-4 pl-5 pr-14 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all"
             data-testid="input-ai-message"
           />
           <button
             type="submit"
             disabled={!input.trim() || isStreaming}
-            className="absolute right-2 top-2 p-2.5 bg-violet-500 text-white rounded-lg hover:bg-violet-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="absolute right-2 top-2 p-2.5 bg-violet-500 text-foreground rounded-lg hover:bg-violet-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             data-testid="button-send-message"
           >
             <Send className="w-5 h-5" />
