@@ -1,0 +1,255 @@
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Hash, Percent, Shuffle, Calculator, Divide, Search } from "lucide-react";
+import { ToolCard, InputField, ResultDisplay, ToolButton } from "@/components/ToolCard";
+
+const tools = [
+  { id: "prime", label: "Prime Check", icon: Hash },
+  { id: "lcmhcf", label: "LCM & HCF", icon: Divide },
+  { id: "random", label: "Random", icon: Shuffle },
+  { id: "factorial", label: "Factorial", icon: Calculator },
+  { id: "percent", label: "% Change", icon: Percent },
+];
+
+export default function MathTools() {
+  const [activeTool, setActiveTool] = useState("prime");
+
+  return (
+    <div className="flex flex-col h-full bg-background overflow-hidden">
+      <div className="px-4 py-4 border-b border-border">
+        <h1 className="text-2xl font-bold">Math Tools</h1>
+        <p className="text-muted-foreground text-sm mt-1">Prime numbers, LCM, HCF, and more</p>
+      </div>
+
+      <div className="px-4 py-3 border-b border-border/50">
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+          {tools.map((tool) => (
+            <button
+              key={tool.id}
+              onClick={() => setActiveTool(tool.id)}
+              data-testid={`tab-${tool.id}`}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+                activeTool === tool.id
+                  ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
+                  : "bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted"
+              }`}
+            >
+              <tool.icon className="w-4 h-4" />
+              {tool.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-4 pb-8">
+        {activeTool === "prime" && <PrimeChecker />}
+        {activeTool === "lcmhcf" && <LcmHcfCalculator />}
+        {activeTool === "random" && <RandomGenerator />}
+        {activeTool === "factorial" && <FactorialCalculator />}
+        {activeTool === "percent" && <PercentChangeCalculator />}
+      </div>
+    </div>
+  );
+}
+
+function PrimeChecker() {
+  const [number, setNumber] = useState("17");
+  const [result, setResult] = useState<{ isPrime: boolean; factors: number[] } | null>(null);
+
+  const checkPrime = () => {
+    const n = parseInt(number);
+    if (n < 2) {
+      setResult({ isPrime: false, factors: [] });
+      return;
+    }
+    const factors: number[] = [];
+    for (let i = 2; i <= Math.sqrt(n); i++) {
+      if (n % i === 0) {
+        factors.push(i);
+        if (i !== n / i) factors.push(n / i);
+      }
+    }
+    setResult({ isPrime: factors.length === 0, factors: factors.sort((a, b) => a - b) });
+  };
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Prime Number Checker" icon={Hash} iconColor="bg-orange-500">
+        <div className="space-y-4">
+          <InputField label="Enter Number" value={number} onChange={setNumber} type="number" />
+          <ToolButton onClick={checkPrime} className="bg-orange-500 hover:bg-orange-600">Check</ToolButton>
+        </div>
+      </ToolCard>
+
+      {result && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+          <ToolCard title="Result" icon={Search} iconColor="bg-blue-500">
+            <div className="text-center py-4">
+              <div className={`text-4xl font-bold ${result.isPrime ? "text-emerald-400" : "text-red-400"}`}>
+                {result.isPrime ? "Prime" : "Not Prime"}
+              </div>
+              {!result.isPrime && result.factors.length > 0 && (
+                <p className="text-muted-foreground mt-2">Factors: {result.factors.join(", ")}</p>
+              )}
+            </div>
+          </ToolCard>
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
+function LcmHcfCalculator() {
+  const [num1, setNum1] = useState("12");
+  const [num2, setNum2] = useState("18");
+  const [result, setResult] = useState<{ lcm: number; hcf: number } | null>(null);
+
+  const calculate = () => {
+    const a = parseInt(num1) || 0;
+    const b = parseInt(num2) || 0;
+    if (a <= 0 || b <= 0) return;
+
+    const gcd = (x: number, y: number): number => (y === 0 ? x : gcd(y, x % y));
+    const hcf = gcd(a, b);
+    const lcm = (a * b) / hcf;
+    setResult({ lcm, hcf });
+  };
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="LCM & HCF Calculator" icon={Divide} iconColor="bg-blue-500">
+        <div className="space-y-4">
+          <InputField label="First Number" value={num1} onChange={setNum1} type="number" />
+          <InputField label="Second Number" value={num2} onChange={setNum2} type="number" />
+          <ToolButton onClick={calculate}>Calculate</ToolButton>
+        </div>
+      </ToolCard>
+
+      {result && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+          <ToolCard title="Results" icon={Calculator} iconColor="bg-emerald-500">
+            <div className="space-y-3">
+              <ResultDisplay label="LCM (Least Common Multiple)" value={result.lcm.toLocaleString()} highlight color="text-blue-400" />
+              <ResultDisplay label="HCF (Highest Common Factor)" value={result.hcf.toLocaleString()} color="text-emerald-400" />
+            </div>
+          </ToolCard>
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
+function RandomGenerator() {
+  const [min, setMin] = useState("1");
+  const [max, setMax] = useState("100");
+  const [count, setCount] = useState("1");
+  const [results, setResults] = useState<number[]>([]);
+
+  const generate = () => {
+    const minVal = parseInt(min) || 0;
+    const maxVal = parseInt(max) || 100;
+    const countVal = Math.min(parseInt(count) || 1, 50);
+    const nums: number[] = [];
+    for (let i = 0; i < countVal; i++) {
+      nums.push(Math.floor(Math.random() * (maxVal - minVal + 1)) + minVal);
+    }
+    setResults(nums);
+  };
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Random Number Generator" icon={Shuffle} iconColor="bg-purple-500">
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <InputField label="Min" value={min} onChange={setMin} type="number" />
+            <InputField label="Max" value={max} onChange={setMax} type="number" />
+          </div>
+          <InputField label="How Many" value={count} onChange={setCount} type="number" />
+          <ToolButton onClick={generate} className="bg-purple-500 hover:bg-purple-600">Generate</ToolButton>
+        </div>
+      </ToolCard>
+
+      {results.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+          <ToolCard title="Random Numbers" icon={Hash} iconColor="bg-emerald-500">
+            <div className="flex flex-wrap gap-2">
+              {results.map((n, i) => (
+                <span key={i} className="px-3 py-2 bg-muted rounded-lg font-mono text-lg">{n}</span>
+              ))}
+            </div>
+          </ToolCard>
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
+function FactorialCalculator() {
+  const [number, setNumber] = useState("5");
+  const [result, setResult] = useState<string | null>(null);
+
+  const calculate = () => {
+    const n = parseInt(number) || 0;
+    if (n < 0 || n > 170) {
+      setResult("Number must be 0-170");
+      return;
+    }
+    let fact = BigInt(1);
+    for (let i = BigInt(2); i <= BigInt(n); i = i + BigInt(1)) fact = fact * i;
+    setResult(fact.toString());
+  };
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Factorial Calculator" icon={Calculator} iconColor="bg-amber-500">
+        <div className="space-y-4">
+          <InputField label="Enter Number (n)" value={number} onChange={setNumber} type="number" />
+          <ToolButton onClick={calculate} className="bg-amber-500 hover:bg-amber-600">Calculate n!</ToolButton>
+        </div>
+      </ToolCard>
+
+      {result && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+          <ToolCard title="Result" icon={Hash} iconColor="bg-emerald-500">
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground mb-2">{number}! =</p>
+              <p className="text-lg font-mono text-emerald-400 break-all">{result}</p>
+            </div>
+          </ToolCard>
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
+function PercentChangeCalculator() {
+  const [oldValue, setOldValue] = useState("100");
+  const [newValue, setNewValue] = useState("125");
+
+  const old = parseFloat(oldValue) || 0;
+  const current = parseFloat(newValue) || 0;
+  const change = old !== 0 ? ((current - old) / old) * 100 : 0;
+  const isIncrease = change >= 0;
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Percentage Change" icon={Percent} iconColor="bg-pink-500">
+        <div className="space-y-4">
+          <InputField label="Original Value" value={oldValue} onChange={setOldValue} type="number" />
+          <InputField label="New Value" value={newValue} onChange={setNewValue} type="number" />
+        </div>
+      </ToolCard>
+
+      <ToolCard title="Change" icon={Calculator} iconColor="bg-emerald-500">
+        <div className="text-center py-4">
+          <div className={`text-4xl font-bold ${isIncrease ? "text-emerald-400" : "text-red-400"}`}>
+            {isIncrease ? "+" : ""}{change.toFixed(2)}%
+          </div>
+          <p className="text-muted-foreground mt-2">
+            {isIncrease ? "Increase" : "Decrease"} of {Math.abs(current - old).toFixed(2)}
+          </p>
+        </div>
+      </ToolCard>
+    </div>
+  );
+}
