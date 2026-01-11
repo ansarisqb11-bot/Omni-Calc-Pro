@@ -8,41 +8,87 @@
   --font-sans: 'Inter', sans-serif;
   --font-display: 'Outfit', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+}
 
-  /* CalcHub Dark Theme Palette */
-  --background: 222 47% 11%;     /* #0f172a - Deep Slate Blue */
-  --foreground: 210 40% 98%;     /* #f8fafc */
-
-  --card: 217 33% 17%;           /* #1e293b - Slate 800 */
+/* Dark Theme (Default) */
+.dark, :root {
+  --background: 222 47% 11%;
+  --foreground: 210 40% 98%;
+  --card: 217 33% 17%;
   --card-foreground: 210 40% 98%;
-
   --popover: 222 47% 11%;
   --popover-foreground: 210 40% 98%;
-
-  --primary: 217 91% 60%;        /* #3b82f6 - Blue 500 */
+  --primary: 217 91% 60%;
   --primary-foreground: 222 47% 11%;
-
-  --secondary: 215 25% 27%;      /* #334155 - Slate 700 */
+  --secondary: 215 25% 27%;
   --secondary-foreground: 210 40% 98%;
-
   --muted: 217 33% 17%;
   --muted-foreground: 215 20.2% 65.1%;
-
   --accent: 217 33% 17%;
   --accent-foreground: 210 40% 98%;
-
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 210 40% 98%;
-
   --border: 217 33% 17%;
   --input: 217 33% 17%;
   --ring: 224 76% 48%;
+  --color-finance: 142 71% 45%;
+  --color-math: 10 78% 54%;
+  --color-health: 326 100% 74%;
+  --color-eng: 45 93% 47%;
+}
 
-  /* Custom Category Colors */
-  --color-finance: 142 71% 45%;  /* Green */
-  --color-math: 10 78% 54%;      /* Orange */
-  --color-health: 326 100% 74%;  /* Pink */
-  --color-eng: 45 93% 47%;       /* Yellow/Amber */
+/* Light Theme */
+.light {
+  --background: 0 0% 100%;
+  --foreground: 222 47% 11%;
+  --card: 210 40% 96%;
+  --card-foreground: 222 47% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --primary: 217 91% 60%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 40% 90%;
+  --secondary-foreground: 222 47% 11%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 16% 47%;
+  --accent: 210 40% 96%;
+  --accent-foreground: 222 47% 11%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 217 91% 60%;
+  --color-finance: 142 71% 45%;
+  --color-math: 10 78% 54%;
+  --color-health: 326 100% 74%;
+  --color-eng: 45 93% 47%;
+}
+
+/* AMOLED Theme (Pure Black) */
+.amoled {
+  --background: 0 0% 0%;
+  --foreground: 0 0% 100%;
+  --card: 0 0% 5%;
+  --card-foreground: 0 0% 100%;
+  --popover: 0 0% 0%;
+  --popover-foreground: 0 0% 100%;
+  --primary: 217 91% 60%;
+  --primary-foreground: 0 0% 0%;
+  --secondary: 0 0% 10%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 0 0% 8%;
+  --muted-foreground: 0 0% 65%;
+  --accent: 0 0% 10%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 0 0% 15%;
+  --input: 0 0% 10%;
+  --ring: 217 91% 60%;
+  --color-finance: 142 71% 45%;
+  --color-math: 10 78% 54%;
+  --color-health: 326 100% 74%;
+  --color-eng: 45 93% 47%;
 }
 
 @layer base {

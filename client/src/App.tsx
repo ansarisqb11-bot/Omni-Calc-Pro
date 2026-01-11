@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Layout } from "@/components/Layout";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import NotFound from "@/pages/not-found";
 
 import Home from "@/pages/Home";
@@ -13,6 +14,11 @@ import FinanceTools from "@/pages/FinanceTools";
 import UnitConverter from "@/pages/UnitConverter";
 import DateTimeTools from "@/pages/DateTimeTools";
 import HealthTools from "@/pages/HealthTools";
+import MathTools from "@/pages/MathTools";
+import GeometryTools from "@/pages/GeometryTools";
+import ScienceTools from "@/pages/ScienceTools";
+import ConstructionTools from "@/pages/ConstructionTools";
+import TravelTools from "@/pages/TravelTools";
 import AiTools from "@/pages/AiTools";
 import Notes from "@/pages/Notes";
 
@@ -26,6 +32,11 @@ function Router() {
       <Route path="/units" component={UnitConverter} />
       <Route path="/date-time" component={DateTimeTools} />
       <Route path="/health" component={HealthTools} />
+      <Route path="/math" component={MathTools} />
+      <Route path="/geometry" component={GeometryTools} />
+      <Route path="/science" component={ScienceTools} />
+      <Route path="/construction" component={ConstructionTools} />
+      <Route path="/travel" component={TravelTools} />
       <Route path="/ai-tools" component={AiTools} />
       <Route path="/notes" component={Notes} />
       <Route component={NotFound} />
@@ -36,12 +47,14 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Layout>
-          <Router />
-        </Layout>
-        <Toaster />
-      </TooltipProvider>
+      <ThemeProvider>
+        <TooltipProvider>
+          <Layout>
+            <Router />
+          </Layout>
+          <Toaster />
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
