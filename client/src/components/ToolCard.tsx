@@ -36,7 +36,7 @@ interface InputFieldProps {
   label: string;
   value: string | number;
   onChange: (value: string) => void;
-  type?: "text" | "number" | "date";
+  type?: "text" | "number" | "date" | "time";
   placeholder?: string;
   suffix?: string;
   min?: number;

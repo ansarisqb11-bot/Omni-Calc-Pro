@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { Calendar as CalendarIcon, Clock, Timer, Hourglass, Play, Pause, RotateCcw } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Timer, Hourglass, Play, Pause, RotateCcw, Globe, Target, Briefcase } from "lucide-react";
 import { motion } from "framer-motion";
 import { differenceInDays, differenceInYears, differenceInMonths, differenceInHours, differenceInMinutes, addDays, format } from "date-fns";
 import { ToolCard, InputField, ResultDisplay, ToolButton } from "@/components/ToolCard";
 
-type ToolType = "age" | "difference" | "stopwatch" | "countdown";
+type ToolType = "age" | "difference" | "stopwatch" | "countdown" | "worldclock" | "pomodoro" | "workdays";
 
 export default function DateTimeTools() {
   const [activeTool, setActiveTool] = useState<ToolType>("age");
@@ -14,6 +14,9 @@ export default function DateTimeTools() {
     { id: "difference" as ToolType, label: "Date Diff", icon: Hourglass },
     { id: "stopwatch" as ToolType, label: "Stopwatch", icon: Clock },
     { id: "countdown" as ToolType, label: "Countdown", icon: Timer },
+    { id: "worldclock" as ToolType, label: "World Clock", icon: Globe },
+    { id: "pomodoro" as ToolType, label: "Pomodoro", icon: Target },
+    { id: "workdays" as ToolType, label: "Work Days", icon: Briefcase },
   ];
 
   return (
@@ -51,6 +54,9 @@ export default function DateTimeTools() {
         {activeTool === "difference" && <DateDifference />}
         {activeTool === "stopwatch" && <Stopwatch />}
         {activeTool === "countdown" && <CountdownTimer />}
+        {activeTool === "worldclock" && <WorldClock />}
+        {activeTool === "pomodoro" && <PomodoroTimer />}
+        {activeTool === "workdays" && <WorkDaysCalculator />}
       </div>
     </div>
   );
@@ -349,6 +355,166 @@ function CountdownTimer() {
           </div>
         )}
       </ToolCard>
+    </div>
+  );
+}
+
+function WorldClock() {
+  const [currentTime, setCurrentTime] = useState(new Date());
+  
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const cities = [
+    { name: "New York", offset: -5, country: "USA" },
+    { name: "London", offset: 0, country: "UK" },
+    { name: "Paris", offset: 1, country: "France" },
+    { name: "Dubai", offset: 4, country: "UAE" },
+    { name: "Mumbai", offset: 5.5, country: "India" },
+    { name: "Tokyo", offset: 9, country: "Japan" },
+    { name: "Sydney", offset: 11, country: "Australia" },
+  ];
+
+  const getTimeInZone = (offset: number) => {
+    const utc = currentTime.getTime() + currentTime.getTimezoneOffset() * 60000;
+    const cityTime = new Date(utc + offset * 3600000);
+    return cityTime.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  };
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="World Clock" icon={Globe} iconColor="bg-sky-500">
+        <div className="space-y-3">
+          {cities.map((city) => (
+            <div key={city.name} className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
+              <div>
+                <p className="font-medium">{city.name}</p>
+                <p className="text-sm text-muted-foreground">{city.country}</p>
+              </div>
+              <p className="font-mono text-lg text-sky-400">{getTimeInZone(city.offset)}</p>
+            </div>
+          ))}
+        </div>
+      </ToolCard>
+    </div>
+  );
+}
+
+function PomodoroTimer() {
+  const [mode, setMode] = useState<"work" | "break">("work");
+  const [timeLeft, setTimeLeft] = useState(25 * 60);
+  const [isRunning, setIsRunning] = useState(false);
+  const [sessions, setSessions] = useState(0);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isRunning && timeLeft > 0) {
+      interval = setInterval(() => setTimeLeft((t) => t - 1), 1000);
+    } else if (timeLeft === 0) {
+      setIsRunning(false);
+      if (mode === "work") {
+        setSessions((s) => s + 1);
+        setMode("break");
+        setTimeLeft(5 * 60);
+      } else {
+        setMode("work");
+        setTimeLeft(25 * 60);
+      }
+    }
+    return () => clearInterval(interval);
+  }, [isRunning, timeLeft, mode]);
+
+  const formatTime = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  };
+
+  const reset = () => {
+    setIsRunning(false);
+    setMode("work");
+    setTimeLeft(25 * 60);
+  };
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Pomodoro Timer" icon={Target} iconColor={mode === "work" ? "bg-red-500" : "bg-emerald-500"}>
+        <div className="text-center py-8">
+          <p className="text-muted-foreground mb-2 capitalize">{mode} Session</p>
+          <div className={`text-7xl font-mono font-bold mb-6 ${mode === "work" ? "text-red-400" : "text-emerald-400"}`}>
+            {formatTime(timeLeft)}
+          </div>
+          <div className="flex justify-center gap-4">
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setIsRunning(!isRunning)}
+              data-testid="button-pomodoro-toggle"
+              className={`p-4 rounded-full ${isRunning ? "bg-yellow-500" : "bg-emerald-500"} text-white shadow-lg`}
+            >
+              {isRunning ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={reset}
+              data-testid="button-pomodoro-reset"
+              className="p-4 rounded-full bg-slate-700 text-white"
+            >
+              <RotateCcw className="w-6 h-6" />
+            </motion.button>
+          </div>
+          <p className="mt-6 text-muted-foreground">Sessions completed: <span className="text-white font-bold">{sessions}</span></p>
+        </div>
+      </ToolCard>
+    </div>
+  );
+}
+
+function WorkDaysCalculator() {
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [result, setResult] = useState<{ workdays: number; weekends: number; total: number } | null>(null);
+
+  const calculate = () => {
+    if (!startDate || !endDate) return;
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    let workdays = 0;
+    let weekends = 0;
+    const current = new Date(start);
+    
+    while (current <= end) {
+      const day = current.getDay();
+      if (day === 0 || day === 6) weekends++;
+      else workdays++;
+      current.setDate(current.getDate() + 1);
+    }
+    
+    setResult({ workdays, weekends, total: workdays + weekends });
+  };
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Work Days Calculator" icon={Briefcase} iconColor="bg-indigo-500">
+        <div className="space-y-4">
+          <InputField label="Start Date" value={startDate} onChange={setStartDate} type="date" />
+          <InputField label="End Date" value={endDate} onChange={setEndDate} type="date" />
+          <ToolButton onClick={calculate} className="bg-indigo-500 hover:bg-indigo-600">Calculate</ToolButton>
+        </div>
+      </ToolCard>
+
+      {result && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+          <ToolCard title="Results" icon={CalendarIcon} iconColor="bg-emerald-500">
+            <div className="space-y-3">
+              <ResultDisplay label="Work Days (Mon-Fri)" value={result.workdays.toString()} highlight color="text-indigo-400" />
+              <ResultDisplay label="Weekend Days" value={result.weekends.toString()} color="text-yellow-400" />
+              <ResultDisplay label="Total Days" value={result.total.toString()} />
+            </div>
+          </ToolCard>
+        </motion.div>
+      )}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRightLeft, Ruler, Weight, Thermometer, Droplets, Zap, Clock } from "lucide-react";
+import { ArrowRightLeft, Ruler, Weight, Thermometer, Droplets, Zap, Clock, Square, Gauge, Flame, HardDrive, Activity } from "lucide-react";
 import { motion } from "framer-motion";
 import { ToolCard } from "@/components/ToolCard";
 import { LucideIcon } from "lucide-react";
@@ -25,6 +25,19 @@ const categories: UnitCategory[] = [
       { name: "Yards", toBase: 0.9144, fromBase: 1.09361 },
       { name: "Feet", toBase: 0.3048, fromBase: 3.28084 },
       { name: "Inches", toBase: 0.0254, fromBase: 39.3701 },
+    ],
+  },
+  {
+    id: "area",
+    name: "Area",
+    icon: Square,
+    units: [
+      { name: "sq.m", toBase: 1, fromBase: 1 },
+      { name: "sq.km", toBase: 1000000, fromBase: 0.000001 },
+      { name: "sq.ft", toBase: 0.092903, fromBase: 10.7639 },
+      { name: "sq.yd", toBase: 0.836127, fromBase: 1.19599 },
+      { name: "Acres", toBase: 4046.86, fromBase: 0.000247105 },
+      { name: "Hectares", toBase: 10000, fromBase: 0.0001 },
     ],
   },
   {
@@ -77,6 +90,44 @@ const categories: UnitCategory[] = [
     ],
   },
   {
+    id: "pressure",
+    name: "Pressure",
+    icon: Gauge,
+    units: [
+      { name: "Pascal", toBase: 1, fromBase: 1 },
+      { name: "kPa", toBase: 1000, fromBase: 0.001 },
+      { name: "Bar", toBase: 100000, fromBase: 0.00001 },
+      { name: "PSI", toBase: 6894.76, fromBase: 0.000145038 },
+      { name: "atm", toBase: 101325, fromBase: 0.00000986923 },
+    ],
+  },
+  {
+    id: "energy",
+    name: "Energy",
+    icon: Flame,
+    units: [
+      { name: "Joules", toBase: 1, fromBase: 1 },
+      { name: "kJ", toBase: 1000, fromBase: 0.001 },
+      { name: "Calories", toBase: 4.184, fromBase: 0.239006 },
+      { name: "kcal", toBase: 4184, fromBase: 0.000239006 },
+      { name: "Wh", toBase: 3600, fromBase: 0.000277778 },
+      { name: "kWh", toBase: 3600000, fromBase: 2.77778e-7 },
+      { name: "BTU", toBase: 1055.06, fromBase: 0.000947817 },
+    ],
+  },
+  {
+    id: "data",
+    name: "Data",
+    icon: HardDrive,
+    units: [
+      { name: "Bytes", toBase: 1, fromBase: 1 },
+      { name: "KB", toBase: 1024, fromBase: 1/1024 },
+      { name: "MB", toBase: 1048576, fromBase: 1/1048576 },
+      { name: "GB", toBase: 1073741824, fromBase: 1/1073741824 },
+      { name: "TB", toBase: 1099511627776, fromBase: 1/1099511627776 },
+    ],
+  },
+  {
     id: "time",
     name: "Time",
     icon: Clock,
@@ -86,6 +137,17 @@ const categories: UnitCategory[] = [
       { name: "Hours", toBase: 3600, fromBase: 1 / 3600 },
       { name: "Days", toBase: 86400, fromBase: 1 / 86400 },
       { name: "Weeks", toBase: 604800, fromBase: 1 / 604800 },
+    ],
+  },
+  {
+    id: "frequency",
+    name: "Freq",
+    icon: Activity,
+    units: [
+      { name: "Hz", toBase: 1, fromBase: 1 },
+      { name: "kHz", toBase: 1000, fromBase: 0.001 },
+      { name: "MHz", toBase: 1000000, fromBase: 0.000001 },
+      { name: "GHz", toBase: 1000000000, fromBase: 0.000000001 },
     ],
   },
 ];

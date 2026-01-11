@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Banknote, Percent, TrendingUp, Receipt, PiggyBank, CreditCard } from "lucide-react";
+import { Banknote, Percent, TrendingUp, Receipt, PiggyBank, CreditCard, Building2, BadgePercent, LineChart, Coins } from "lucide-react";
 import { ToolCard, InputField, ResultDisplay, ToolButton } from "@/components/ToolCard";
 
-type ToolType = "emi" | "compound" | "tip" | "roi";
+type ToolType = "emi" | "compound" | "tip" | "roi" | "gst" | "sip" | "salary" | "discount";
 
 export default function FinanceTools() {
   const [activeTool, setActiveTool] = useState<ToolType>("emi");
@@ -11,8 +11,12 @@ export default function FinanceTools() {
   const tools = [
     { id: "emi" as ToolType, label: "Loan EMI", icon: CreditCard },
     { id: "compound" as ToolType, label: "Compound", icon: TrendingUp },
-    { id: "tip" as ToolType, label: "Tip Calc", icon: Receipt },
+    { id: "sip" as ToolType, label: "SIP", icon: LineChart },
+    { id: "gst" as ToolType, label: "GST/VAT", icon: Building2 },
+    { id: "tip" as ToolType, label: "Tip", icon: Receipt },
     { id: "roi" as ToolType, label: "ROI", icon: PiggyBank },
+    { id: "salary" as ToolType, label: "Salary", icon: Coins },
+    { id: "discount" as ToolType, label: "Discount", icon: BadgePercent },
   ];
 
   return (
@@ -48,8 +52,12 @@ export default function FinanceTools() {
       <div className="flex-1 overflow-y-auto p-4 pb-8">
         {activeTool === "emi" && <LoanEMICalculator />}
         {activeTool === "compound" && <CompoundInterestCalculator />}
+        {activeTool === "sip" && <SIPCalculator />}
+        {activeTool === "gst" && <GSTCalculator />}
         {activeTool === "tip" && <TipCalculator />}
         {activeTool === "roi" && <ROICalculator />}
+        {activeTool === "salary" && <SalaryConverter />}
+        {activeTool === "discount" && <DiscountCalculator />}
       </div>
     </div>
   );
@@ -238,6 +246,170 @@ function ROICalculator() {
         <div className="space-y-3">
           <ResultDisplay label="Profit/Loss" value={`$${profit.toFixed(2)}`} color={profit >= 0 ? "text-emerald-400" : "text-red-400"} />
           <ResultDisplay label="ROI" value={`${roi.toFixed(2)}%`} highlight color={roi >= 0 ? "text-emerald-400" : "text-red-400"} />
+        </div>
+      </ToolCard>
+    </div>
+  );
+}
+
+function SIPCalculator() {
+  const [monthly, setMonthly] = useState("5000");
+  const [rate, setRate] = useState("12");
+  const [years, setYears] = useState("10");
+
+  const m = parseFloat(monthly) || 0;
+  const r = (parseFloat(rate) || 0) / 100 / 12;
+  const n = (parseInt(years) || 0) * 12;
+  const invested = m * n;
+  const futureValue = r > 0 ? m * ((Math.pow(1 + r, n) - 1) / r) * (1 + r) : invested;
+  const returns = futureValue - invested;
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="SIP Calculator" icon={LineChart} iconColor="bg-indigo-500">
+        <div className="space-y-4">
+          <InputField label="Monthly Investment" value={monthly} onChange={setMonthly} type="number" suffix="$" />
+          <InputField label="Expected Return" value={rate} onChange={setRate} type="number" suffix="%" />
+          <InputField label="Time Period" value={years} onChange={setYears} type="number" suffix="years" />
+        </div>
+      </ToolCard>
+
+      <ToolCard title="Projected Growth" icon={TrendingUp} iconColor="bg-emerald-500">
+        <div className="space-y-3">
+          <ResultDisplay label="Total Invested" value={`$${invested.toLocaleString()}`} />
+          <ResultDisplay label="Est. Returns" value={`$${returns.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`} color="text-indigo-400" />
+          <ResultDisplay label="Future Value" value={`$${futureValue.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`} highlight color="text-emerald-400" />
+        </div>
+      </ToolCard>
+    </div>
+  );
+}
+
+function GSTCalculator() {
+  const [amount, setAmount] = useState("1000");
+  const [gstRate, setGstRate] = useState("18");
+  const [mode, setMode] = useState<"add" | "remove">("add");
+
+  const base = parseFloat(amount) || 0;
+  const rate = parseFloat(gstRate) || 0;
+  
+  const gstAmount = mode === "add" ? base * (rate / 100) : base - (base * 100) / (100 + rate);
+  const total = mode === "add" ? base + base * (rate / 100) : (base * 100) / (100 + rate);
+  const taxPart = mode === "add" ? gstAmount : base - total;
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="GST / VAT Calculator" icon={Building2} iconColor="bg-teal-500">
+        <div className="space-y-4">
+          <div className="flex gap-2">
+            <button
+              onClick={() => setMode("add")}
+              className={`flex-1 py-2 rounded-lg text-sm font-medium ${mode === "add" ? "bg-teal-500 text-white" : "bg-muted text-muted-foreground"}`}
+              data-testid="button-gst-add"
+            >
+              Add GST
+            </button>
+            <button
+              onClick={() => setMode("remove")}
+              className={`flex-1 py-2 rounded-lg text-sm font-medium ${mode === "remove" ? "bg-teal-500 text-white" : "bg-muted text-muted-foreground"}`}
+              data-testid="button-gst-remove"
+            >
+              Remove GST
+            </button>
+          </div>
+          <InputField label={mode === "add" ? "Amount (excl. GST)" : "Amount (incl. GST)"} value={amount} onChange={setAmount} type="number" suffix="$" />
+          <div>
+            <label className="text-sm font-medium text-muted-foreground mb-2 block">GST Rate</label>
+            <div className="flex gap-2 flex-wrap">
+              {[5, 12, 18, 28].map((r) => (
+                <button
+                  key={r}
+                  onClick={() => setGstRate(r.toString())}
+                  className={`px-4 py-2 rounded-lg text-sm ${gstRate === r.toString() ? "bg-teal-500 text-white" : "bg-muted text-muted-foreground"}`}
+                  data-testid={`button-gst-rate-${r}`}
+                >
+                  {r}%
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </ToolCard>
+
+      <ToolCard title="Breakdown" icon={Percent} iconColor="bg-emerald-500">
+        <div className="space-y-3">
+          <ResultDisplay label={mode === "add" ? "Base Amount" : "Net Amount"} value={`$${(mode === "add" ? base : total).toFixed(2)}`} />
+          <ResultDisplay label="GST Amount" value={`$${taxPart.toFixed(2)}`} color="text-teal-400" />
+          <ResultDisplay label={mode === "add" ? "Total (incl. GST)" : "Original Amount"} value={`$${(mode === "add" ? total : base).toFixed(2)}`} highlight color="text-emerald-400" />
+        </div>
+      </ToolCard>
+    </div>
+  );
+}
+
+function SalaryConverter() {
+  const [hourly, setHourly] = useState("25");
+  const [hoursPerWeek, setHoursPerWeek] = useState("40");
+
+  const h = parseFloat(hourly) || 0;
+  const hpw = parseFloat(hoursPerWeek) || 40;
+  
+  const daily = h * 8;
+  const weekly = h * hpw;
+  const monthly = weekly * 4.33;
+  const yearly = weekly * 52;
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Salary Converter" icon={Coins} iconColor="bg-amber-500">
+        <div className="space-y-4">
+          <InputField label="Hourly Rate" value={hourly} onChange={setHourly} type="number" suffix="$/hr" />
+          <InputField label="Hours per Week" value={hoursPerWeek} onChange={setHoursPerWeek} type="number" />
+        </div>
+      </ToolCard>
+
+      <ToolCard title="Salary Breakdown" icon={Banknote} iconColor="bg-emerald-500">
+        <div className="space-y-3">
+          <ResultDisplay label="Daily (8 hrs)" value={`$${daily.toFixed(2)}`} />
+          <ResultDisplay label="Weekly" value={`$${weekly.toFixed(2)}`} color="text-amber-400" />
+          <ResultDisplay label="Monthly" value={`$${monthly.toFixed(2)}`} color="text-blue-400" />
+          <ResultDisplay label="Yearly" value={`$${yearly.toLocaleString(undefined, { maximumFractionDigits: 0 })}`} highlight color="text-emerald-400" />
+        </div>
+      </ToolCard>
+    </div>
+  );
+}
+
+function DiscountCalculator() {
+  const [originalPrice, setOriginalPrice] = useState("100");
+  const [discount1, setDiscount1] = useState("20");
+  const [discount2, setDiscount2] = useState("10");
+
+  const original = parseFloat(originalPrice) || 0;
+  const d1 = parseFloat(discount1) || 0;
+  const d2 = parseFloat(discount2) || 0;
+
+  const afterFirst = original * (1 - d1 / 100);
+  const afterSecond = afterFirst * (1 - d2 / 100);
+  const totalSaved = original - afterSecond;
+  const effectiveDiscount = original > 0 ? (totalSaved / original) * 100 : 0;
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Stacked Discount Calculator" icon={BadgePercent} iconColor="bg-rose-500">
+        <div className="space-y-4">
+          <InputField label="Original Price" value={originalPrice} onChange={setOriginalPrice} type="number" suffix="$" />
+          <InputField label="First Discount" value={discount1} onChange={setDiscount1} type="number" suffix="%" />
+          <InputField label="Second Discount" value={discount2} onChange={setDiscount2} type="number" suffix="%" />
+        </div>
+      </ToolCard>
+
+      <ToolCard title="Final Price" icon={Receipt} iconColor="bg-emerald-500">
+        <div className="space-y-3">
+          <ResultDisplay label="After 1st Discount" value={`$${afterFirst.toFixed(2)}`} />
+          <ResultDisplay label="After 2nd Discount" value={`$${afterSecond.toFixed(2)}`} highlight color="text-emerald-400" />
+          <ResultDisplay label="Total Saved" value={`$${totalSaved.toFixed(2)}`} color="text-rose-400" />
+          <ResultDisplay label="Effective Discount" value={`${effectiveDiscount.toFixed(1)}%`} color="text-blue-400" />
         </div>
       </ToolCard>
     </div>

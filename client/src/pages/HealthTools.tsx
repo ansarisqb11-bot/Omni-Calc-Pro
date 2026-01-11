@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Heart, Activity, Flame, Scale, Dumbbell } from "lucide-react";
+import { Heart, Activity, Flame, Scale, Dumbbell, Footprints, Moon, UtensilsCrossed, Clock } from "lucide-react";
 import { ToolCard, InputField, ResultDisplay, ToolButton } from "@/components/ToolCard";
 
-type ToolType = "bmi" | "bmr" | "calories" | "water";
+type ToolType = "bmi" | "bmr" | "calories" | "water" | "bodyfat" | "sleep" | "cooking";
 
 export default function HealthTools() {
   const [activeTool, setActiveTool] = useState<ToolType>("bmi");
@@ -13,6 +13,9 @@ export default function HealthTools() {
     { id: "bmr" as ToolType, label: "BMR", icon: Flame },
     { id: "calories" as ToolType, label: "Calories", icon: Activity },
     { id: "water" as ToolType, label: "Water", icon: Dumbbell },
+    { id: "bodyfat" as ToolType, label: "Body Fat", icon: Footprints },
+    { id: "sleep" as ToolType, label: "Sleep", icon: Moon },
+    { id: "cooking" as ToolType, label: "Cooking", icon: UtensilsCrossed },
   ];
 
   return (
@@ -50,6 +53,9 @@ export default function HealthTools() {
         {activeTool === "bmr" && <BMRCalculator />}
         {activeTool === "calories" && <CalorieCalculator />}
         {activeTool === "water" && <WaterIntake />}
+        {activeTool === "bodyfat" && <BodyFatCalculator />}
+        {activeTool === "sleep" && <SleepCycleCalculator />}
+        {activeTool === "cooking" && <CookingConverter />}
       </div>
     </div>
   );
@@ -339,6 +345,147 @@ function WaterIntake() {
           <p className="text-slate-400">
             That's about <span className="text-white font-medium">{glasses} glasses</span> of water
           </p>
+        </div>
+      </ToolCard>
+    </div>
+  );
+}
+
+function BodyFatCalculator() {
+  const [gender, setGender] = useState<"male" | "female">("male");
+  const [waist, setWaist] = useState("85");
+  const [neck, setNeck] = useState("38");
+  const [height, setHeight] = useState("175");
+  const [hip, setHip] = useState("95");
+
+  const w = parseFloat(waist) || 0;
+  const n = parseFloat(neck) || 0;
+  const h = parseFloat(height) || 0;
+  const hp = parseFloat(hip) || 0;
+
+  let bodyFat = 0;
+  if (gender === "male") {
+    bodyFat = 495 / (1.0324 - 0.19077 * Math.log10(w - n) + 0.15456 * Math.log10(h)) - 450;
+  } else {
+    bodyFat = 495 / (1.29579 - 0.35004 * Math.log10(w + hp - n) + 0.22100 * Math.log10(h)) - 450;
+  }
+
+  const category = bodyFat < 10 ? "Essential" : bodyFat < 14 ? "Athletes" : bodyFat < 21 ? "Fitness" : bodyFat < 25 ? "Average" : "Obese";
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Body Fat Calculator" icon={Footprints} iconColor="bg-orange-500">
+        <div className="space-y-4">
+          <div className="flex gap-2">
+            <button onClick={() => setGender("male")} className={`flex-1 py-2 rounded-lg ${gender === "male" ? "bg-orange-500 text-white" : "bg-muted text-muted-foreground"}`} data-testid="button-gender-male">Male</button>
+            <button onClick={() => setGender("female")} className={`flex-1 py-2 rounded-lg ${gender === "female" ? "bg-orange-500 text-white" : "bg-muted text-muted-foreground"}`} data-testid="button-gender-female">Female</button>
+          </div>
+          <InputField label="Waist (cm)" value={waist} onChange={setWaist} type="number" />
+          <InputField label="Neck (cm)" value={neck} onChange={setNeck} type="number" />
+          <InputField label="Height (cm)" value={height} onChange={setHeight} type="number" />
+          {gender === "female" && <InputField label="Hip (cm)" value={hip} onChange={setHip} type="number" />}
+        </div>
+      </ToolCard>
+
+      <ToolCard title="Body Fat Percentage" icon={Activity} iconColor="bg-emerald-500">
+        <div className="text-center py-4">
+          <div className="text-5xl font-bold text-orange-400">{bodyFat.toFixed(1)}%</div>
+          <p className="text-muted-foreground mt-2">Category: <span className="text-white font-medium">{category}</span></p>
+        </div>
+      </ToolCard>
+    </div>
+  );
+}
+
+function SleepCycleCalculator() {
+  const [wakeTime, setWakeTime] = useState("07:00");
+
+  const getOptimalSleepTimes = () => {
+    const [hours, minutes] = wakeTime.split(":").map(Number);
+    const wakeDate = new Date();
+    wakeDate.setHours(hours, minutes, 0, 0);
+    
+    const cycles = [6, 5, 4];
+    return cycles.map((c) => {
+      const sleepTime = new Date(wakeDate.getTime() - (c * 90 + 15) * 60000);
+      return { cycles: c, time: sleepTime.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }), hours: (c * 1.5).toFixed(1) };
+    });
+  };
+
+  const sleepTimes = getOptimalSleepTimes();
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Sleep Cycle Calculator" icon={Moon} iconColor="bg-indigo-500">
+        <div className="space-y-4">
+          <InputField label="Wake Up Time" value={wakeTime} onChange={setWakeTime} type="time" />
+        </div>
+      </ToolCard>
+
+      <ToolCard title="Optimal Bedtimes" icon={Clock} iconColor="bg-emerald-500">
+        <div className="space-y-3">
+          {sleepTimes.map((s) => (
+            <div key={s.cycles} className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
+              <div>
+                <p className="font-mono text-xl text-indigo-400">{s.time}</p>
+                <p className="text-sm text-muted-foreground">{s.cycles} cycles ({s.hours} hours)</p>
+              </div>
+              {s.cycles === 6 && <span className="px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded text-xs">Recommended</span>}
+            </div>
+          ))}
+        </div>
+        <p className="text-muted-foreground text-sm mt-4">Each sleep cycle is ~90 minutes. Allow 15 min to fall asleep.</p>
+      </ToolCard>
+    </div>
+  );
+}
+
+function CookingConverter() {
+  const [amount, setAmount] = useState("1");
+  const [fromUnit, setFromUnit] = useState("cup");
+
+  const conversions: Record<string, Record<string, number>> = {
+    cup: { tbsp: 16, tsp: 48, ml: 237, oz: 8, g: 128 },
+    tbsp: { cup: 0.0625, tsp: 3, ml: 14.79, oz: 0.5, g: 8 },
+    tsp: { cup: 0.0208, tbsp: 0.333, ml: 4.93, oz: 0.167, g: 2.67 },
+    ml: { cup: 0.00422, tbsp: 0.0676, tsp: 0.203, oz: 0.0338, g: 0.54 },
+    oz: { cup: 0.125, tbsp: 2, tsp: 6, ml: 29.57, g: 16 },
+  };
+
+  const val = parseFloat(amount) || 0;
+  const units = Object.keys(conversions);
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Cooking Converter" icon={UtensilsCrossed} iconColor="bg-amber-500">
+        <div className="space-y-4">
+          <InputField label="Amount" value={amount} onChange={setAmount} type="number" />
+          <div>
+            <label className="text-sm font-medium text-muted-foreground mb-2 block">From</label>
+            <div className="flex gap-2 flex-wrap">
+              {units.map((u) => (
+                <button
+                  key={u}
+                  onClick={() => setFromUnit(u)}
+                  className={`px-3 py-2 rounded-lg text-sm ${fromUnit === u ? "bg-amber-500 text-white" : "bg-muted text-muted-foreground"}`}
+                  data-testid={`button-unit-${u}`}
+                >
+                  {u}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </ToolCard>
+
+      <ToolCard title="Conversions" icon={Scale} iconColor="bg-emerald-500">
+        <div className="space-y-2">
+          {Object.entries(conversions[fromUnit] || {}).map(([unit, factor]) => (
+            <div key={unit} className="flex justify-between items-center p-2 bg-muted/30 rounded-lg">
+              <span className="text-muted-foreground capitalize">{unit}</span>
+              <span className="font-mono text-amber-400">{(val * factor).toFixed(2)}</span>
+            </div>
+          ))}
         </div>
       </ToolCard>
     </div>
