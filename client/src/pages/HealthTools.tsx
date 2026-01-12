@@ -4,7 +4,7 @@ import { Heart, Activity, Flame, Scale, Dumbbell, Footprints, Moon, UtensilsCros
 import { ToolCard, InputField, ResultDisplay, ToolButton } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
 
-type ToolType = "bmi" | "bmr" | "calories" | "water" | "bodyfat" | "sleep" | "cooking";
+type ToolType = "bmi" | "bmr" | "calories" | "water" | "bodyfat" | "sleep" | "cooking" | "pregnancy" | "idealweight";
 
 export default function HealthTools() {
   const [activeTool, setActiveTool] = useState<ToolType>("bmi");
@@ -15,6 +15,8 @@ export default function HealthTools() {
     { id: "calories", label: "Calories", icon: Activity },
     { id: "water", label: "Water", icon: Dumbbell },
     { id: "bodyfat", label: "Body Fat", icon: Footprints },
+    { id: "pregnancy", label: "Pregnancy", icon: Heart },
+    { id: "idealweight", label: "Ideal Weight", icon: Scale },
     { id: "sleep", label: "Sleep", icon: Moon },
     { id: "cooking", label: "Cooking", icon: UtensilsCrossed },
   ];
@@ -33,6 +35,8 @@ export default function HealthTools() {
       {activeTool === "calories" && <CalorieCalculator />}
       {activeTool === "water" && <WaterIntake />}
       {activeTool === "bodyfat" && <BodyFatCalculator />}
+      {activeTool === "pregnancy" && <PregnancyCalculator />}
+      {activeTool === "idealweight" && <IdealWeightCalculator />}
       {activeTool === "sleep" && <SleepCycleCalculator />}
       {activeTool === "cooking" && <CookingConverter />}
     </PageWrapper>
@@ -369,6 +373,167 @@ function BodyFatCalculator() {
         <div className="text-center py-4">
           <div className="text-5xl font-bold text-orange-400">{bodyFat.toFixed(1)}%</div>
           <p className="text-muted-foreground mt-2">Category: <span className="text-foreground font-medium">{category}</span></p>
+        </div>
+      </ToolCard>
+    </div>
+  );
+}
+
+function PregnancyCalculator() {
+  const [lmpDate, setLmpDate] = useState("");
+  const [result, setResult] = useState<{ dueDate: string; weeks: number; days: number; trimester: number; progress: number } | null>(null);
+
+  const calculate = () => {
+    if (!lmpDate) return;
+    const lmp = new Date(lmpDate);
+    const now = new Date();
+    
+    const dueDate = new Date(lmp);
+    dueDate.setDate(dueDate.getDate() + 280);
+    
+    const totalDays = Math.floor((now.getTime() - lmp.getTime()) / (1000 * 60 * 60 * 24));
+    const weeks = Math.floor(totalDays / 7);
+    const days = totalDays % 7;
+    
+    let trimester = 1;
+    if (weeks >= 13 && weeks < 27) trimester = 2;
+    else if (weeks >= 27) trimester = 3;
+    
+    const progress = Math.min((totalDays / 280) * 100, 100);
+    
+    setResult({
+      dueDate: dueDate.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }),
+      weeks,
+      days,
+      trimester,
+      progress,
+    });
+  };
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Pregnancy Due Date" icon={Heart} iconColor="bg-pink-500">
+        <div className="space-y-4">
+          <InputField label="Last Menstrual Period (LMP)" value={lmpDate} onChange={setLmpDate} type="date" />
+          <ToolButton onClick={calculate} variant="primary" className="bg-pink-500 hover:bg-pink-600">
+            Calculate Due Date
+          </ToolButton>
+        </div>
+      </ToolCard>
+
+      {result && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+          <ToolCard title="Pregnancy Progress" icon={Activity} iconColor="bg-emerald-500">
+            <div className="text-center py-4">
+              <div className="text-4xl font-bold text-pink-400 mb-2">
+                {result.weeks} weeks, {result.days} days
+              </div>
+              <p className="text-muted-foreground">Trimester {result.trimester}</p>
+              
+              <div className="mt-6">
+                <div className="flex justify-between text-sm text-muted-foreground mb-2">
+                  <span>Progress</span>
+                  <span>{result.progress.toFixed(0)}%</span>
+                </div>
+                <div className="h-3 bg-muted rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-pink-500 to-rose-500 rounded-full transition-all"
+                    style={{ width: `${result.progress}%` }}
+                  />
+                </div>
+              </div>
+              
+              <div className="mt-6 p-4 bg-muted/30 rounded-xl">
+                <p className="text-sm text-muted-foreground">Estimated Due Date</p>
+                <p className="text-lg font-medium text-foreground mt-1">{result.dueDate}</p>
+              </div>
+            </div>
+          </ToolCard>
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
+function IdealWeightCalculator() {
+  const [height, setHeight] = useState("170");
+  const [gender, setGender] = useState<"male" | "female">("male");
+  const [unit, setUnit] = useState<"metric" | "imperial">("metric");
+
+  const h = parseFloat(height) || 0;
+  const heightCm = unit === "metric" ? h : h * 2.54;
+  const heightInches = heightCm / 2.54;
+
+  const hamwiMale = 48 + 2.7 * (heightInches - 60);
+  const hamwiFemale = 45.5 + 2.2 * (heightInches - 60);
+  const hamwi = gender === "male" ? hamwiMale : hamwiFemale;
+
+  const devineMale = 50 + 2.3 * (heightInches - 60);
+  const devineFemale = 45.5 + 2.3 * (heightInches - 60);
+  const devine = gender === "male" ? devineMale : devineFemale;
+
+  const robinsonMale = 52 + 1.9 * (heightInches - 60);
+  const robinsonFemale = 49 + 1.7 * (heightInches - 60);
+  const robinson = gender === "male" ? robinsonMale : robinsonFemale;
+
+  const millerMale = 56.2 + 1.41 * (heightInches - 60);
+  const millerFemale = 53.1 + 1.36 * (heightInches - 60);
+  const miller = gender === "male" ? millerMale : millerFemale;
+
+  const average = (hamwi + devine + robinson + miller) / 4;
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Ideal Weight Calculator" icon={Scale} iconColor="bg-blue-500">
+        <div className="space-y-4">
+          <div className="flex gap-2">
+            {["metric", "imperial"].map((u) => (
+              <button
+                key={u}
+                onClick={() => setUnit(u as "metric" | "imperial")}
+                className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
+                  unit === u ? "bg-blue-500 text-white" : "bg-muted text-muted-foreground"
+                }`}
+                data-testid={`button-unit-${u}`}
+              >
+                {u === "metric" ? "Metric (cm)" : "Imperial (in)"}
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            {["male", "female"].map((g) => (
+              <button
+                key={g}
+                onClick={() => setGender(g as "male" | "female")}
+                className={`flex-1 py-2 rounded-lg text-sm font-medium capitalize transition-all ${
+                  gender === g ? "bg-blue-500 text-white" : "bg-muted text-muted-foreground"
+                }`}
+                data-testid={`button-gender-${g}`}
+              >
+                {g}
+              </button>
+            ))}
+          </div>
+          <InputField 
+            label={unit === "metric" ? "Height (cm)" : "Height (inches)"} 
+            value={height} 
+            onChange={setHeight} 
+            type="number" 
+          />
+        </div>
+      </ToolCard>
+
+      <ToolCard title="Ideal Weight Range" icon={Activity} iconColor="bg-emerald-500">
+        <div className="space-y-3">
+          <div className="text-center py-4 mb-4">
+            <div className="text-4xl font-bold text-blue-400">{average.toFixed(1)} kg</div>
+            <p className="text-muted-foreground text-sm">Average Ideal Weight</p>
+            <p className="text-foreground text-sm mt-1">{(average * 2.205).toFixed(1)} lbs</p>
+          </div>
+          <ResultDisplay label="Hamwi Formula" value={`${hamwi.toFixed(1)} kg`} />
+          <ResultDisplay label="Devine Formula" value={`${devine.toFixed(1)} kg`} />
+          <ResultDisplay label="Robinson Formula" value={`${robinson.toFixed(1)} kg`} />
+          <ResultDisplay label="Miller Formula" value={`${miller.toFixed(1)} kg`} />
         </div>
       </ToolCard>
     </div>

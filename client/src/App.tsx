@@ -21,6 +21,7 @@ import ConstructionTools from "@/pages/ConstructionTools";
 import TravelTools from "@/pages/TravelTools";
 import AiTools from "@/pages/AiTools";
 import Notes from "@/pages/Notes";
+import NumberTools from "@/pages/NumberTools";
 
 function Router() {
   return (
@@ -39,6 +40,7 @@ function Router() {
       <Route path="/travel" component={TravelTools} />
       <Route path="/ai-tools" component={AiTools} />
       <Route path="/notes" component={Notes} />
+      <Route path="/numbers" component={NumberTools} />
       <Route component={NotFound} />
     </Switch>
   );

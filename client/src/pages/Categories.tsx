@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import {
   Search, ArrowLeft, Wallet, Calculator, Heart, Compass,
   Clock, Ruler, MessageSquare, StickyNote, Binary, FlaskConical,
-  HardHat, Plane, Grid3X3, ChevronRight
+  HardHat, Plane, Grid3X3, ChevronRight, Hash
 } from "lucide-react";
 
 export default function Categories() {
@@ -13,6 +13,7 @@ export default function Categories() {
 
   const allTools = [
     { title: "EMI Calculator", category: "Finance", icon: Wallet, color: "bg-emerald-500", href: "/finance" },
+    { title: "Mortgage Calculator", category: "Finance", icon: Wallet, color: "bg-emerald-500", href: "/finance" },
     { title: "Compound Interest", category: "Finance", icon: Wallet, color: "bg-emerald-500", href: "/finance" },
     { title: "Tip Calculator", category: "Finance", icon: Wallet, color: "bg-emerald-500", href: "/finance" },
     { title: "ROI Calculator", category: "Finance", icon: Wallet, color: "bg-emerald-500", href: "/finance" },
@@ -20,14 +21,17 @@ export default function Categories() {
     { title: "GST Calculator", category: "Finance", icon: Wallet, color: "bg-emerald-500", href: "/finance" },
     { title: "Salary Converter", category: "Finance", icon: Wallet, color: "bg-emerald-500", href: "/finance" },
     { title: "Discount Calculator", category: "Finance", icon: Wallet, color: "bg-emerald-500", href: "/finance" },
-    { title: "Mortgage Calculator", category: "Finance", icon: Wallet, color: "bg-emerald-500", href: "/finance" },
-    { title: "Tax Calculator", category: "Finance", icon: Wallet, color: "bg-emerald-500", href: "/finance" },
     { title: "Currency Converter", category: "Finance", icon: Wallet, color: "bg-emerald-500", href: "/finance" },
+    { title: "Tax Calculator", category: "Finance", icon: Wallet, color: "bg-emerald-500", href: "/finance" },
     { title: "Loan Amortization", category: "Finance", icon: Wallet, color: "bg-emerald-500", href: "/finance" },
     { title: "Basic Calculator", category: "Calculator", icon: Calculator, color: "bg-blue-500", href: "/calculator" },
     { title: "Scientific Calculator", category: "Calculator", icon: Calculator, color: "bg-blue-500", href: "/calculator" },
     { title: "Percentage Calculator", category: "Calculator", icon: Calculator, color: "bg-blue-500", href: "/calculator" },
     { title: "Programmer Calculator", category: "Calculator", icon: Calculator, color: "bg-blue-500", href: "/calculator" },
+    { title: "Billion/Million Converter", category: "Numbers", icon: Hash, color: "bg-teal-500", href: "/numbers" },
+    { title: "Crore/Lakh Converter", category: "Numbers", icon: Hash, color: "bg-teal-500", href: "/numbers" },
+    { title: "US to Indian Numbers", category: "Numbers", icon: Hash, color: "bg-teal-500", href: "/numbers" },
+    { title: "Number to Words", category: "Numbers", icon: Hash, color: "bg-teal-500", href: "/numbers" },
     { title: "BMI Calculator", category: "Health", icon: Heart, color: "bg-pink-500", href: "/health" },
     { title: "BMR Calculator", category: "Health", icon: Heart, color: "bg-pink-500", href: "/health" },
     { title: "Calorie Calculator", category: "Health", icon: Heart, color: "bg-pink-500", href: "/health" },
@@ -54,9 +58,9 @@ export default function Categories() {
     { title: "Stopwatch", category: "Date/Time", icon: Clock, color: "bg-purple-500", href: "/date-time" },
     { title: "Countdown Timer", category: "Date/Time", icon: Clock, color: "bg-purple-500", href: "/date-time" },
     { title: "World Clock", category: "Date/Time", icon: Clock, color: "bg-purple-500", href: "/date-time" },
+    { title: "Time Zone Converter", category: "Date/Time", icon: Clock, color: "bg-purple-500", href: "/date-time" },
     { title: "Pomodoro Timer", category: "Date/Time", icon: Clock, color: "bg-purple-500", href: "/date-time" },
     { title: "Work Days Calculator", category: "Date/Time", icon: Clock, color: "bg-purple-500", href: "/date-time" },
-    { title: "Time Zone Converter", category: "Date/Time", icon: Clock, color: "bg-purple-500", href: "/date-time" },
     { title: "Prime Checker", category: "Math", icon: Binary, color: "bg-indigo-500", href: "/math" },
     { title: "LCM/HCF Calculator", category: "Math", icon: Binary, color: "bg-indigo-500", href: "/math" },
     { title: "Random Generator", category: "Math", icon: Binary, color: "bg-indigo-500", href: "/math" },
@@ -104,6 +108,7 @@ export default function Categories() {
     { title: "All Tools", icon: Grid3X3, color: "bg-primary", count: allTools.length },
     { title: "Finance", icon: Wallet, color: "bg-emerald-500", count: allTools.filter(t => t.category === "Finance").length, href: "/finance" },
     { title: "Calculator", icon: Calculator, color: "bg-blue-500", count: allTools.filter(t => t.category === "Calculator").length, href: "/calculator" },
+    { title: "Numbers", icon: Hash, color: "bg-teal-500", count: allTools.filter(t => t.category === "Numbers").length, href: "/numbers" },
     { title: "Health", icon: Heart, color: "bg-pink-500", count: allTools.filter(t => t.category === "Health").length, href: "/health" },
     { title: "Units", icon: Ruler, color: "bg-amber-500", count: allTools.filter(t => t.category === "Units").length, href: "/units" },
     { title: "Date/Time", icon: Clock, color: "bg-purple-500", count: allTools.filter(t => t.category === "Date/Time").length, href: "/date-time" },
@@ -138,7 +143,7 @@ export default function Categories() {
           </div>
           <div>
             <h1 className="text-lg font-bold text-foreground">All Categories</h1>
-            <p className="text-xs text-muted-foreground">{allTools.length} tools available</p>
+            <p className="text-xs text-muted-foreground">{allTools.length}+ tools available</p>
           </div>
         </div>
       </div>

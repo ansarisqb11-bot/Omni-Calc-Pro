@@ -1,54 +1,43 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Hammer, PaintBucket, LayoutGrid, Construction, Box, Calculator } from "lucide-react";
+import { Hammer, PaintBucket, LayoutGrid, Construction, Box, Calculator, Home, Layers } from "lucide-react";
 import { ToolCard, InputField, ResultDisplay, ToolButton } from "@/components/ToolCard";
+import { PageWrapper } from "@/components/PageWrapper";
 
-const tools = [
-  { id: "cement", label: "Cement", icon: Box },
-  { id: "paint", label: "Paint", icon: PaintBucket },
-  { id: "tile", label: "Tiles", icon: LayoutGrid },
-  { id: "steel", label: "Steel Bar", icon: Construction },
-  { id: "concrete", label: "Concrete", icon: Hammer },
-];
+type ToolType = "cement" | "paint" | "tile" | "steel" | "concrete" | "brick" | "roofing" | "flooring";
 
 export default function ConstructionTools() {
-  const [activeTool, setActiveTool] = useState("cement");
+  const [activeTool, setActiveTool] = useState<ToolType>("cement");
+
+  const tools = [
+    { id: "cement", label: "Cement", icon: Box },
+    { id: "paint", label: "Paint", icon: PaintBucket },
+    { id: "tile", label: "Tiles", icon: LayoutGrid },
+    { id: "brick", label: "Brick", icon: Layers },
+    { id: "concrete", label: "Concrete", icon: Hammer },
+    { id: "roofing", label: "Roofing", icon: Home },
+    { id: "flooring", label: "Flooring", icon: LayoutGrid },
+    { id: "steel", label: "Steel Bar", icon: Construction },
+  ];
 
   return (
-    <div className="flex flex-col h-full bg-background overflow-hidden">
-      <div className="px-4 py-4 border-b border-border">
-        <h1 className="text-2xl font-bold">Construction Tools</h1>
-        <p className="text-muted-foreground text-sm mt-1">Building materials estimators</p>
-      </div>
-
-      <div className="px-4 py-3 border-b border-border/50">
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-          {tools.map((tool) => (
-            <button
-              key={tool.id}
-              onClick={() => setActiveTool(tool.id)}
-              data-testid={`tab-${tool.id}`}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
-                activeTool === tool.id
-                  ? "bg-amber-500 text-foreground shadow-lg shadow-amber-500/30"
-                  : "bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted"
-              }`}
-            >
-              <tool.icon className="w-4 h-4" />
-              {tool.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-4 pb-8">
-        {activeTool === "cement" && <CementCalculator />}
-        {activeTool === "paint" && <PaintCalculator />}
-        {activeTool === "tile" && <TileCalculator />}
-        {activeTool === "steel" && <SteelBarCalculator />}
-        {activeTool === "concrete" && <ConcreteCalculator />}
-      </div>
-    </div>
+    <PageWrapper
+      title="Construction Tools"
+      subtitle="Building materials estimators"
+      accentColor="bg-orange-500"
+      tools={tools}
+      activeTool={activeTool}
+      onToolChange={(id) => setActiveTool(id as ToolType)}
+    >
+      {activeTool === "cement" && <CementCalculator />}
+      {activeTool === "paint" && <PaintCalculator />}
+      {activeTool === "tile" && <TileCalculator />}
+      {activeTool === "brick" && <BrickCalculator />}
+      {activeTool === "concrete" && <ConcreteCalculator />}
+      {activeTool === "roofing" && <RoofingCalculator />}
+      {activeTool === "flooring" && <FlooringCalculator />}
+      {activeTool === "steel" && <SteelBarCalculator />}
+    </PageWrapper>
   );
 }
 
@@ -111,9 +100,9 @@ function CementCalculator() {
       <ToolCard title="Materials Required" icon={Calculator} iconColor="bg-emerald-500">
         <div className="space-y-3">
           <ResultDisplay label="Cement Bags (50kg)" value={Math.ceil(result.cement).toString()} highlight color="text-amber-400" />
-          <ResultDisplay label="Sand" value={`${result.sand.toFixed(2)} m3`} color="text-yellow-400" />
-          <ResultDisplay label="Aggregate" value={`${result.aggregate.toFixed(2)} m3`} color="text-blue-400" />
-          <ResultDisplay label="Wet Volume" value={`${result.wetVolume.toFixed(2)} m3`} />
+          <ResultDisplay label="Sand" value={`${result.sand.toFixed(2)} m³`} color="text-yellow-400" />
+          <ResultDisplay label="Aggregate" value={`${result.aggregate.toFixed(2)} m³`} color="text-blue-400" />
+          <ResultDisplay label="Wet Volume" value={`${result.wetVolume.toFixed(2)} m³`} />
         </div>
       </ToolCard>
     </div>
@@ -209,32 +198,62 @@ function TileCalculator() {
   );
 }
 
-function SteelBarCalculator() {
-  const [diameter, setDiameter] = useState("12");
-  const [length, setLength] = useState("12");
-  const [quantity, setQuantity] = useState("10");
+function BrickCalculator() {
+  const [length, setLength] = useState("10");
+  const [height, setHeight] = useState("3");
+  const [thickness, setThickness] = useState("0.23");
+  const [brickType, setBrickType] = useState("standard");
 
-  const d = parseFloat(diameter) || 0;
-  const l = parseFloat(length) || 0;
-  const q = parseInt(quantity) || 0;
+  const brickSizes = {
+    standard: { l: 0.19, h: 0.057, w: 0.09, name: "Standard (190x90x57mm)" },
+    modular: { l: 0.194, h: 0.057, w: 0.092, name: "Modular (194x92x57mm)" },
+    jumbo: { l: 0.203, h: 0.067, w: 0.092, name: "Jumbo (203x92x67mm)" },
+  };
 
-  const weightPerMeter = (d * d) / 162;
-  const totalWeight = weightPerMeter * l * q;
+  const mortar = 0.01;
+  const brick = brickSizes[brickType as keyof typeof brickSizes];
+  const wallArea = (parseFloat(length) || 0) * (parseFloat(height) || 0);
+  const brickArea = (brick.l + mortar) * (brick.h + mortar);
+  const bricksPerSqM = 1 / brickArea;
+  const totalBricks = Math.ceil(wallArea * bricksPerSqM);
+  const withWastage = Math.ceil(totalBricks * 1.05);
 
   return (
     <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Steel Bar Weight" icon={Construction} iconColor="bg-slate-500">
+      <ToolCard title="Brick Calculator" icon={Layers} iconColor="bg-red-500">
         <div className="space-y-4">
-          <InputField label="Diameter (mm)" value={diameter} onChange={setDiameter} type="number" />
-          <InputField label="Length (m)" value={length} onChange={setLength} type="number" />
-          <InputField label="Quantity" value={quantity} onChange={setQuantity} type="number" />
+          <div className="grid grid-cols-2 gap-4">
+            <InputField label="Wall Length (m)" value={length} onChange={setLength} type="number" />
+            <InputField label="Wall Height (m)" value={height} onChange={setHeight} type="number" />
+          </div>
+          <div>
+            <label className="text-sm font-medium text-muted-foreground mb-2 block">Brick Type</label>
+            <div className="space-y-2">
+              {Object.entries(brickSizes).map(([key, val]) => (
+                <button
+                  key={key}
+                  onClick={() => setBrickType(key)}
+                  className={`w-full text-left p-3 rounded-xl text-sm transition-all ${
+                    brickType === key
+                      ? "bg-red-500 text-white"
+                      : "bg-muted text-muted-foreground hover:text-foreground"
+                  }`}
+                  data-testid={`button-brick-${key}`}
+                >
+                  {val.name}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </ToolCard>
 
-      <ToolCard title="Weight" icon={Calculator} iconColor="bg-emerald-500">
+      <ToolCard title="Bricks Required" icon={Calculator} iconColor="bg-emerald-500">
         <div className="space-y-3">
-          <ResultDisplay label="Weight per meter" value={`${weightPerMeter.toFixed(3)} kg/m`} />
-          <ResultDisplay label="Total Weight" value={`${totalWeight.toFixed(2)} kg`} highlight color="text-foreground" />
+          <ResultDisplay label="Wall Area" value={`${wallArea.toFixed(2)} sq.m`} />
+          <ResultDisplay label="Bricks per sq.m" value={Math.ceil(bricksPerSqM).toString()} />
+          <ResultDisplay label="Total Bricks (exact)" value={totalBricks.toString()} />
+          <ResultDisplay label="With 5% Wastage" value={withWastage.toString()} highlight color="text-red-400" />
         </div>
       </ToolCard>
     </div>
@@ -266,9 +285,169 @@ function ConcreteCalculator() {
 
       <ToolCard title="Concrete Needed" icon={Calculator} iconColor="bg-emerald-500">
         <div className="space-y-3">
-          <ResultDisplay label="Volume" value={`${volume.toFixed(3)} m3`} highlight />
+          <ResultDisplay label="Volume" value={`${volume.toFixed(3)} m³`} highlight />
           <ResultDisplay label="~Bags (80lb premix)" value={bags.toString()} color="text-blue-400" />
           <ResultDisplay label="Cubic Yards" value={(volume * 1.308).toFixed(2)} />
+        </div>
+      </ToolCard>
+    </div>
+  );
+}
+
+function RoofingCalculator() {
+  const [length, setLength] = useState("12");
+  const [width, setWidth] = useState("8");
+  const [pitch, setPitch] = useState("4");
+  const [roofType, setRoofType] = useState("shingles");
+
+  const l = parseFloat(length) || 0;
+  const w = parseFloat(width) || 0;
+  const p = parseFloat(pitch) || 0;
+
+  const pitchFactor = Math.sqrt(1 + Math.pow(p / 12, 2));
+  const roofArea = l * w * pitchFactor;
+  const squares = roofArea / 9.29;
+
+  const materials = {
+    shingles: { bundles: Math.ceil(squares * 3), name: "Shingles", unit: "bundles" },
+    metal: { bundles: Math.ceil(roofArea / 2.79), name: "Metal Panels", unit: "panels" },
+    tiles: { bundles: Math.ceil(roofArea * 10), name: "Roof Tiles", unit: "tiles" },
+  };
+
+  const selected = materials[roofType as keyof typeof materials];
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Roofing Calculator" icon={Home} iconColor="bg-slate-500">
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <InputField label="Length (m)" value={length} onChange={setLength} type="number" />
+            <InputField label="Width (m)" value={width} onChange={setWidth} type="number" />
+          </div>
+          <InputField label="Roof Pitch (rise/12)" value={pitch} onChange={setPitch} type="number" />
+          <div>
+            <label className="text-sm font-medium text-muted-foreground mb-2 block">Material Type</label>
+            <div className="flex gap-2 flex-wrap">
+              {Object.entries(materials).map(([key, val]) => (
+                <button
+                  key={key}
+                  onClick={() => setRoofType(key)}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                    roofType === key
+                      ? "bg-slate-600 text-white"
+                      : "bg-muted text-muted-foreground hover:text-foreground"
+                  }`}
+                  data-testid={`button-roof-${key}`}
+                >
+                  {val.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </ToolCard>
+
+      <ToolCard title="Roofing Materials" icon={Calculator} iconColor="bg-emerald-500">
+        <div className="space-y-3">
+          <ResultDisplay label="Roof Area" value={`${roofArea.toFixed(2)} sq.m`} />
+          <ResultDisplay label="Roofing Squares" value={squares.toFixed(2)} />
+          <ResultDisplay label={`${selected.name} Needed`} value={`${selected.bundles} ${selected.unit}`} highlight color="text-slate-400" />
+        </div>
+      </ToolCard>
+    </div>
+  );
+}
+
+function FlooringCalculator() {
+  const [length, setLength] = useState("5");
+  const [width, setWidth] = useState("4");
+  const [floorType, setFloorType] = useState("hardwood");
+  const [wastage, setWastage] = useState("10");
+
+  const area = (parseFloat(length) || 0) * (parseFloat(width) || 0);
+  const waste = parseFloat(wastage) || 0;
+  const totalArea = area * (1 + waste / 100);
+
+  const costs = {
+    hardwood: { price: 80, name: "Hardwood" },
+    laminate: { price: 40, name: "Laminate" },
+    vinyl: { price: 30, name: "Vinyl" },
+    carpet: { price: 25, name: "Carpet" },
+    tile: { price: 60, name: "Ceramic Tile" },
+  };
+
+  const selected = costs[floorType as keyof typeof costs];
+  const totalCost = totalArea * selected.price;
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Flooring Calculator" icon={LayoutGrid} iconColor="bg-amber-600">
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <InputField label="Length (m)" value={length} onChange={setLength} type="number" />
+            <InputField label="Width (m)" value={width} onChange={setWidth} type="number" />
+          </div>
+          <InputField label="Wastage %" value={wastage} onChange={setWastage} type="number" />
+          <div>
+            <label className="text-sm font-medium text-muted-foreground mb-2 block">Floor Type</label>
+            <div className="flex gap-2 flex-wrap">
+              {Object.entries(costs).map(([key, val]) => (
+                <button
+                  key={key}
+                  onClick={() => setFloorType(key)}
+                  className={`px-3 py-2 rounded-xl text-sm font-medium transition-all ${
+                    floorType === key
+                      ? "bg-amber-600 text-white"
+                      : "bg-muted text-muted-foreground hover:text-foreground"
+                  }`}
+                  data-testid={`button-floor-${key}`}
+                >
+                  {val.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </ToolCard>
+
+      <ToolCard title="Flooring Estimate" icon={Calculator} iconColor="bg-emerald-500">
+        <div className="space-y-3">
+          <ResultDisplay label="Room Area" value={`${area.toFixed(2)} sq.m`} />
+          <ResultDisplay label="With Wastage" value={`${totalArea.toFixed(2)} sq.m`} />
+          <ResultDisplay label="Estimated Cost" value={`$${totalCost.toFixed(0)}`} highlight color="text-amber-400" />
+          <ResultDisplay label="Per sq.m" value={`$${selected.price}/sq.m`} />
+        </div>
+      </ToolCard>
+    </div>
+  );
+}
+
+function SteelBarCalculator() {
+  const [diameter, setDiameter] = useState("12");
+  const [length, setLength] = useState("12");
+  const [quantity, setQuantity] = useState("10");
+
+  const d = parseFloat(diameter) || 0;
+  const l = parseFloat(length) || 0;
+  const q = parseInt(quantity) || 0;
+
+  const weightPerMeter = (d * d) / 162;
+  const totalWeight = weightPerMeter * l * q;
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Steel Bar Weight" icon={Construction} iconColor="bg-slate-500">
+        <div className="space-y-4">
+          <InputField label="Diameter (mm)" value={diameter} onChange={setDiameter} type="number" />
+          <InputField label="Length (m)" value={length} onChange={setLength} type="number" />
+          <InputField label="Quantity" value={quantity} onChange={setQuantity} type="number" />
+        </div>
+      </ToolCard>
+
+      <ToolCard title="Weight" icon={Calculator} iconColor="bg-emerald-500">
+        <div className="space-y-3">
+          <ResultDisplay label="Weight per meter" value={`${weightPerMeter.toFixed(3)} kg/m`} />
+          <ResultDisplay label="Total Weight" value={`${totalWeight.toFixed(2)} kg`} highlight color="text-foreground" />
         </div>
       </ToolCard>
     </div>

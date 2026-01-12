@@ -4,15 +4,17 @@ import { Banknote, Percent, TrendingUp, Receipt, PiggyBank, CreditCard, Building
 import { ToolCard, InputField, ResultDisplay, ToolButton } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
 
-type ToolType = "emi" | "compound" | "tip" | "roi" | "gst" | "sip" | "salary" | "discount";
+type ToolType = "emi" | "compound" | "tip" | "roi" | "gst" | "sip" | "salary" | "discount" | "currency" | "mortgage";
 
 export default function FinanceTools() {
   const [activeTool, setActiveTool] = useState<ToolType>("emi");
 
   const tools = [
     { id: "emi", label: "Loan EMI", icon: CreditCard },
+    { id: "mortgage", label: "Mortgage", icon: Building2 },
     { id: "compound", label: "Compound", icon: TrendingUp },
     { id: "sip", label: "SIP", icon: LineChart },
+    { id: "currency", label: "Currency", icon: Coins },
     { id: "gst", label: "GST/VAT", icon: Building2 },
     { id: "tip", label: "Tip", icon: Receipt },
     { id: "roi", label: "ROI", icon: PiggyBank },
@@ -37,6 +39,8 @@ export default function FinanceTools() {
       {activeTool === "roi" && <ROICalculator />}
       {activeTool === "salary" && <SalaryConverter />}
       {activeTool === "discount" && <DiscountCalculator />}
+      {activeTool === "currency" && <CurrencyConverter />}
+      {activeTool === "mortgage" && <MortgageCalculator />}
     </PageWrapper>
   );
 }
@@ -388,6 +392,142 @@ function DiscountCalculator() {
           <ResultDisplay label="After 2nd Discount" value={`$${afterSecond.toFixed(2)}`} highlight color="text-emerald-400" />
           <ResultDisplay label="Total Saved" value={`$${totalSaved.toFixed(2)}`} color="text-rose-400" />
           <ResultDisplay label="Effective Discount" value={`${effectiveDiscount.toFixed(1)}%`} color="text-blue-400" />
+        </div>
+      </ToolCard>
+    </div>
+  );
+}
+
+function CurrencyConverter() {
+  const [amount, setAmount] = useState("100");
+  const [fromCurrency, setFromCurrency] = useState("USD");
+  const [toCurrency, setToCurrency] = useState("INR");
+
+  const exchangeRates: Record<string, number> = {
+    USD: 1,
+    EUR: 0.92,
+    GBP: 0.79,
+    INR: 83.12,
+    JPY: 149.50,
+    CAD: 1.36,
+    AUD: 1.53,
+    CHF: 0.88,
+    CNY: 7.24,
+    SGD: 1.34,
+  };
+
+  const currencies = [
+    { code: "USD", name: "US Dollar", symbol: "$" },
+    { code: "EUR", name: "Euro", symbol: "€" },
+    { code: "GBP", name: "British Pound", symbol: "£" },
+    { code: "INR", name: "Indian Rupee", symbol: "₹" },
+    { code: "JPY", name: "Japanese Yen", symbol: "¥" },
+    { code: "CAD", name: "Canadian Dollar", symbol: "C$" },
+    { code: "AUD", name: "Australian Dollar", symbol: "A$" },
+    { code: "CHF", name: "Swiss Franc", symbol: "Fr" },
+    { code: "CNY", name: "Chinese Yuan", symbol: "¥" },
+    { code: "SGD", name: "Singapore Dollar", symbol: "S$" },
+  ];
+
+  const convertedAmount = (parseFloat(amount) || 0) / exchangeRates[fromCurrency] * exchangeRates[toCurrency];
+  const fromCurrencyData = currencies.find(c => c.code === fromCurrency);
+  const toCurrencyData = currencies.find(c => c.code === toCurrency);
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Currency Converter" icon={Coins} iconColor="bg-green-500">
+        <div className="space-y-4">
+          <InputField label="Amount" value={amount} onChange={setAmount} type="number" />
+          
+          <div>
+            <label className="text-sm font-medium text-muted-foreground mb-2 block">From Currency</label>
+            <select
+              value={fromCurrency}
+              onChange={(e) => setFromCurrency(e.target.value)}
+              className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+              data-testid="select-from-currency"
+            >
+              {currencies.map((c) => (
+                <option key={c.code} value={c.code}>{c.code} - {c.name}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div>
+            <label className="text-sm font-medium text-muted-foreground mb-2 block">To Currency</label>
+            <select
+              value={toCurrency}
+              onChange={(e) => setToCurrency(e.target.value)}
+              className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+              data-testid="select-to-currency"
+            >
+              {currencies.map((c) => (
+                <option key={c.code} value={c.code}>{c.code} - {c.name}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </ToolCard>
+
+      <ToolCard title="Converted Amount" icon={Banknote} iconColor="bg-emerald-500">
+        <div className="text-center py-6">
+          <div className="text-4xl font-bold text-green-400 mb-2">
+            {toCurrencyData?.symbol}{convertedAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </div>
+          <p className="text-muted-foreground">
+            {fromCurrencyData?.symbol}{parseFloat(amount).toLocaleString()} {fromCurrency} = {toCurrencyData?.symbol}{convertedAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {toCurrency}
+          </p>
+          <div className="mt-4 p-3 bg-muted/30 rounded-xl">
+            <p className="text-sm text-muted-foreground">
+              Exchange Rate: 1 {fromCurrency} = {(exchangeRates[toCurrency] / exchangeRates[fromCurrency]).toFixed(4)} {toCurrency}
+            </p>
+          </div>
+        </div>
+      </ToolCard>
+    </div>
+  );
+}
+
+function MortgageCalculator() {
+  const [homePrice, setHomePrice] = useState("300000");
+  const [downPayment, setDownPayment] = useState("60000");
+  const [rate, setRate] = useState("6.5");
+  const [years, setYears] = useState("30");
+
+  const price = parseFloat(homePrice) || 0;
+  const down = parseFloat(downPayment) || 0;
+  const principal = price - down;
+  const r = (parseFloat(rate) || 0) / 100 / 12;
+  const n = (parseInt(years) || 0) * 12;
+  
+  const monthlyPayment = r > 0 && n > 0 
+    ? (principal * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1)
+    : 0;
+  const totalPayment = monthlyPayment * n;
+  const totalInterest = totalPayment - principal;
+  const downPaymentPercent = price > 0 ? (down / price) * 100 : 0;
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Mortgage Calculator" icon={Building2} iconColor="bg-blue-500">
+        <div className="space-y-4">
+          <InputField label="Home Price" value={homePrice} onChange={setHomePrice} type="number" suffix="$" />
+          <InputField label="Down Payment" value={downPayment} onChange={setDownPayment} type="number" suffix="$" />
+          <InputField label="Interest Rate (Annual)" value={rate} onChange={setRate} type="number" suffix="%" step={0.1} />
+          <InputField label="Loan Term" value={years} onChange={setYears} type="number" suffix="years" />
+        </div>
+      </ToolCard>
+
+      <ToolCard title="Monthly Payment" icon={Banknote} iconColor="bg-emerald-500">
+        <div className="text-center py-4 mb-4">
+          <div className="text-4xl font-bold text-blue-400">${monthlyPayment.toFixed(2)}</div>
+          <p className="text-muted-foreground text-sm">per month</p>
+        </div>
+        <div className="space-y-3">
+          <ResultDisplay label="Loan Amount" value={`$${principal.toLocaleString()}`} />
+          <ResultDisplay label="Down Payment" value={`$${down.toLocaleString()} (${downPaymentPercent.toFixed(1)}%)`} />
+          <ResultDisplay label="Total Interest" value={`$${totalInterest.toLocaleString(undefined, { maximumFractionDigits: 0 })}`} color="text-orange-400" />
+          <ResultDisplay label="Total Payment" value={`$${totalPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}`} highlight color="text-emerald-400" />
         </div>
       </ToolCard>
     </div>

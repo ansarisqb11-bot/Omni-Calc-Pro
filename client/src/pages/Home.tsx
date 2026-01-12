@@ -3,26 +3,17 @@ import { Link } from "wouter";
 import { evaluate } from "mathjs";
 import { motion } from "framer-motion";
 import { 
-  Search, Grid3X3, Calculator, FlaskConical, Percent,
-  Delete, Divide, X, Minus, Plus, Equal, ArrowRight,
-  Wallet, Heart, Ruler, Clock, Binary, Compass, HardHat, Plane, MessageSquare
+  Search, Grid3X3, Delete, Divide, X, Minus, Plus, Equal, ArrowRight,
+  Wallet, Heart, Ruler, Clock, Binary, Compass, FlaskConical, HardHat, 
+  Plane, MessageSquare, Hash, Percent
 } from "lucide-react";
 import { useAddToHistory } from "@/hooks/use-history";
 
-type TabType = "Basic" | "Scientific" | "Percentage";
-
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<TabType>("Basic");
   const [expression, setExpression] = useState("");
   const [result, setResult] = useState("0");
   const [searchQuery, setSearchQuery] = useState("");
   const historyMutation = useAddToHistory();
-
-  const tabs: { id: TabType; label: string; icon: typeof Calculator }[] = [
-    { id: "Basic", label: "Basic", icon: Grid3X3 },
-    { id: "Scientific", label: "Scientific", icon: FlaskConical },
-    { id: "Percentage", label: "Percentage", icon: Percent },
-  ];
 
   const categories = [
     { title: "Finance", icon: Wallet, color: "bg-emerald-500", href: "/finance" },
@@ -30,6 +21,7 @@ export default function Home() {
     { title: "Units", icon: Ruler, color: "bg-amber-500", href: "/units" },
     { title: "Date/Time", icon: Clock, color: "bg-purple-500", href: "/date-time" },
     { title: "Math", icon: Binary, color: "bg-indigo-500", href: "/math" },
+    { title: "Numbers", icon: Hash, color: "bg-teal-500", href: "/numbers" },
     { title: "Geometry", icon: Compass, color: "bg-cyan-500", href: "/geometry" },
     { title: "Science", icon: FlaskConical, color: "bg-rose-500", href: "/science" },
     { title: "Construction", icon: HardHat, color: "bg-orange-500", href: "/construction" },
@@ -38,13 +30,13 @@ export default function Home() {
   ];
 
   const handlePress = (key: string) => {
-    if (key === "C") {
+    if (key === "AC") {
       setExpression("");
       setResult("0");
       return;
     }
 
-    if (key === "backspace") {
+    if (key === "C") {
       setExpression((prev) => prev.slice(0, -1));
       if (expression.length <= 1) {
         setResult("0");
@@ -59,7 +51,7 @@ export default function Home() {
         historyMutation.mutate({
           expression,
           result: evalResult,
-          category: activeTab
+          category: "Calculator"
         });
         setExpression(evalResult);
       } catch {
@@ -79,12 +71,24 @@ export default function Home() {
       return;
     }
 
+    if (key === "±") {
+      if (expression) {
+        if (expression.startsWith("-")) {
+          setExpression(expression.slice(1));
+        } else {
+          setExpression("-" + expression);
+        }
+      }
+      return;
+    }
+
     setExpression((prev) => prev + key);
   };
 
-  const basicButtons = [
-    { label: "C", value: "C", variant: "function" },
-    { label: <Delete className="w-5 h-5" />, value: "backspace", variant: "function" },
+  const buttons = [
+    { label: "AC", value: "AC", variant: "function" },
+    { label: "(", value: "(", variant: "function" },
+    { label: ")", value: ")", variant: "function" },
     { label: <Divide className="w-5 h-5" />, value: "/", variant: "operator" },
     { label: "7", value: "7", variant: "number" },
     { label: "8", value: "8", variant: "number" },
@@ -98,8 +102,9 @@ export default function Home() {
     { label: "2", value: "2", variant: "number" },
     { label: "3", value: "3", variant: "number" },
     { label: <Plus className="w-5 h-5" />, value: "+", variant: "operator" },
-    { label: "0", value: "0", variant: "number", span: 2 },
+    { label: "0", value: "0", variant: "number" },
     { label: ".", value: ".", variant: "number" },
+    { label: <Delete className="w-5 h-5" />, value: "C", variant: "function" },
     { label: <Equal className="w-5 h-5" />, value: "=", variant: "equals" },
   ];
 
@@ -108,7 +113,7 @@ export default function Home() {
       case "function": 
         return "bg-slate-600 hover:bg-slate-500 text-white";
       case "operator": 
-        return "bg-slate-600 hover:bg-slate-500 text-white";
+        return "bg-amber-600 hover:bg-amber-500 text-white";
       case "equals": 
         return "bg-emerald-500 hover:bg-emerald-400 text-white";
       default: 
@@ -130,27 +135,6 @@ export default function Home() {
             className="w-full pl-12 pr-4 py-3.5 bg-muted/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all text-sm"
             data-testid="input-search-tools"
           />
-        </div>
-      </div>
-
-      {/* Calculator Tabs */}
-      <div className="px-4 pb-2">
-        <div className="flex gap-2">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              data-testid={`tab-${tab.id.toLowerCase()}`}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                activeTab === tab.id
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <tab.icon className="w-4 h-4" />
-              {tab.label}
-            </button>
-          ))}
         </div>
       </div>
 
@@ -179,7 +163,7 @@ export default function Home() {
         <div className="bg-slate-800 rounded-2xl p-4 flex-1 flex flex-col">
           {/* Display */}
           <div className="bg-slate-900/60 rounded-xl p-4 mb-4">
-            <div className="text-right min-h-[60px] flex flex-col justify-end">
+            <div className="text-right min-h-[70px] flex flex-col justify-end">
               <p className="text-slate-400 text-sm h-5 overflow-x-auto scrollbar-hide">
                 {expression || " "}
               </p>
@@ -189,17 +173,15 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Keypad */}
+          {/* Keypad - 4x5 Grid */}
           <div className="grid grid-cols-4 gap-2 flex-1">
-            {basicButtons.map((btn, index) => (
+            {buttons.map((btn, index) => (
               <motion.button
                 key={index}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => handlePress(btn.value)}
                 data-testid={`button-calc-${btn.value}`}
-                className={`rounded-xl font-medium text-xl flex items-center justify-center transition-all min-h-[52px] ${getButtonClass(btn.variant)} ${
-                  btn.span === 2 ? "col-span-2" : ""
-                }`}
+                className={`rounded-xl font-medium text-xl flex items-center justify-center transition-all min-h-[52px] ${getButtonClass(btn.variant)}`}
               >
                 {btn.label}
               </motion.button>
