@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Link } from "wouter";
 import { evaluate } from "mathjs";
 import { motion } from "framer-motion";
 import { 
   Search, Grid3X3, Delete, Divide, X, Minus, Plus, Equal, ArrowRight,
   Wallet, Heart, Ruler, Clock, Binary, Compass, FlaskConical, HardHat, 
-  Plane, MessageSquare, Hash, Percent
+  Plane, MessageSquare, Hash, GraduationCap, Stethoscope, Home as HomeIcon,
+  Car, Leaf, Code, ShoppingCart, Globe
 } from "lucide-react";
 import { useAddToHistory } from "@/hooks/use-history";
 
@@ -26,10 +27,18 @@ export default function Home() {
     { title: "Science", icon: FlaskConical, color: "bg-rose-500", href: "/science" },
     { title: "Construction", icon: HardHat, color: "bg-orange-500", href: "/construction" },
     { title: "Travel", icon: Plane, color: "bg-sky-500", href: "/travel" },
+    { title: "Education", icon: GraduationCap, color: "bg-blue-600", href: "/education" },
+    { title: "Medical", icon: Stethoscope, color: "bg-red-500", href: "/medical" },
+    { title: "Lifestyle", icon: HomeIcon, color: "bg-lime-500", href: "/lifestyle" },
+    { title: "Automobile", icon: Car, color: "bg-slate-500", href: "/automobile" },
+    { title: "Agriculture", icon: Leaf, color: "bg-green-600", href: "/agriculture" },
+    { title: "Developer", icon: Code, color: "bg-gray-600", href: "/developer" },
+    { title: "E-Commerce", icon: ShoppingCart, color: "bg-fuchsia-500", href: "/ecommerce" },
+    { title: "Environment", icon: Globe, color: "bg-emerald-600", href: "/environment" },
     { title: "AI Tools", icon: MessageSquare, color: "bg-violet-500", href: "/ai-tools" },
   ];
 
-  const handlePress = (key: string) => {
+  const handlePress = useCallback((key: string) => {
     if (key === "AC") {
       setExpression("");
       setResult("0");
@@ -83,7 +92,7 @@ export default function Home() {
     }
 
     setExpression((prev) => prev + key);
-  };
+  }, [expression, historyMutation]);
 
   const buttons = [
     { label: "AC", value: "AC", variant: "function" },
@@ -104,20 +113,22 @@ export default function Home() {
     { label: <Plus className="w-5 h-5" />, value: "+", variant: "operator" },
     { label: "0", value: "0", variant: "number" },
     { label: ".", value: ".", variant: "number" },
-    { label: <Delete className="w-5 h-5" />, value: "C", variant: "function" },
+    { label: <Delete className="w-5 h-5" />, value: "C", variant: "delete" },
     { label: <Equal className="w-5 h-5" />, value: "=", variant: "equals" },
   ];
 
   const getButtonClass = (variant: string) => {
     switch (variant) {
       case "function": 
-        return "bg-slate-600 hover:bg-slate-500 text-white";
+        return "bg-gray-200 dark:bg-slate-600 hover:bg-gray-300 dark:hover:bg-slate-500 text-gray-700 dark:text-white";
       case "operator": 
-        return "bg-amber-600 hover:bg-amber-500 text-white";
+        return "bg-amber-500 hover:bg-amber-400 text-white";
+      case "delete":
+        return "bg-red-500 hover:bg-red-400 text-white";
       case "equals": 
         return "bg-emerald-500 hover:bg-emerald-400 text-white";
       default: 
-        return "bg-slate-700 hover:bg-slate-600 text-white";
+        return "bg-white dark:bg-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600 text-gray-900 dark:text-white border border-gray-200 dark:border-transparent";
     }
   };
 
@@ -158,16 +169,16 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Calculator Card - Always Dark Theme */}
+      {/* Calculator Card - Responsive Light/Dark Theme */}
       <div className="flex-1 px-4 pb-4 flex flex-col min-h-0">
-        <div className="bg-slate-800 rounded-2xl p-4 flex-1 flex flex-col">
+        <div className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-4 flex-1 flex flex-col shadow-sm dark:shadow-none">
           {/* Display */}
-          <div className="bg-slate-900/60 rounded-xl p-4 mb-4">
+          <div className="bg-white dark:bg-slate-900/60 rounded-xl p-4 mb-4 shadow-sm dark:shadow-none">
             <div className="text-right min-h-[70px] flex flex-col justify-end">
-              <p className="text-slate-400 text-sm h-5 overflow-x-auto scrollbar-hide">
+              <p className="text-gray-500 dark:text-slate-400 text-sm h-5 overflow-x-auto scrollbar-hide">
                 {expression || " "}
               </p>
-              <p className="text-4xl font-light text-white mt-1 overflow-x-auto scrollbar-hide">
+              <p className="text-4xl font-light text-gray-900 dark:text-white mt-1 overflow-x-auto scrollbar-hide">
                 {result}
               </p>
             </div>
@@ -196,7 +207,7 @@ export default function Home() {
           <motion.div 
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
-            className="bg-slate-800 rounded-2xl p-4 flex items-center justify-between cursor-pointer"
+            className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-4 flex items-center justify-between cursor-pointer shadow-sm dark:shadow-none"
             data-testid="card-all-categories"
           >
             <div className="flex items-center gap-3">
@@ -204,11 +215,11 @@ export default function Home() {
                 <Grid3X3 className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 className="font-semibold text-white">All Categories</h2>
-                <p className="text-sm text-slate-400">Browse 300+ tools</p>
+                <h2 className="font-semibold text-gray-900 dark:text-white">All Categories</h2>
+                <p className="text-sm text-gray-500 dark:text-slate-400">Browse 300+ tools</p>
               </div>
             </div>
-            <ArrowRight className="w-5 h-5 text-slate-400" />
+            <ArrowRight className="w-5 h-5 text-gray-400 dark:text-slate-400" />
           </motion.div>
         </Link>
       </div>

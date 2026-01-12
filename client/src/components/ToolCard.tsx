@@ -77,7 +77,10 @@ interface ResultDisplayProps {
 
 export function ResultDisplay({ label, value, highlight, color }: ResultDisplayProps) {
   return (
-    <div className={`flex justify-between items-center p-3 rounded-xl ${highlight ? "bg-muted/50" : "bg-muted/30"}`}>
+    <div 
+      className={`flex justify-between items-center p-3 rounded-xl ${highlight ? "bg-muted/50" : "bg-muted/30"}`}
+      data-testid={`result-${label.toLowerCase().replace(/\s+/g, "-")}`}
+    >
       <span className="text-muted-foreground">{label}</span>
       <span className={`font-bold ${color || (highlight ? "text-foreground text-xl" : "text-foreground")}`}>
         {value}
@@ -93,9 +96,10 @@ interface ButtonProps {
   disabled?: boolean;
   className?: string;
   type?: "button" | "submit";
+  testId?: string;
 }
 
-export function ToolButton({ children, onClick, variant = "primary", disabled, className = "", type = "button" }: ButtonProps) {
+export function ToolButton({ children, onClick, variant = "primary", disabled, className = "", type = "button", testId }: ButtonProps) {
   const variantClasses = {
     primary: "bg-primary hover:bg-primary/90 text-primary-foreground",
     secondary: "bg-muted hover:bg-muted/80 text-foreground",
@@ -109,6 +113,7 @@ export function ToolButton({ children, onClick, variant = "primary", disabled, c
       onClick={onClick}
       disabled={disabled}
       className={`w-full py-3 rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed ${variantClasses[variant]} ${className}`}
+      data-testid={testId || "button-tool-action"}
     >
       {children}
     </button>

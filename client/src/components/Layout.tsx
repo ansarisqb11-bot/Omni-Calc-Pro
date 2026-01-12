@@ -4,7 +4,8 @@ import {
   Menu, Moon, Sun, X, Monitor,
   LayoutDashboard, Calculator, Wallet,
   Ruler, Calendar, MessageSquare, StickyNote, Grid3X3, Heart,
-  Hash, Triangle, FlaskConical, HardHat, Plane
+  Hash, Triangle, FlaskConical, HardHat, Plane, GraduationCap,
+  Stethoscope, Home, Car, Leaf, Code, ShoppingCart, Globe
 } from "lucide-react";
 import { clsx } from "clsx";
 import { motion, AnimatePresence } from "framer-motion";
@@ -34,10 +35,19 @@ export function Layout({ children }: { children: ReactNode }) {
     { label: "Units", icon: Ruler, href: "/units" },
     { label: "Date & Time", icon: Calendar, href: "/date-time" },
     { label: "Math", icon: Hash, href: "/math" },
+    { label: "Numbers", icon: Hash, href: "/numbers" },
     { label: "Geometry", icon: Triangle, href: "/geometry" },
     { label: "Science", icon: FlaskConical, href: "/science" },
     { label: "Construction", icon: HardHat, href: "/construction" },
     { label: "Travel", icon: Plane, href: "/travel" },
+    { label: "Education", icon: GraduationCap, href: "/education" },
+    { label: "Medical", icon: Stethoscope, href: "/medical" },
+    { label: "Lifestyle", icon: Home, href: "/lifestyle" },
+    { label: "Automobile", icon: Car, href: "/automobile" },
+    { label: "Agriculture", icon: Leaf, href: "/agriculture" },
+    { label: "Developer", icon: Code, href: "/developer" },
+    { label: "E-Commerce", icon: ShoppingCart, href: "/ecommerce" },
+    { label: "Environment", icon: Globe, href: "/environment" },
     { label: "AI Assistant", icon: MessageSquare, href: "/ai-tools" },
     { label: "Notes", icon: StickyNote, href: "/notes" },
   ];

@@ -22,6 +22,14 @@ import TravelTools from "@/pages/TravelTools";
 import AiTools from "@/pages/AiTools";
 import Notes from "@/pages/Notes";
 import NumberTools from "@/pages/NumberTools";
+import EducationTools from "@/pages/EducationTools";
+import MedicalTools from "@/pages/MedicalTools";
+import LifestyleTools from "@/pages/LifestyleTools";
+import AutomobileTools from "@/pages/AutomobileTools";
+import AgricultureTools from "@/pages/AgricultureTools";
+import DeveloperTools from "@/pages/DeveloperTools";
+import EcommerceTools from "@/pages/EcommerceTools";
+import EnvironmentTools from "@/pages/EnvironmentTools";
 
 function Router() {
   return (
@@ -41,6 +49,14 @@ function Router() {
       <Route path="/ai-tools" component={AiTools} />
       <Route path="/notes" component={Notes} />
       <Route path="/numbers" component={NumberTools} />
+      <Route path="/education" component={EducationTools} />
+      <Route path="/medical" component={MedicalTools} />
+      <Route path="/lifestyle" component={LifestyleTools} />
+      <Route path="/automobile" component={AutomobileTools} />
+      <Route path="/agriculture" component={AgricultureTools} />
+      <Route path="/developer" component={DeveloperTools} />
+      <Route path="/ecommerce" component={EcommerceTools} />
+      <Route path="/environment" component={EnvironmentTools} />
       <Route component={NotFound} />
     </Switch>
   );
