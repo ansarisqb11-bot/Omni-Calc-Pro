@@ -1,13 +1,22 @@
-import { useState } from "react";
+import { useState, createContext, useContext } from "react";
 import { motion } from "framer-motion";
-import { Banknote, Percent, TrendingUp, Receipt, PiggyBank, CreditCard, Building2, BadgePercent, LineChart, Coins } from "lucide-react";
+import { Banknote, Percent, TrendingUp, Receipt, PiggyBank, CreditCard, Building2, BadgePercent, LineChart, Coins, Calculator, TrendingDown, Tag } from "lucide-react";
 import { ToolCard, InputField, ResultDisplay, ToolButton } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
 
-type ToolType = "emi" | "compound" | "tip" | "roi" | "gst" | "sip" | "salary" | "discount" | "currency" | "mortgage";
+type ToolType = "emi" | "compound" | "tip" | "roi" | "gst" | "sip" | "salary" | "discount" | "currency" | "mortgage" | "profit" | "markup" | "margin";
+
+type NumberFormat = "US" | "IN";
+const FormatContext = createContext<{ format: NumberFormat; setFormat: (f: NumberFormat) => void }>({ format: "US", setFormat: () => {} });
+
+function formatMoney(num: number, format: NumberFormat): string {
+  const symbol = format === "IN" ? "₹" : "$";
+  return symbol + num.toLocaleString(format === "IN" ? "en-IN" : "en-US", { maximumFractionDigits: 2 });
+}
 
 export default function FinanceTools() {
   const [activeTool, setActiveTool] = useState<ToolType>("emi");
+  const [format, setFormat] = useState<NumberFormat>("US");
 
   const tools = [
     { id: "emi", label: "Loan EMI", icon: CreditCard },
@@ -20,28 +29,55 @@ export default function FinanceTools() {
     { id: "roi", label: "ROI", icon: PiggyBank },
     { id: "salary", label: "Salary", icon: Coins },
     { id: "discount", label: "Discount", icon: BadgePercent },
+    { id: "profit", label: "Profit/Loss", icon: TrendingDown },
+    { id: "markup", label: "Markup", icon: Tag },
+    { id: "margin", label: "Margin", icon: Percent },
   ];
 
   return (
-    <PageWrapper
-      title="Finance Tools"
-      subtitle="Calculate loans, interest, tips and more"
-      accentColor="bg-emerald-500"
-      tools={tools}
-      activeTool={activeTool}
-      onToolChange={(id) => setActiveTool(id as ToolType)}
-    >
-      {activeTool === "emi" && <LoanEMICalculator />}
-      {activeTool === "compound" && <CompoundInterestCalculator />}
-      {activeTool === "sip" && <SIPCalculator />}
-      {activeTool === "gst" && <GSTCalculator />}
-      {activeTool === "tip" && <TipCalculator />}
-      {activeTool === "roi" && <ROICalculator />}
-      {activeTool === "salary" && <SalaryConverter />}
-      {activeTool === "discount" && <DiscountCalculator />}
-      {activeTool === "currency" && <CurrencyConverter />}
-      {activeTool === "mortgage" && <MortgageCalculator />}
-    </PageWrapper>
+    <FormatContext.Provider value={{ format, setFormat }}>
+      <PageWrapper
+        title="Finance Tools"
+        subtitle="Calculate loans, interest, tips and more"
+        accentColor="bg-emerald-500"
+        tools={tools}
+        activeTool={activeTool}
+        onToolChange={(id) => setActiveTool(id as ToolType)}
+      >
+        <div className="mb-4 max-w-lg mx-auto">
+          <div className="flex items-center gap-2 p-2 bg-muted/30 rounded-xl">
+            <span className="text-sm text-muted-foreground px-2">Format:</span>
+            <button
+              onClick={() => setFormat("US")}
+              className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${format === "US" ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground hover:text-foreground"}`}
+              data-testid="button-format-us"
+            >
+              USA ($)
+            </button>
+            <button
+              onClick={() => setFormat("IN")}
+              className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${format === "IN" ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground hover:text-foreground"}`}
+              data-testid="button-format-in"
+            >
+              Indian (₹)
+            </button>
+          </div>
+        </div>
+        {activeTool === "emi" && <LoanEMICalculator />}
+        {activeTool === "compound" && <CompoundInterestCalculator />}
+        {activeTool === "sip" && <SIPCalculator />}
+        {activeTool === "gst" && <GSTCalculator />}
+        {activeTool === "tip" && <TipCalculator />}
+        {activeTool === "roi" && <ROICalculator />}
+        {activeTool === "salary" && <SalaryConverter />}
+        {activeTool === "discount" && <DiscountCalculator />}
+        {activeTool === "currency" && <CurrencyConverter />}
+        {activeTool === "mortgage" && <MortgageCalculator />}
+        {activeTool === "profit" && <ProfitLossCalculator />}
+        {activeTool === "markup" && <MarkupCalculator />}
+        {activeTool === "margin" && <MarginCalculator />}
+      </PageWrapper>
+    </FormatContext.Provider>
   );
 }
 
@@ -530,6 +566,140 @@ function MortgageCalculator() {
           <ResultDisplay label="Total Payment" value={`$${totalPayment.toLocaleString(undefined, { maximumFractionDigits: 0 })}`} highlight color="text-emerald-400" />
         </div>
       </ToolCard>
+    </div>
+  );
+}
+
+function ProfitLossCalculator() {
+  const { format } = useContext(FormatContext);
+  const [costPrice, setCostPrice] = useState("1000");
+  const [sellingPrice, setSellingPrice] = useState("1200");
+  const [result, setResult] = useState<{ diff: number; percent: number; isProfit: boolean } | null>(null);
+
+  const calculate = () => {
+    const cp = parseFloat(costPrice) || 0;
+    const sp = parseFloat(sellingPrice) || 0;
+    if (cp > 0) {
+      const diff = sp - cp;
+      const percent = (Math.abs(diff) / cp) * 100;
+      setResult({ diff, percent, isProfit: diff >= 0 });
+    }
+  };
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Profit & Loss Calculator" icon={TrendingDown} iconColor="bg-purple-500">
+        <div className="space-y-4">
+          <InputField label="Cost Price" value={costPrice} onChange={setCostPrice} type="number" suffix={format === "IN" ? "₹" : "$"} />
+          <InputField label="Selling Price" value={sellingPrice} onChange={setSellingPrice} type="number" suffix={format === "IN" ? "₹" : "$"} />
+          <ToolButton onClick={calculate} testId="button-calculate-profit">Calculate</ToolButton>
+        </div>
+      </ToolCard>
+
+      {result && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+          <ToolCard title="Result" icon={result.isProfit ? TrendingUp : TrendingDown} iconColor={result.isProfit ? "bg-emerald-500" : "bg-red-500"}>
+            <div className="text-center py-4">
+              <div className={`text-3xl font-bold ${result.isProfit ? "text-emerald-400" : "text-red-400"}`}>
+                {result.isProfit ? "Profit" : "Loss"}: {formatMoney(Math.abs(result.diff), format)}
+              </div>
+              <div className="text-xl mt-2 text-muted-foreground">
+                ({result.percent.toFixed(2)}%)
+              </div>
+            </div>
+          </ToolCard>
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
+function MarkupCalculator() {
+  const { format } = useContext(FormatContext);
+  const [costPrice, setCostPrice] = useState("1000");
+  const [markupPercent, setMarkupPercent] = useState("25");
+  const [result, setResult] = useState<{ markup: number; sellingPrice: number } | null>(null);
+
+  const calculate = () => {
+    const cp = parseFloat(costPrice) || 0;
+    const per = parseFloat(markupPercent) || 0;
+    if (cp > 0) {
+      const markup = cp * per / 100;
+      const sp = cp + markup;
+      setResult({ markup, sellingPrice: sp });
+    }
+  };
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Markup Calculator" icon={Tag} iconColor="bg-orange-500">
+        <div className="space-y-4">
+          <InputField label="Cost Price" value={costPrice} onChange={setCostPrice} type="number" suffix={format === "IN" ? "₹" : "$"} />
+          <InputField label="Markup Percentage" value={markupPercent} onChange={setMarkupPercent} type="number" suffix="%" />
+          <ToolButton onClick={calculate} testId="button-calculate-markup">Calculate</ToolButton>
+        </div>
+      </ToolCard>
+
+      {result && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+          <ToolCard title="Result" icon={Banknote} iconColor="bg-emerald-500">
+            <div className="space-y-3">
+              <ResultDisplay label="Markup Amount" value={formatMoney(result.markup, format)} color="text-orange-400" />
+              <ResultDisplay label="Selling Price" value={formatMoney(result.sellingPrice, format)} highlight color="text-emerald-400" />
+            </div>
+          </ToolCard>
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
+function MarginCalculator() {
+  const { format } = useContext(FormatContext);
+  const [costPrice, setCostPrice] = useState("800");
+  const [sellingPrice, setSellingPrice] = useState("1000");
+  const [result, setResult] = useState<{ margin: number; profit: number } | null>(null);
+
+  const calculate = () => {
+    const cp = parseFloat(costPrice) || 0;
+    const sp = parseFloat(sellingPrice) || 0;
+    if (sp > 0) {
+      const profit = sp - cp;
+      const margin = (profit / sp) * 100;
+      setResult({ margin, profit });
+    }
+  };
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Margin Calculator" icon={Percent} iconColor="bg-cyan-500">
+        <div className="space-y-4">
+          <InputField label="Cost Price" value={costPrice} onChange={setCostPrice} type="number" suffix={format === "IN" ? "₹" : "$"} />
+          <InputField label="Selling Price" value={sellingPrice} onChange={setSellingPrice} type="number" suffix={format === "IN" ? "₹" : "$"} />
+          <ToolButton onClick={calculate} testId="button-calculate-margin">Calculate</ToolButton>
+        </div>
+      </ToolCard>
+
+      {result && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+          <ToolCard title="Result" icon={TrendingUp} iconColor="bg-emerald-500">
+            <div className="text-center py-4">
+              <div className="text-4xl font-bold text-cyan-400">
+                {result.margin.toFixed(2)}%
+              </div>
+              <div className="text-lg mt-2 text-muted-foreground">
+                Profit Margin
+              </div>
+              <div className="mt-4 p-3 bg-muted/30 rounded-xl">
+                <span className="text-muted-foreground">Profit: </span>
+                <span className={result.profit >= 0 ? "text-emerald-400 font-medium" : "text-red-400 font-medium"}>
+                  {formatMoney(result.profit, format)}
+                </span>
+              </div>
+            </div>
+          </ToolCard>
+        </motion.div>
+      )}
     </div>
   );
 }
