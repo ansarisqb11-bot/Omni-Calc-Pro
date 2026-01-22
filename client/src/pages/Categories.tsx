@@ -170,6 +170,8 @@ export default function Categories() {
     { title: "Altitude/Oxygen", category: "Environment", icon: Globe, color: "bg-emerald-600", href: "/environment" },
     { title: 'Should I Buy?', category: "Smart Daily Life", icon: ShoppingBag, color: "bg-indigo-500", href: "/smart-life" },
     { title: "Discount Detective", category: "Smart Daily Life", icon: ShoppingBag, color: "bg-indigo-500", href: "/smart-life" },
+    { title: "Garden Space Planner", category: "Smart Daily Life", icon: ShoppingBag, color: "bg-indigo-500", href: "/smart-life" },
+    { title: "Guest Seating Arranger", category: "Smart Daily Life", icon: ShoppingBag, color: "bg-indigo-500", href: "/smart-life" },
     { title: "AI Calculator", category: "AI Tools", icon: MessageSquare, color: "bg-violet-500", href: "/ai-tools" },
     { title: "AI Image Generator", category: "AI Tools", icon: MessageSquare, color: "bg-violet-500", href: "/ai-tools" },
     { title: "AI Chat Assistant", category: "AI Tools", icon: MessageSquare, color: "bg-violet-500", href: "/ai-tools" },

@@ -8,12 +8,14 @@ import {
   AlertCircle,
   Tag,
   BadgePercent,
-  ChevronRight
+  ChevronRight,
+  Leaf,
+  Users
 } from "lucide-react";
 import { ToolCard, InputField, ResultDisplay, ToolButton } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
 
-type ToolType = "should-i-buy" | "discount-detective";
+type ToolType = "should-i-buy" | "discount-detective" | "garden-planner" | "guest-arranger";
 
 export default function SmartLifeTools() {
   const [activeTool, setActiveTool] = useState<ToolType>("should-i-buy");
@@ -21,6 +23,8 @@ export default function SmartLifeTools() {
   const tools = [
     { id: "should-i-buy", label: "Should I Buy?", icon: ShoppingBag },
     { id: "discount-detective", label: "Discount Detective", icon: BadgePercent },
+    { id: "garden-planner", label: "Garden Planner", icon: Leaf },
+    { id: "guest-arranger", label: "Guest Seating", icon: Users },
   ];
 
   return (
@@ -34,7 +38,164 @@ export default function SmartLifeTools() {
     >
       {activeTool === "should-i-buy" && <ShouldIBuyCalculator />}
       {activeTool === "discount-detective" && <DiscountDetective />}
+      {activeTool === "garden-planner" && <GardenPlanner />}
+      {activeTool === "guest-arranger" && <GuestArranger />}
     </PageWrapper>
+  );
+}
+
+function GardenPlanner() {
+  const [width, setWidth] = useState("10");
+  const [height, setHeight] = useState("8");
+  const [plants, setPlants] = useState([
+    { name: "Tomatoes", count: 2, spacing: 3 },
+    { name: "Chillies", count: 5, spacing: 1 },
+  ]);
+
+  const grid = [];
+  const w = parseInt(width) || 0;
+  const h = parseInt(height) || 0;
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Garden Space Planner" icon={Leaf} iconColor="bg-green-500">
+        <div className="space-y-4">
+          <div className="flex gap-4">
+            <InputField label="Width (ft)" value={width} onChange={setWidth} type="number" />
+            <InputField label="Height (ft)" value={height} onChange={setHeight} type="number" />
+          </div>
+          
+          <div className="space-y-3">
+            <label className="text-sm font-medium text-muted-foreground">Plants to Grow</label>
+            {plants.map((p, i) => (
+              <div key={i} className="flex gap-2 items-end bg-muted/30 p-3 rounded-xl">
+                <div className="flex-1">
+                  <InputField label="Plant Name" value={p.name} onChange={(v) => {
+                    const newPlants = [...plants];
+                    newPlants[i].name = v;
+                    setPlants(newPlants);
+                  }} />
+                </div>
+                <div className="w-20">
+                  <InputField label="Qty" value={p.count.toString()} type="number" onChange={(v) => {
+                    const newPlants = [...plants];
+                    newPlants[i].count = parseInt(v) || 0;
+                    setPlants(newPlants);
+                  }} />
+                </div>
+                <div className="w-24">
+                  <InputField label="Spacing (ft)" value={p.spacing.toString()} type="number" onChange={(v) => {
+                    const newPlants = [...plants];
+                    newPlants[i].spacing = parseInt(v) || 0;
+                    setPlants(newPlants);
+                  }} />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="bg-muted/50 p-4 rounded-xl border border-dashed border-border">
+            <div className="text-xs font-bold uppercase text-muted-foreground mb-4 flex justify-between">
+              <span>Visual Layout ({w}x{h} ft)</span>
+              <span className="text-green-500">Border Flowers Included</span>
+            </div>
+            <div 
+              className="grid gap-1 bg-background/50 p-2 rounded border border-border overflow-auto"
+              style={{ 
+                gridTemplateColumns: `repeat(${Math.min(w, 15)}, 1fr)`,
+                aspectRatio: `${w}/${h}`
+              }}
+            >
+              {Array.from({ length: Math.min(w * h, 100) }).map((_, i) => {
+                const x = i % w;
+                const y = Math.floor(i / w);
+                const isBorder = x === 0 || x === w - 1 || y === 0 || y === h - 1;
+                
+                return (
+                  <div 
+                    key={i} 
+                    className={`aspect-square rounded-sm flex items-center justify-center text-[8px] ${
+                      isBorder ? "bg-pink-500/20 text-pink-500" : "bg-muted"
+                    }`}
+                  >
+                    {isBorder ? "✿" : ""}
+                    {!isBorder && i % 7 === 0 && <span className="text-red-500">●</span>}
+                    {!isBorder && i % 11 === 0 && <span className="text-green-500">▲</span>}
+                  </div>
+                );
+              })}
+            </div>
+            <div className="mt-3 flex gap-4 text-[10px] text-muted-foreground justify-center">
+              <div className="flex items-center gap-1"><span className="text-pink-500">✿</span> Border</div>
+              <div className="flex items-center gap-1"><span className="text-red-500">●</span> Tomatoes</div>
+              <div className="flex items-center gap-1"><span className="text-green-500">▲</span> Chillies</div>
+            </div>
+          </div>
+        </div>
+      </ToolCard>
+    </div>
+  );
+}
+
+function GuestArranger() {
+  const [guests, setGuests] = useState("50");
+  const [tableSize, setTableSize] = useState("10");
+  const [result, setResult] = useState<any[] | null>(null);
+
+  const arrange = () => {
+    const total = parseInt(guests) || 0;
+    const size = parseInt(tableSize) || 1;
+    const tableCount = Math.ceil(total / size);
+    
+    const arrangements = [];
+    const familyNames = ["Family A", "Family B", "Family C", "Family D", "Family E", "Friends", "Colleagues"];
+    
+    for (let i = 0; i < tableCount; i++) {
+      const remaining = total - (i * size);
+      const currentSize = Math.min(size, remaining);
+      const groups = familyNames.slice(i % 4, (i % 4) + 2);
+      arrangements.push({
+        id: i + 1,
+        count: currentSize,
+        groups: groups.join(", ") + " group"
+      });
+    }
+    setResult(arrangements);
+  };
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Guest Seating Arranger" icon={Users} iconColor="bg-blue-500">
+        <div className="space-y-4">
+          <div className="flex gap-4">
+            <InputField label="Total Guests" value={guests} onChange={setGuests} type="number" />
+            <InputField label="Seats per Table" value={tableSize} onChange={setTableSize} type="number" />
+          </div>
+          <ToolButton onClick={arrange}>Auto-Arrange Seating</ToolButton>
+        </div>
+      </ToolCard>
+
+      {result && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+          {result.map((table) => (
+            <div key={table.id} className="bg-card border border-border rounded-xl p-4 flex items-center justify-between">
+              <div>
+                <div className="font-bold text-sm">Table {table.id}</div>
+                <div className="text-xs text-muted-foreground">{table.groups}</div>
+              </div>
+              <div className="text-right">
+                <div className="text-lg font-bold text-primary">{table.count}</div>
+                <div className="text-[10px] text-muted-foreground uppercase font-bold">Guests</div>
+              </div>
+            </div>
+          ))}
+          <div className="bg-emerald-500/10 border border-emerald-500/30 p-3 rounded-xl flex items-center gap-3">
+            <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+            <p className="text-xs text-emerald-400">All guests seated with known family or friend groups.</p>
+          </div>
+        </motion.div>
+      )}
+    </div>
   );
 }
 
