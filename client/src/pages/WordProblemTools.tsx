@@ -103,10 +103,10 @@ function WordProblemCalculator({ mode }: { mode: Mode }) {
     
     if (mode === "money-to-qty") {
       // Formula: Quantity = Money / Rate
-      // Rate is v2 per v1 u1
-      const ratePerBase = v2 / (v1 * (CONVERSIONS[u1] || 1));
-      const resultBase = v3 / ratePerBase;
-      const result = resultBase / (CONVERSIONS[u3] || 1);
+      // v2 price for v1 u1. Find how many u3 for v3 money.
+      const pricePerBase = v2 / (v1 * (CONVERSIONS[u1] || 1));
+      const targetBase = v3 / pricePerBase;
+      const result = targetBase / (CONVERSIONS[u3] || 1);
       return { result, label: "Quantity", unit: u3 };
     }
 
