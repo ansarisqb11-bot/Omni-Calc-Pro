@@ -49,6 +49,7 @@ export function Layout({ children }: { children: ReactNode }) {
     { label: "E-Commerce", icon: ShoppingCart, href: "/ecommerce" },
     { label: "Environment", icon: Globe, href: "/environment" },
     { label: "Smart Daily Life", icon: ShoppingBag, href: "/smart-life" },
+    { label: "Word Problems", icon: Calculator, href: "/word-problems" },
     { label: "AI Assistant", icon: MessageSquare, href: "/ai-tools" },
     { label: "Notes", icon: StickyNote, href: "/notes" },
   ];

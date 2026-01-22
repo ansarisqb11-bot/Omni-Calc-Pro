@@ -172,6 +172,9 @@ export default function Categories() {
     { title: "Discount Detective", category: "Smart Daily Life", icon: ShoppingBag, color: "bg-indigo-500", href: "/smart-life" },
     { title: "Garden Space Planner", category: "Smart Daily Life", icon: ShoppingBag, color: "bg-indigo-500", href: "/smart-life" },
     { title: "Guest Seating Arranger", category: "Smart Daily Life", icon: ShoppingBag, color: "bg-indigo-500", href: "/smart-life" },
+    { title: "Price/Qty Solver", category: "Word Problems", icon: Calculator, color: "bg-orange-500", href: "/word-problems" },
+    { title: "Weight/Price Solver", category: "Word Problems", icon: Calculator, color: "bg-orange-500", href: "/word-problems" },
+    { title: "Speed/Time Solver", category: "Word Problems", icon: Calculator, color: "bg-orange-500", href: "/word-problems" },
     { title: "AI Calculator", category: "AI Tools", icon: MessageSquare, color: "bg-violet-500", href: "/ai-tools" },
     { title: "AI Image Generator", category: "AI Tools", icon: MessageSquare, color: "bg-violet-500", href: "/ai-tools" },
     { title: "AI Chat Assistant", category: "AI Tools", icon: MessageSquare, color: "bg-violet-500", href: "/ai-tools" },
@@ -199,6 +202,7 @@ export default function Categories() {
     { title: "E-Commerce", icon: ShoppingCart, color: "bg-fuchsia-500", count: allTools.filter(t => t.category === "E-Commerce").length, href: "/ecommerce" },
     { title: "Environment", icon: Globe, color: "bg-emerald-600", count: allTools.filter(t => t.category === "Environment").length, href: "/environment" },
     { title: "Smart Daily Life", icon: ShoppingBag, color: "bg-indigo-500", count: allTools.filter(t => t.category === "Smart Daily Life").length, href: "/smart-life" },
+    { title: "Word Problems", icon: Calculator, color: "bg-orange-500", count: allTools.filter(t => t.category === "Word Problems").length, href: "/word-problems" },
     { title: "AI Tools", icon: MessageSquare, color: "bg-violet-500", count: allTools.filter(t => t.category === "AI Tools").length, href: "/ai-tools" },
     { title: "Notes", icon: StickyNote, color: "bg-yellow-500", count: 0, href: "/notes" },
   ];
