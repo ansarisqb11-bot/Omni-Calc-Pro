@@ -5,7 +5,7 @@ import {
   Search, ArrowLeft, Wallet, Calculator, Heart, Compass,
   Clock, Ruler, MessageSquare, StickyNote, Binary, FlaskConical,
   HardHat, Plane, Grid3X3, ChevronRight, Hash, GraduationCap,
-  Stethoscope, Home, Car, Leaf, Code, ShoppingCart, Globe
+  Stethoscope, Home, Car, Leaf, Code, ShoppingCart, Globe, ShoppingBag
 } from "lucide-react";
 
 export default function Categories() {
@@ -168,6 +168,8 @@ export default function Categories() {
     { title: "Carbon Footprint", category: "Environment", icon: Globe, color: "bg-emerald-600", href: "/environment" },
     { title: "AQI Explainer", category: "Environment", icon: Globe, color: "bg-emerald-600", href: "/environment" },
     { title: "Altitude/Oxygen", category: "Environment", icon: Globe, color: "bg-emerald-600", href: "/environment" },
+    { title: 'Should I Buy?', category: "Smart Daily Life", icon: ShoppingBag, color: "bg-indigo-500", href: "/smart-life" },
+    { title: "Discount Detective", category: "Smart Daily Life", icon: ShoppingBag, color: "bg-indigo-500", href: "/smart-life" },
     { title: "AI Calculator", category: "AI Tools", icon: MessageSquare, color: "bg-violet-500", href: "/ai-tools" },
     { title: "AI Image Generator", category: "AI Tools", icon: MessageSquare, color: "bg-violet-500", href: "/ai-tools" },
     { title: "AI Chat Assistant", category: "AI Tools", icon: MessageSquare, color: "bg-violet-500", href: "/ai-tools" },
@@ -194,6 +196,7 @@ export default function Categories() {
     { title: "Developer", icon: Code, color: "bg-gray-600", count: allTools.filter(t => t.category === "Developer").length, href: "/developer" },
     { title: "E-Commerce", icon: ShoppingCart, color: "bg-fuchsia-500", count: allTools.filter(t => t.category === "E-Commerce").length, href: "/ecommerce" },
     { title: "Environment", icon: Globe, color: "bg-emerald-600", count: allTools.filter(t => t.category === "Environment").length, href: "/environment" },
+    { title: "Smart Daily Life", icon: ShoppingBag, color: "bg-indigo-500", count: allTools.filter(t => t.category === "Smart Daily Life").length, href: "/smart-life" },
     { title: "AI Tools", icon: MessageSquare, color: "bg-violet-500", count: allTools.filter(t => t.category === "AI Tools").length, href: "/ai-tools" },
     { title: "Notes", icon: StickyNote, color: "bg-yellow-500", count: 0, href: "/notes" },
   ];

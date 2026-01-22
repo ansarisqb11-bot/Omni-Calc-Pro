@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Calculator, Wallet,
   Ruler, Calendar, MessageSquare, StickyNote, Grid3X3, Heart,
   Hash, Triangle, FlaskConical, HardHat, Plane, GraduationCap,
-  Stethoscope, Home, Car, Leaf, Code, ShoppingCart, Globe
+  Stethoscope, Home, Car, Leaf, Code, ShoppingCart, Globe, ShoppingBag
 } from "lucide-react";
 import { clsx } from "clsx";
 import { motion, AnimatePresence } from "framer-motion";
@@ -48,6 +48,7 @@ export function Layout({ children }: { children: ReactNode }) {
     { label: "Developer", icon: Code, href: "/developer" },
     { label: "E-Commerce", icon: ShoppingCart, href: "/ecommerce" },
     { label: "Environment", icon: Globe, href: "/environment" },
+    { label: "Smart Daily Life", icon: ShoppingBag, href: "/smart-life" },
     { label: "AI Assistant", icon: MessageSquare, href: "/ai-tools" },
     { label: "Notes", icon: StickyNote, href: "/notes" },
   ];

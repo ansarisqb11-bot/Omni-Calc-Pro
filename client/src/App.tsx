@@ -30,6 +30,7 @@ import AgricultureTools from "@/pages/AgricultureTools";
 import DeveloperTools from "@/pages/DeveloperTools";
 import EcommerceTools from "@/pages/EcommerceTools";
 import EnvironmentTools from "@/pages/EnvironmentTools";
+import SmartLifeTools from "@/pages/SmartLifeTools";
 
 function Router() {
   return (
@@ -57,6 +58,7 @@ function Router() {
       <Route path="/developer" component={DeveloperTools} />
       <Route path="/ecommerce" component={EcommerceTools} />
       <Route path="/environment" component={EnvironmentTools} />
+      <Route path="/smart-life" component={SmartLifeTools} />
       <Route component={NotFound} />
     </Switch>
   );
