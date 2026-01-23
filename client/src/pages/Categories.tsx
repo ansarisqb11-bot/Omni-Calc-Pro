@@ -5,7 +5,7 @@ import {
   Search, ArrowLeft, Wallet, Calculator, Heart, Compass,
   Clock, Ruler, MessageSquare, StickyNote, Binary, FlaskConical,
   HardHat, Plane, Grid3X3, ChevronRight, Hash, GraduationCap,
-  Stethoscope, Home, Car, Leaf, Code, ShoppingCart, Globe, ShoppingBag
+  Stethoscope, Home, Car, Leaf, Code, ShoppingCart, Globe, ShoppingBag, Users
 } from "lucide-react";
 
 export default function Categories() {

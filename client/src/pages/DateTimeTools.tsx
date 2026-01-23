@@ -1,17 +1,19 @@
 import { useState, useEffect, useRef } from "react";
-import { Calendar as CalendarIcon, Clock, Timer, Hourglass, Play, Pause, RotateCcw, Globe, Target, Briefcase, ArrowRightLeft } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Timer, Hourglass, Play, Pause, RotateCcw, Globe, Target, Briefcase, ArrowRightLeft, Users } from "lucide-react";
 import { motion } from "framer-motion";
 import { differenceInDays, differenceInYears, differenceInMonths, addDays, format } from "date-fns";
 import { ToolCard, InputField, ResultDisplay, ToolButton } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
+import RelationshipTools from "./RelationshipTools";
 
-type ToolType = "age" | "difference" | "stopwatch" | "countdown" | "worldclock" | "timezone" | "pomodoro" | "workdays";
+type ToolType = "age" | "relationship" | "difference" | "stopwatch" | "countdown" | "worldclock" | "timezone" | "pomodoro" | "workdays";
 
 export default function DateTimeTools() {
   const [activeTool, setActiveTool] = useState<ToolType>("age");
 
   const tools = [
     { id: "age", label: "Age Calc", icon: CalendarIcon },
+    { id: "relationship", label: "Relationship", icon: Users },
     { id: "difference", label: "Date Diff", icon: Hourglass },
     { id: "stopwatch", label: "Stopwatch", icon: Clock },
     { id: "countdown", label: "Countdown", icon: Timer },
@@ -31,6 +33,7 @@ export default function DateTimeTools() {
       onToolChange={(id) => setActiveTool(id as ToolType)}
     >
       {activeTool === "age" && <AgeCalculator />}
+      {activeTool === "relationship" && <RelationshipTools />}
       {activeTool === "difference" && <DateDifference />}
       {activeTool === "stopwatch" && <Stopwatch />}
       {activeTool === "countdown" && <CountdownTimer />}
