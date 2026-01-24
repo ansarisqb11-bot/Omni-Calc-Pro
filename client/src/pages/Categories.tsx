@@ -58,6 +58,7 @@ export default function Categories() {
     { title: "Frequency Converter", category: "Units", icon: Ruler, color: "bg-amber-500", href: "/units" },
     { title: "Fuel Economy", category: "Units", icon: Ruler, color: "bg-amber-500", href: "/units" },
     { title: "Age Calculator", category: "Date/Time", icon: Clock, color: "bg-purple-500", href: "/date-time" },
+    { title: "Day Finder", category: "Date/Time", icon: Calendar, color: "bg-sky-500", href: "/day-finder" },
     { title: "Relationship Finder", category: "Date/Time", icon: Users, color: "bg-violet-500", href: "/relationship-finder" },
     { title: "Date Difference", category: "Date/Time", icon: Clock, color: "bg-purple-500", href: "/date-time" },
     { title: "Stopwatch", category: "Date/Time", icon: Clock, color: "bg-purple-500", href: "/date-time" },

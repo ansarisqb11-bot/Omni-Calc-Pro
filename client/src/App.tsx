@@ -14,6 +14,7 @@ import FinanceTools from "@/pages/FinanceTools";
 import UnitConverter from "@/pages/UnitConverter";
 import DateTimeTools from "@/pages/DateTimeTools";
 import RelationshipTools from "@/pages/RelationshipTools";
+import DayFinderTools from "@/pages/DayFinderTools";
 import HealthTools from "@/pages/HealthTools";
 import MathTools from "@/pages/MathTools";
 import GeometryTools from "@/pages/GeometryTools";
@@ -44,6 +45,7 @@ function Router() {
       <Route path="/units" component={UnitConverter} />
       <Route path="/date-time" component={DateTimeTools} />
       <Route path="/relationship-finder" component={RelationshipTools} />
+      <Route path="/day-finder" component={DayFinderTools} />
       <Route path="/health" component={HealthTools} />
       <Route path="/math" component={MathTools} />
       <Route path="/geometry" component={GeometryTools} />
