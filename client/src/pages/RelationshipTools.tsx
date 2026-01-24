@@ -8,179 +8,188 @@ import {
   User,
   HelpCircle,
   Search,
-  CheckCircle2
+  MessageSquare,
+  ArrowRight
 } from "lucide-react";
 import { ToolCard, ToolButton } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
 
-type Mode = "direct" | "reverse" | "path";
+type Mode = "step-by-step" | "sentence" | "two-way";
 
-const RELATIONSHIPS: Record<string, string> = {
-  "Father": "Son/Daughter",
-  "Mother": "Son/Daughter",
-  "Son": "Parent",
-  "Daughter": "Parent",
-  "Brother": "Sibling",
-  "Sister": "Sibling",
-  "Husband": "Wife",
-  "Wife": "Husband",
-  "Uncle": "Nephew/Niece",
-  "Aunt": "Nephew/Niece",
-  "Grandfather": "Grandson/Granddaughter",
-  "Grandmother": "Grandson/Granddaughter",
+const RELATIONSHIP_MAP: Record<string, any> = {
+  "sister-daughter": { relation: "Niece", reverse: "Uncle/Aunt" },
+  "sister-son": { relation: "Nephew", reverse: "Uncle/Aunt" },
+  "brother-daughter": { relation: "Niece", reverse: "Uncle/Aunt" },
+  "brother-son": { relation: "Nephew", reverse: "Uncle/Aunt" },
+  "uncle-son": { relation: "Cousin", reverse: "Cousin" },
+  "uncle-daughter": { relation: "Cousin", reverse: "Cousin" },
+  "father-sister": { relation: "Aunt", reverse: "Nephew/Niece" },
+  "mother-brother": { relation: "Uncle", reverse: "Nephew/Niece" },
+  "father-brother": { relation: "Uncle", reverse: "Nephew/Niece" },
+  "mother-sister": { relation: "Aunt", reverse: "Nephew/Niece" },
 };
 
 export default function RelationshipTools() {
-  const [activeMode, setActiveMode] = useState<Mode>("direct");
+  const [activeMode, setActiveMode] = useState<Mode>("step-by-step");
 
   const modes = [
-    { id: "direct", label: "Direct Finder", icon: Users },
-    { id: "reverse", label: "Reverse Finder", icon: ArrowRightLeft },
-    { id: "path", label: "Family Path", icon: GitBranch },
+    { id: "step-by-step", label: "Step-by-Step", icon: Users },
+    { id: "sentence", label: "Smart Sentence", icon: MessageSquare },
+    { id: "two-way", label: "Two-Way", icon: ArrowRightLeft },
   ];
 
   return (
-    <PageWrapper
-      title="Relationship Finder"
-      subtitle="Discover family connections and relationships"
-      accentColor="bg-violet-500"
-      tools={modes}
-      activeTool={activeMode}
-      onToolChange={(id) => setActiveMode(id as Mode)}
-    >
-      <RelationshipCalculator mode={activeMode} />
-    </PageWrapper>
+    <div className="space-y-4 max-w-lg mx-auto">
+      <div className="flex gap-2 p-1 bg-muted rounded-xl mb-4">
+        {modes.map((m) => (
+          <button
+            key={m.id}
+            onClick={() => setActiveMode(m.id as Mode)}
+            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${
+              activeMode === m.id ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <m.icon className="w-3.5 h-3.5" />
+            {m.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTool(activeMode)}
+    </div>
   );
 }
 
-function RelationshipCalculator({ mode }: { mode: Mode }) {
-  const [personA, setPersonA] = useState("Father");
-  const [gender, setGender] = useState("Male");
-  const [path, setPath] = useState<string[]>(["Father", "Sister", "Son"]);
+function activeTool(mode: Mode) {
+  switch (mode) {
+    case "step-by-step": return <StepByStepFinder />;
+    case "sentence": return <SentenceFinder />;
+    case "two-way": return <TwoWayFinder />;
+  }
+}
+
+function StepByStepFinder() {
+  const [first, setFirst] = useState("sister");
+  const [second, setSecond] = useState("daughter");
 
   const result = useMemo(() => {
-    if (mode === "direct") {
-      const resp = RELATIONSHIPS[personA] || "Relative";
-      return `If A is ${personA} of B, then B is ${resp} of A`;
-    }
-
-    if (mode === "reverse") {
-      const resp = RELATIONSHIPS[personA] || "Relative";
-      return `If ${personA} is your ${personA}, then you are ${resp} of them`;
-    }
-
-    if (mode === "path") {
-      // Simple path logic for the requested examples
-      const pathStr = path.join(" -> ");
-      let relation = "Relative";
-      
-      const fullPath = path.join("-");
-      if (fullPath === "Father-Sister-Son") relation = "Cousin (Paternal)";
-      if (fullPath === "Mother-Brother-Daughter") relation = "Cousin (Maternal)";
-      if (fullPath === "Father-Brother") relation = "Uncle (Paternal)";
-      if (fullPath === "Mother-Sister") relation = "Aunt (Maternal)";
-      
-      return `Your ${pathStr} is your ${relation}`;
-    }
-
-    return null;
-  }, [mode, personA, path]);
+    const key = `${first}-${second}`;
+    return RELATIONSHIP_MAP[key]?.relation || "Relative";
+  }, [first, second]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Relationship Solver" icon={Calculator} iconColor="bg-violet-500">
-        <div className="space-y-4">
-          {mode !== "path" ? (
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-muted-foreground mb-1.5 block">
-                  {mode === "direct" ? "A is ___ of B" : "X is my ___"}
-                </label>
-                <select
-                  value={personA}
-                  onChange={(e) => setPersonA(e.target.value)}
-                  className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                >
-                  {Object.keys(RELATIONSHIPS).map(r => <option key={r} value={r}>{r}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-muted-foreground mb-1.5 block">Gender (Optional)</label>
-                <div className="flex gap-2">
-                  {["Male", "Female", "Neutral"].map(g => (
-                    <button
-                      key={g}
-                      onClick={() => setGender(g)}
-                      className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
-                        gender === g ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted text-muted-foreground"
-                      }`}
-                    >
-                      {g}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <label className="text-sm font-medium text-muted-foreground block">Build Family Path</label>
-              <div className="space-y-2">
-                {path.map((p, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold">
-                      {i + 1}
-                    </div>
-                    <select
-                      value={p}
-                      onChange={(e) => {
-                        const newPath = [...path];
-                        newPath[i] = e.target.value;
-                        setPath(newPath);
-                      }}
-                      className="flex-1 bg-muted/50 border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none"
-                    >
-                      {["Father", "Mother", "Brother", "Sister", "Son", "Daughter", "Husband", "Wife"].map(opt => (
-                        <option key={opt} value={opt}>{opt}</option>
-                      ))}
-                    </select>
-                    {path.length > 2 && (
-                      <button 
-                        onClick={() => setPath(path.filter((_, idx) => idx !== i))}
-                        className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg"
-                      >
-                        ×
-                      </button>
-                    )}
-                  </div>
-                ))}
-                {path.length < 5 && (
-                  <button
-                    onClick={() => setPath([...path, "Son"])}
-                    className="w-full py-2 border border-dashed border-border rounded-xl text-xs text-muted-foreground hover:bg-muted/50 transition-colors"
-                  >
-                    + Add Next Connection
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
+    <ToolCard title="Direct Relationship Finder" icon={Users} iconColor="bg-violet-500">
+      <div className="space-y-4">
+        <div>
+          <label className="text-xs font-medium text-muted-foreground mb-1 block">My / Your</label>
+          <select
+            value={first}
+            onChange={(e) => setFirst(e.target.value)}
+            className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none"
+          >
+            <option value="sister">Sister</option>
+            <option value="brother">Brother</option>
+            <option value="uncle">Uncle</option>
+            <option value="father">Father</option>
+            <option value="mother">Mother</option>
+          </select>
+        </div>
+        <div className="flex justify-center">
+          <ArrowRight className="w-5 h-5 text-muted-foreground rotate-90" />
+        </div>
+        <div>
+          <label className="text-xs font-medium text-muted-foreground mb-1 block">Relation of that person</label>
+          <select
+            value={second}
+            onChange={(e) => setSecond(e.target.value)}
+            className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none"
+          >
+            <option value="daughter">Daughter</option>
+            <option value="son">Son</option>
+            <option value="sister">Sister</option>
+            <option value="brother">Brother</option>
+          </select>
+        </div>
 
-          <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
-            <div className="flex items-center gap-2 mb-2 text-xs font-bold uppercase text-muted-foreground">
-              <Search className="w-3.5 h-3.5" />
-              Result
-            </div>
-            <div className="text-lg font-bold text-foreground">
-              {result}
-            </div>
-          </div>
+        <div className="bg-primary/10 border border-primary/20 p-4 rounded-xl text-center">
+          <div className="text-xs text-muted-foreground uppercase font-bold mb-1">Result</div>
+          <div className="text-2xl font-bold text-primary">She/He is your {result}</div>
+        </div>
+      </div>
+    </ToolCard>
+  );
+}
 
-          <div className="flex items-center gap-2 text-[10px] text-muted-foreground bg-violet-500/5 p-3 rounded-lg border border-violet-500/10">
-            <HelpCircle className="w-3.5 h-3.5 text-violet-500" />
-            <span>Relationship names are based on standard family tree logic.</span>
+function SentenceFinder() {
+  const [sentence, setSentence] = useState("Who is my sister's daughter to me?");
+  
+  const result = useMemo(() => {
+    const lower = sentence.toLowerCase();
+    if (lower.includes("sister") && lower.includes("daughter")) return "Niece";
+    if (lower.includes("sister") && lower.includes("son")) return "Nephew";
+    if (lower.includes("brother") && lower.includes("daughter")) return "Niece";
+    if (lower.includes("brother") && lower.includes("son")) return "Nephew";
+    if (lower.includes("uncle") && (lower.includes("son") || lower.includes("daughter"))) return "Cousin";
+    return "Relative";
+  }, [sentence]);
+
+  return (
+    <ToolCard title="Smart Sentence Finder" icon={MessageSquare} iconColor="bg-blue-500">
+      <div className="space-y-4">
+        <div>
+          <label className="text-xs font-medium text-muted-foreground mb-1 block">Ask Relationship</label>
+          <input
+            type="text"
+            value={sentence}
+            onChange={(e) => setSentence(e.target.value)}
+            placeholder="e.g. Who is my brother's son to me?"
+            className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+          />
+        </div>
+
+        <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl">
+          <div className="text-xs text-muted-foreground uppercase font-bold mb-1 text-center">Translation</div>
+          <div className="text-lg font-medium text-blue-400 text-center">
+            Your {sentence.split("'")[0].split("my ")[1] || "relative"}'s {sentence.split("'")[1]?.split(" to")[0] || "child"} is your <span className="font-bold text-white">{result}</span>
           </div>
         </div>
-      </ToolCard>
-    </div>
+      </div>
+    </ToolCard>
+  );
+}
+
+function TwoWayFinder() {
+  const [target, setTarget] = useState("sister-daughter");
+
+  const data = RELATIONSHIP_MAP[target];
+
+  return (
+    <ToolCard title="Two-Way Relationship" icon={ArrowRightLeft} iconColor="bg-emerald-500">
+      <div className="space-y-4">
+        <div>
+          <label className="text-xs font-medium text-muted-foreground mb-1 block">Select Connection</label>
+          <select
+            value={target}
+            onChange={(e) => setTarget(e.target.value)}
+            className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none"
+          >
+            {Object.keys(RELATIONSHIP_MAP).map(k => (
+              <option key={k} value={k}>{k.replace("-", "'s ")}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3">
+          <div className="p-4 bg-muted/30 rounded-xl border border-border">
+            <div className="text-xs text-muted-foreground font-bold uppercase mb-1">She/He is my</div>
+            <div className="text-xl font-bold text-emerald-400">{data?.relation || "Relative"}</div>
+          </div>
+          <div className="p-4 bg-muted/30 rounded-xl border border-border">
+            <div className="text-xs text-muted-foreground font-bold uppercase mb-1">I am her/his</div>
+            <div className="text-xl font-bold text-blue-400">{data?.reverse || "Relative"}</div>
+          </div>
+        </div>
+      </div>
+    </ToolCard>
   );
 }
