@@ -174,6 +174,7 @@ export default function Categories() {
     { title: "Discount Detective", category: "Smart Daily Life", icon: ShoppingBag, color: "bg-indigo-500", href: "/smart-life" },
     { title: "Garden Space Planner", category: "Smart Daily Life", icon: ShoppingBag, color: "bg-indigo-500", href: "/smart-life" },
     { title: "Guest Seating Arranger", category: "Smart Daily Life", icon: ShoppingBag, color: "bg-indigo-500", href: "/smart-life" },
+    { title: "Vacation Budget Divider", category: "Smart Daily Life", icon: Wallet, color: "bg-indigo-500", href: "/smart-life" },
     { title: "Price/Qty Solver", category: "Word Problems", icon: Calculator, color: "bg-orange-500", href: "/word-problems" },
     { title: "Weight/Price Solver", category: "Word Problems", icon: Calculator, color: "bg-orange-500", href: "/word-problems" },
     { title: "Speed/Time Solver", category: "Word Problems", icon: Calculator, color: "bg-orange-500", href: "/word-problems" },

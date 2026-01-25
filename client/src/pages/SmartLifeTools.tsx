@@ -10,12 +10,13 @@ import {
   BadgePercent,
   ChevronRight,
   Leaf,
-  Users
+  Users,
+  Wallet
 } from "lucide-react";
 import { ToolCard, InputField, ResultDisplay, ToolButton } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
 
-type ToolType = "should-i-buy" | "discount-detective" | "garden-planner" | "guest-arranger";
+type ToolType = "should-i-buy" | "discount-detective" | "garden-planner" | "guest-arranger" | "vacation-budget";
 
 export default function SmartLifeTools() {
   const [activeTool, setActiveTool] = useState<ToolType>("should-i-buy");
@@ -23,6 +24,7 @@ export default function SmartLifeTools() {
   const tools = [
     { id: "should-i-buy", label: "Should I Buy?", icon: ShoppingBag },
     { id: "discount-detective", label: "Discount Detective", icon: BadgePercent },
+    { id: "vacation-budget", label: "Vacation Budget", icon: Wallet },
     { id: "garden-planner", label: "Garden Planner", icon: Leaf },
     { id: "guest-arranger", label: "Guest Seating", icon: Users },
   ];
@@ -38,9 +40,94 @@ export default function SmartLifeTools() {
     >
       {activeTool === "should-i-buy" && <ShouldIBuyCalculator />}
       {activeTool === "discount-detective" && <DiscountDetective />}
+      {activeTool === "vacation-budget" && <VacationBudgetDivider />}
       {activeTool === "garden-planner" && <GardenPlanner />}
       {activeTool === "guest-arranger" && <GuestArranger />}
     </PageWrapper>
+  );
+}
+
+function VacationBudgetDivider() {
+  const [totalBudget, setTotalBudget] = useState("50000");
+  const [days, setDays] = useState("5");
+  const [currency, setCurrency] = useState("₹");
+
+  const budgetNum = parseFloat(totalBudget) || 0;
+  const daysNum = parseInt(days) || 1;
+
+  const breakdown = [
+    { label: "Travel", percent: 30, color: "bg-blue-500" },
+    { label: "Hotel", percent: 40, color: "bg-purple-500" },
+    { label: "Food", percent: 20, color: "bg-orange-500" },
+    { label: "Shopping", percent: 10, color: "bg-pink-500" },
+  ];
+
+  const dailyAllowance = budgetNum / daysNum;
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Vacation Budget Divider" icon={Wallet} iconColor="bg-indigo-500">
+        <div className="space-y-4">
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <InputField 
+                label="Total Budget" 
+                value={totalBudget} 
+                onChange={setTotalBudget} 
+                type="number" 
+                suffix={currency}
+              />
+            </div>
+            <div className="w-24">
+              <label className="text-sm font-medium text-muted-foreground mb-1.5 block">Currency</label>
+              <select
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+                className="w-full bg-muted/50 border border-border rounded-xl px-3 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
+              >
+                <option value="₹">Rupees (₹)</option>
+                <option value="$">USD ($)</option>
+                <option value="%">Percent (%)</option>
+              </select>
+            </div>
+          </div>
+          <InputField label="Number of Days" value={days} onChange={setDays} type="number" />
+
+          <div className="space-y-4 pt-2">
+            <div className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Breakdown</div>
+            <div className="space-y-3">
+              {breakdown.map((item) => {
+                const amount = (budgetNum * item.percent) / 100;
+                return (
+                  <div key={item.label} className="space-y-1.5">
+                    <div className="flex justify-between text-sm font-medium">
+                      <span>{item.label}</span>
+                      <span className="text-primary font-bold">
+                        {currency === "%" ? `${item.percent}%` : `${currency}${amount.toLocaleString()}`}
+                      </span>
+                    </div>
+                    <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${item.percent}%` }}
+                        className={`h-full ${item.color}`}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="mt-6 p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl text-center">
+            <div className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">Daily Allowance</div>
+            <div className="text-2xl font-black text-indigo-500">
+              {currency === "%" ? `${(100 / daysNum).toFixed(1)}%` : `${currency}${dailyAllowance.toLocaleString()}`}/day
+            </div>
+          </div>
+        </div>
+      </ToolCard>
+    </div>
   );
 }
 
