@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Users, 
   ArrowRightLeft, 
@@ -6,7 +7,8 @@ import {
   MessageSquare,
   Plus,
   Trash2,
-  Info
+  Info,
+  Search
 } from "lucide-react";
 import { ToolCard } from "@/components/ToolCard";
 
