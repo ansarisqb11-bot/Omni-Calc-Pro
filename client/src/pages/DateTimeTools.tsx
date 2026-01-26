@@ -49,52 +49,84 @@ export default function DateTimeTools() {
 }
 
 function AgeCalculator() {
-  const [mode, setMode] = useState<"birthdate" | "birthyear">("birthdate");
+  const [mode, setMode] = useState<"birthdate" | "age-to-dob">("birthdate");
   const [birthDate, setBirthDate] = useState("");
-  const [birthYear, setBirthYear] = useState("1990");
-  const [result, setResult] = useState<{ years: number; months: number; days: number; totalDays: number; nextBirthday: string } | null>(null);
+  const [inputAge, setInputAge] = useState("29");
+  const [result, setResult] = useState<any>(null);
+
+  const getZodiac = (date: Date) => {
+    const day = date.getDate();
+    const month = date.getMonth() + 1;
+    const signs = [
+      { name: "Capricorn", emoji: "♑", start: [12, 22], end: [1, 19], indian: "Makara" },
+      { name: "Aquarius", emoji: "♒", start: [1, 20], end: [2, 18], indian: "Kumbha" },
+      { name: "Pisces", emoji: "♓", start: [2, 19], end: [3, 20], indian: "Meena" },
+      { name: "Aries", emoji: "♈", start: [3, 21], end: [4, 19], indian: "Mesha" },
+      { name: "Taurus", emoji: "♉", start: [4, 20], end: [5, 20], indian: "Vrishabha" },
+      { name: "Gemini", emoji: "♊", start: [5, 21], end: [6, 20], indian: "Mithuna" },
+      { name: "Cancer", emoji: "♋", start: [6, 21], end: [7, 22], indian: "Karka" },
+      { name: "Leo", emoji: "♌", start: [7, 23], end: [8, 22], indian: "Simha" },
+      { name: "Virgo", emoji: "♍", start: [8, 23], end: [9, 22], indian: "Kanya" },
+      { name: "Libra", emoji: "♎", start: [9, 23], end: [10, 22], indian: "Tula" },
+      { name: "Scorpio", emoji: "♏", start: [10, 23], end: [11, 21], indian: "Vrishchika" },
+      { name: "Sagittarius", emoji: "♐", start: [11, 22], end: [12, 21], indian: "Dhanu" }
+    ];
+    const sign = signs.find(s => 
+      (month === s.start[0] && day >= s.start[1]) || 
+      (month === s.end[0] && day <= s.end[1]) ||
+      (month === 12 && day >= 22 && s.name === "Capricorn") ||
+      (month === 1 && day <= 19 && s.name === "Capricorn")
+    );
+    return sign || signs[0];
+  };
 
   const calculate = () => {
     const now = new Date();
-    let birth: Date;
-
     if (mode === "birthdate") {
       if (!birthDate) return;
-      birth = new Date(birthDate);
-    } else {
-      const year = parseInt(birthYear);
-      if (!year || year > now.getFullYear()) return;
-      birth = new Date(year, 0, 1);
-    }
-    
-    let years = now.getFullYear() - birth.getFullYear();
-    let months = now.getMonth() - birth.getMonth();
-    let days = now.getDate() - birth.getDate();
-    
-    if (days < 0) {
-      months--;
-      const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
-      days += prevMonth.getDate();
-    }
-    
-    if (months < 0) {
-      years--;
-      months += 12;
-    }
+      const birth = new Date(birthDate);
+      
+      let years = now.getFullYear() - birth.getFullYear();
+      let months = now.getMonth() - birth.getMonth();
+      let days = now.getDate() - birth.getDate();
+      
+      if (days < 0) {
+        months--;
+        const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+        days += prevMonth.getDate();
+      }
+      if (months < 0) {
+        years--;
+        months += 12;
+      }
 
-    const nextBirthday = new Date(now.getFullYear(), birth.getMonth(), birth.getDate());
-    if (nextBirthday < now) {
-      nextBirthday.setFullYear(nextBirthday.getFullYear() + 1);
+      const nextBirthday = new Date(now.getFullYear(), birth.getMonth(), birth.getDate());
+      if (nextBirthday < now) nextBirthday.setFullYear(nextBirthday.getFullYear() + 1);
+      
+      const zodiac = getZodiac(birth);
+      const diffMonths = differenceInMonths(nextBirthday, now);
+      const diffDays = differenceInDays(nextBirthday, addDays(now, diffMonths * 30));
+
+      setResult({
+        type: "age",
+        years, months, days,
+        totalDays: differenceInDays(now, birth),
+        zodiac,
+        nextBirthdayDate: format(nextBirthday, "MMMM d, yyyy"),
+        nextBirthdayDay: format(nextBirthday, "EEEE"),
+        countdown: `${differenceInMonths(nextBirthday, now)} months ${differenceInDays(nextBirthday, addDays(now, differenceInMonths(nextBirthday, now) * 30))} days`
+      });
+    } else {
+      const age = parseInt(inputAge);
+      if (isNaN(age)) return;
+      const estimatedDOB = new Date();
+      estimatedDOB.setFullYear(now.getFullYear() - age);
+      setResult({
+        type: "dob",
+        dob: format(estimatedDOB, "MMMM d, yyyy"),
+        year: estimatedDOB.getFullYear()
+      });
     }
-    const daysUntilBirthday = differenceInDays(nextBirthday, now);
-    
-    setResult({
-      years,
-      months,
-      days,
-      totalDays: differenceInDays(now, birth),
-      nextBirthday: daysUntilBirthday === 0 ? "Today!" : `${daysUntilBirthday} days`,
-    });
   };
 
   return (
@@ -103,64 +135,75 @@ function AgeCalculator() {
         <div className="space-y-4">
           <div className="flex gap-2 mb-4">
             <button
-              onClick={() => setMode("birthdate")}
-              className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                mode === "birthdate" ? "bg-purple-500 text-white" : "bg-muted text-muted-foreground"
-              }`}
-              data-testid="button-mode-birthdate"
+              onClick={() => { setMode("birthdate"); setResult(null); }}
+              className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${mode === "birthdate" ? "bg-purple-500 text-white" : "bg-muted text-muted-foreground"}`}
             >
-              Date of Birth
+              Find Age
             </button>
             <button
-              onClick={() => setMode("birthyear")}
-              className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                mode === "birthyear" ? "bg-purple-500 text-white" : "bg-muted text-muted-foreground"
-              }`}
-              data-testid="button-mode-birthyear"
+              onClick={() => { setMode("age-to-dob"); setResult(null); }}
+              className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${mode === "age-to-dob" ? "bg-purple-500 text-white" : "bg-muted text-muted-foreground"}`}
             >
-              Year of Birth
+              Find DOB
             </button>
           </div>
           
           {mode === "birthdate" ? (
             <InputField label="Date of Birth" value={birthDate} onChange={setBirthDate} type="date" />
           ) : (
-            <InputField label="Year of Birth" value={birthYear} onChange={setBirthYear} type="number" min={1900} max={new Date().getFullYear()} />
+            <InputField label="Enter Your Age" value={inputAge} onChange={setInputAge} type="number" suffix="years" />
           )}
           
-          <ToolButton onClick={calculate} variant="primary" className="bg-purple-500 hover:bg-purple-600">
-            Calculate Age
+          <ToolButton onClick={calculate} variant="primary" className="bg-purple-500">
+            {mode === "birthdate" ? "Calculate Age" : "Find Birth Year"}
           </ToolButton>
         </div>
       </ToolCard>
 
-      {result && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <ToolCard title="Your Age" icon={Clock} iconColor="bg-blue-500">
-            <div className="text-center py-4">
-              <div className="text-5xl font-bold text-foreground mb-2">
-                {result.years}
-                <span className="text-xl text-muted-foreground ml-2">years</span>
+      {result && result.type === "age" && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+          <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-6">
+            <div className="text-center border-b border-border pb-6">
+              <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">Result</div>
+              <div className="text-5xl font-black text-primary">{result.years} <span className="text-xl font-normal text-muted-foreground">years</span></div>
+              <div className="text-lg font-medium text-purple-400 mt-1">{result.months} months, {result.days} days</div>
+              <div className="text-xs text-muted-foreground mt-2 font-mono">Total Days: {result.totalDays.toLocaleString()}</div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <div className="text-[10px] font-bold text-muted-foreground uppercase">Western Zodiac</div>
+                <div className="text-lg font-bold">{result.zodiac.emoji} {result.zodiac.name}</div>
               </div>
-              {mode === "birthdate" && (
-                <div className="text-xl text-purple-400">
-                  {result.months} months, {result.days} days
-                </div>
-              )}
-              <div className="mt-6 space-y-2">
-                <div className="flex justify-between p-3 bg-muted/30 rounded-xl">
-                  <span className="text-muted-foreground">Total Days Lived</span>
-                  <span className="text-foreground font-medium">{result.totalDays.toLocaleString()}</span>
-                </div>
-                {mode === "birthdate" && (
-                  <div className="flex justify-between p-3 bg-muted/30 rounded-xl">
-                    <span className="text-muted-foreground">Next Birthday</span>
-                    <span className="text-purple-400 font-medium">{result.nextBirthday}</span>
-                  </div>
-                )}
+              <div className="space-y-1">
+                <div className="text-[10px] font-bold text-muted-foreground uppercase">Indian Rashi</div>
+                <div className="text-lg font-bold">🦁 {result.zodiac.indian}</div>
               </div>
             </div>
-          </ToolCard>
+
+            <div className="pt-4 border-t border-border space-y-3">
+              <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Upcoming Birthday</div>
+              <div className="flex justify-between items-end">
+                <div>
+                  <div className="text-lg font-bold text-foreground">{result.nextBirthdayDate}</div>
+                  <div className="text-sm text-muted-foreground">({result.nextBirthdayDay})</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-bold text-purple-400">In {result.countdown}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {result && result.type === "dob" && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+          <div className="bg-card border border-border rounded-2xl p-6 text-center shadow-sm">
+            <div className="text-xs font-bold text-muted-foreground uppercase mb-2">Estimated Birth Date</div>
+            <div className="text-3xl font-black text-primary">{result.dob}</div>
+            <div className="text-sm text-muted-foreground mt-1">Born in {result.year}</div>
+          </div>
         </motion.div>
       )}
     </div>
