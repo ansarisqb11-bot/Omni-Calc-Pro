@@ -58,13 +58,12 @@ function TripCalculator() {
   const [currency, setCurrency] = useState("₹");
   const [route, setRoute] = useState({ from: "Delhi", to: "Jaipur" });
   const [distance, setDistance] = useState("280");
-  const [vehicle, setVehicle] = useState("SUV");
+  const [distanceUnit, setDistanceUnit] = useState("km");
   const [mileage, setMileage] = useState("12");
+  const [mileageUnit, setMileageUnit] = useState("kmpl");
   const [fuelPrice, setFuelPrice] = useState("95");
   const [passengers, setPassengers] = useState("4");
   const [foodPerPerson, setFoodPerPerson] = useState("500");
-  const [tolls, setTolls] = useState("450");
-  const [misc, setMisc] = useState("500");
   const [departTime, setDepartTime] = useState("06:00");
   const [avgSpeed, setAvgSpeed] = useState("50");
   
@@ -72,18 +71,22 @@ function TripCalculator() {
   const [budget, setBudget] = useState("5000");
 
   const calculate = () => {
-    const dist = parseFloat(distance) || 0;
-    const mil = parseFloat(mileage) || 1;
+    let dist = parseFloat(distance) || 0;
+    // Convert distance to km for internal calculation
+    if (distanceUnit === "miles") dist = dist * 1.60934;
+
+    let mil = parseFloat(mileage) || 1;
+    // Convert mileage to kmpl for internal calculation
+    if (mileageUnit === "mpg") mil = mil * 0.425144;
+
     const fp = parseFloat(fuelPrice) || 0;
     const pass = parseInt(passengers) || 1;
     const food = parseFloat(foodPerPerson) || 0;
-    const toll = parseFloat(tolls) || 0;
-    const ms = parseFloat(misc) || 0;
     const speed = parseFloat(avgSpeed) || 50;
 
     const fuelCost = (dist / mil) * fp;
     const foodTotal = pass * food;
-    const subtotal = fuelCost + foodTotal + toll + ms;
+    const subtotal = fuelCost + foodTotal;
     const buffer = subtotal * 0.04;
     const totalCost = subtotal + buffer;
 
@@ -99,8 +102,6 @@ function TripCalculator() {
     return {
       fuel: fuelCost,
       food: foodTotal,
-      tolls: toll,
-      misc: ms,
       buffer: buffer,
       total: totalCost,
       perPerson: totalCost / pass,
@@ -141,7 +142,18 @@ function TripCalculator() {
 
           <div className="flex gap-4">
             <div className="flex-1">
-              <InputField label="Distance (km)" value={distance} onChange={setDistance} type="number" />
+              <InputField label="Distance" value={distance} onChange={setDistance} type="number" />
+            </div>
+            <div className="w-24">
+              <label className="text-sm font-medium text-muted-foreground mb-1.5 block">Unit</label>
+              <select
+                value={distanceUnit}
+                onChange={(e) => setDistanceUnit(e.target.value)}
+                className="w-full bg-muted/50 border border-border rounded-xl px-3 py-3 text-foreground text-sm"
+              >
+                <option value="km">KM</option>
+                <option value="miles">Miles</option>
+              </select>
             </div>
             <div className="w-24">
               <label className="text-sm font-medium text-muted-foreground mb-1.5 block">Currency</label>
@@ -161,7 +173,22 @@ function TripCalculator() {
           )}
 
           <div className="grid grid-cols-2 gap-4">
-            <InputField label="Mileage (km/L)" value={mileage} onChange={setMileage} type="number" />
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <InputField label="Mileage" value={mileage} onChange={setMileage} type="number" />
+              </div>
+              <div className="w-20">
+                <label className="text-sm font-medium text-muted-foreground mb-1.5 block">Unit</label>
+                <select
+                  value={mileageUnit}
+                  onChange={(e) => setMileageUnit(e.target.value)}
+                  className="w-full bg-muted/50 border border-border rounded-xl px-2 py-3 text-foreground text-xs"
+                >
+                  <option value="kmpl">km/L</option>
+                  <option value="mpg">mpg</option>
+                </select>
+              </div>
+            </div>
             <InputField label="Fuel Price" value={fuelPrice} onChange={setFuelPrice} type="number" suffix={`${currency}/L`} />
           </div>
 
@@ -202,16 +229,8 @@ function TripCalculator() {
                 <span className="font-bold">{currency}{res.fuel.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
               </div>
               <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground flex items-center gap-2"><Navigation className="w-3.5 h-3.5" /> Tolls</span>
-                <span className="font-bold">{currency}{res.tolls.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-              </div>
-              <div className="flex justify-between items-center text-sm">
                 <span className="text-muted-foreground flex items-center gap-2">🍛 Food</span>
                 <span className="font-bold">{currency}{res.food.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground flex items-center gap-2">📦 Misc</span>
-                <span className="font-bold">{currency}{res.misc.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
               </div>
               <div className="flex justify-between items-center text-xs pt-2 border-t border-border/50 italic">
                 <span className="text-muted-foreground">Safety Buffer (4%)</span>
