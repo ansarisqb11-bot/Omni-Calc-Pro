@@ -11,18 +11,23 @@ import {
   ChevronRight,
   Leaf,
   Users,
-  Wallet
+  Wallet,
+  Car,
+  Fuel,
+  Navigation,
+  Clock as ClockIcon
 } from "lucide-react";
 import { ToolCard, InputField, ResultDisplay, ToolButton } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
 
-type ToolType = "should-i-buy" | "discount-detective" | "garden-planner" | "guest-arranger" | "vacation-budget";
+type ToolType = "should-i-buy" | "trip-calculator" | "discount-detective" | "garden-planner" | "guest-arranger" | "vacation-budget";
 
 export default function SmartLifeTools() {
   const [activeTool, setActiveTool] = useState<ToolType>("should-i-buy");
 
   const tools = [
     { id: "should-i-buy", label: "Should I Buy?", icon: ShoppingBag },
+    { id: "trip-calculator", label: "Trip Planner", icon: Car },
     { id: "discount-detective", label: "Discount Detective", icon: BadgePercent },
     { id: "vacation-budget", label: "Vacation Budget", icon: Wallet },
     { id: "garden-planner", label: "Garden Planner", icon: Leaf },
@@ -39,11 +44,203 @@ export default function SmartLifeTools() {
       onToolChange={(id) => setActiveTool(id as ToolType)}
     >
       {activeTool === "should-i-buy" && <ShouldIBuyCalculator />}
+      {activeTool === "trip-calculator" && <TripCalculator />}
       {activeTool === "discount-detective" && <DiscountDetective />}
       {activeTool === "vacation-budget" && <VacationBudgetDivider />}
       {activeTool === "garden-planner" && <GardenPlanner />}
       {activeTool === "guest-arranger" && <GuestArranger />}
     </PageWrapper>
+  );
+}
+
+function TripCalculator() {
+  const [mode, setMode] = useState<"planner" | "reverse">("planner");
+  const [currency, setCurrency] = useState("₹");
+  const [route, setRoute] = useState({ from: "Delhi", to: "Jaipur" });
+  const [distance, setDistance] = useState("280");
+  const [vehicle, setVehicle] = useState("SUV");
+  const [mileage, setMileage] = useState("12");
+  const [fuelPrice, setFuelPrice] = useState("95");
+  const [passengers, setPassengers] = useState("4");
+  const [foodPerPerson, setFoodPerPerson] = useState("500");
+  const [tolls, setTolls] = useState("450");
+  const [misc, setMisc] = useState("500");
+  const [departTime, setDepartTime] = useState("06:00");
+  const [avgSpeed, setAvgSpeed] = useState("50");
+  
+  // Reverse mode states
+  const [budget, setBudget] = useState("5000");
+
+  const calculate = () => {
+    const dist = parseFloat(distance) || 0;
+    const mil = parseFloat(mileage) || 1;
+    const fp = parseFloat(fuelPrice) || 0;
+    const pass = parseInt(passengers) || 1;
+    const food = parseFloat(foodPerPerson) || 0;
+    const toll = parseFloat(tolls) || 0;
+    const ms = parseFloat(misc) || 0;
+    const speed = parseFloat(avgSpeed) || 50;
+
+    const fuelCost = (dist / mil) * fp;
+    const foodTotal = pass * food;
+    const subtotal = fuelCost + foodTotal + toll + ms;
+    const buffer = subtotal * 0.04;
+    const totalCost = subtotal + buffer;
+
+    const timeHours = dist / speed;
+    const hours = Math.floor(timeHours);
+    const mins = Math.round((timeHours - hours) * 60);
+
+    const [dHours, dMins] = departTime.split(":").map(Number);
+    const arrivalDate = new Date();
+    arrivalDate.setHours(dHours, dMins + Math.round(timeHours * 60));
+    const arriveTime = arrivalDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+
+    return {
+      fuel: fuelCost,
+      food: foodTotal,
+      tolls: toll,
+      misc: ms,
+      buffer: buffer,
+      total: totalCost,
+      perPerson: totalCost / pass,
+      duration: `${hours} hours ${mins} mins`,
+      arrive: arriveTime
+    };
+  };
+
+  const res = calculate();
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto pb-10">
+      <ToolCard title="Road Trip Planner" icon={Car} iconColor="bg-sky-500">
+        <div className="space-y-4">
+          <div className="flex gap-2 mb-2">
+            <button
+              onClick={() => setMode("planner")}
+              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${mode === "planner" ? "bg-sky-500 text-white" : "bg-muted text-muted-foreground"}`}
+            >
+              PLAN TRIP
+            </button>
+            <button
+              onClick={() => setMode("reverse")}
+              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${mode === "reverse" ? "bg-sky-500 text-white" : "bg-muted text-muted-foreground"}`}
+            >
+              BUDGET MODE
+            </button>
+          </div>
+
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <InputField label="From" value={route.from} onChange={(v) => setRoute({...route, from: v})} />
+            </div>
+            <div className="flex-1">
+              <InputField label="To" value={route.to} onChange={(v) => setRoute({...route, to: v})} />
+            </div>
+          </div>
+
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <InputField label="Distance (km)" value={distance} onChange={setDistance} type="number" />
+            </div>
+            <div className="w-24">
+              <label className="text-sm font-medium text-muted-foreground mb-1.5 block">Currency</label>
+              <select
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+                className="w-full bg-muted/50 border border-border rounded-xl px-3 py-3 text-foreground text-sm"
+              >
+                <option value="₹">₹ INR</option>
+                <option value="$">$ USD</option>
+              </select>
+            </div>
+          </div>
+
+          {mode === "reverse" && (
+            <InputField label="Total Trip Budget" value={budget} onChange={setBudget} type="number" suffix={currency} />
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <InputField label="Mileage (km/L)" value={mileage} onChange={setMileage} type="number" />
+            <InputField label="Fuel Price" value={fuelPrice} onChange={setFuelPrice} type="number" suffix={`${currency}/L`} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <InputField label="Passengers" value={passengers} onChange={setPassengers} type="number" />
+            <InputField label="Food/Person" value={foodPerPerson} onChange={setFoodPerPerson} type="number" suffix={currency} />
+          </div>
+
+          <div className="flex gap-4 items-end">
+            <div className="flex-1">
+              <InputField label="Departure Time" value={departTime} onChange={setDepartTime} type="time" />
+            </div>
+            <div className="flex-1">
+              <InputField label="Avg Speed (km/h)" value={avgSpeed} onChange={setAvgSpeed} type="number" />
+            </div>
+          </div>
+        </div>
+      </ToolCard>
+
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+        <div className="bg-card border-2 border-primary/20 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-4 opacity-10">
+            <Navigation className="w-24 h-24" />
+          </div>
+
+          <div className="space-y-6">
+            <div className="text-center">
+              <div className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1">Estimated Total Cost</div>
+              <div className="text-4xl font-black text-primary">
+                {currency}{res.total.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              </div>
+              <div className="text-sm font-bold text-sky-400 mt-1">Per Person: {currency}{res.perPerson.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+            </div>
+
+            <div className="space-y-3 bg-muted/30 p-4 rounded-xl">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground flex items-center gap-2"><Fuel className="w-3.5 h-3.5" /> Fuel</span>
+                <span className="font-bold">{currency}{res.fuel.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground flex items-center gap-2"><Navigation className="w-3.5 h-3.5" /> Tolls</span>
+                <span className="font-bold">{currency}{res.tolls.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground flex items-center gap-2">🍛 Food</span>
+                <span className="font-bold">{currency}{res.food.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground flex items-center gap-2">📦 Misc</span>
+                <span className="font-bold">{currency}{res.misc.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs pt-2 border-t border-border/50 italic">
+                <span className="text-muted-foreground">Safety Buffer (4%)</span>
+                <span className="text-muted-foreground">{currency}{res.buffer.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 pt-2">
+              <div className="p-3 bg-primary/5 rounded-xl border border-primary/10">
+                <div className="text-[9px] font-bold text-muted-foreground uppercase mb-1 flex items-center gap-1"><ClockIcon className="w-3 h-3" /> Duration</div>
+                <div className="text-sm font-black">{res.duration}</div>
+              </div>
+              <div className="p-3 bg-sky-500/5 rounded-xl border border-sky-500/10">
+                <div className="text-[9px] font-bold text-muted-foreground uppercase mb-1 flex items-center gap-1">🏁 Arrival</div>
+                <div className="text-sm font-black">{res.arrive}</div>
+              </div>
+            </div>
+
+            {mode === "reverse" && (
+              <div className={`p-3 rounded-xl border text-center text-xs font-bold ${parseFloat(budget) >= res.total ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-red-500/10 border-red-500/30 text-red-400"}`}>
+                {parseFloat(budget) >= res.total 
+                  ? `✓ Within Budget (${currency}${(parseFloat(budget) - res.total).toLocaleString(undefined, { maximumFractionDigits: 0 })} Left)`
+                  : `✕ Exceeds Budget by ${currency}${(res.total - parseFloat(budget)).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+              </div>
+            )}
+          </div>
+        </div>
+      </motion.div>
+    </div>
   );
 }
 
