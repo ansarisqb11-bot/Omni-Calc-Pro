@@ -141,19 +141,37 @@ function LandAreaConverter() {
   const [fromUnit, setFromUnit] = useState("acre");
 
   const conversions: Record<string, number> = {
+    // Global Units (Acre as base)
     acre: 1,
-    hectare: 2.471,
-    bigha: 0.625,
-    katha: 0.031,
-    gunta: 0.025,
+    hectare: 2.47105,
     sqft: 0.0000229568,
     sqm: 0.000247105,
+    sqyard: 0.000206612,
+    sqmile: 640,
+    sqkm: 247.105,
+    
+    // Indian Units
+    bigha: 0.625, // Varies by region, but 1.6 bigha per acre is common in many parts
+    biswa: 0.03125, // 1/20 of a Bigha
+    gunta: 0.025, // 40 gunta = 1 acre
+    cent: 0.01, // 100 cents = 1 acre
+    marla: 0.00625, // 160 marla = 1 acre
+    kanal: 0.125, // 8 kanal = 1 acre
   };
 
   const val = parseFloat(value) || 0;
-  const inAcres = val / conversions[fromUnit];
+  const inAcres = val * conversions[fromUnit];
 
-  const units = ["acre", "hectare", "bigha", "sqft", "sqm"];
+  const categories = [
+    {
+      label: "Global Units",
+      units: ["acre", "hectare", "sqft", "sqm", "sqyard", "sqmile", "sqkm"]
+    },
+    {
+      label: "Indian Units",
+      units: ["bigha", "biswa", "gunta", "cent", "marla", "kanal"]
+    }
+  ];
 
   return (
     <div className="space-y-4 max-w-lg mx-auto">
@@ -162,32 +180,40 @@ function LandAreaConverter() {
           <InputField label="Value" value={value} onChange={setValue} type="number" />
           <div>
             <label className="text-sm font-medium text-muted-foreground mb-2 block">From Unit</label>
-            <div className="grid grid-cols-3 gap-2">
-              {units.map((u) => (
-                <button
-                  key={u}
-                  onClick={() => setFromUnit(u)}
-                  className={`p-2 rounded-lg text-sm capitalize ${
-                    fromUnit === u ? "bg-amber-600 text-white" : "bg-muted text-muted-foreground"
-                  }`}
-                  data-testid={`button-unit-${u}`}
-                >
-                  {u}
-                </button>
+            <select
+              value={fromUnit}
+              onChange={(e) => setFromUnit(e.target.value)}
+              className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+            >
+              {categories.map((cat) => (
+                <optgroup key={cat.label} label={cat.label}>
+                  {cat.units.map((u) => (
+                    <option key={u} value={u} className="capitalize">{u}</option>
+                  ))}
+                </optgroup>
               ))}
-            </div>
+            </select>
           </div>
         </div>
       </ToolCard>
 
       <ToolCard title="Conversions" icon={Calculator} iconColor="bg-emerald-500">
-        <div className="space-y-2">
-          {units.filter(u => u !== fromUnit).map((unit) => (
-            <div key={unit} className="flex justify-between p-2 bg-muted/30 rounded-lg">
-              <span className="capitalize text-muted-foreground">{unit}</span>
-              <span className="font-mono text-amber-400">
-                {(inAcres * conversions[unit]).toLocaleString(undefined, { maximumFractionDigits: 4 })}
-              </span>
+        <div className="space-y-6">
+          {categories.map((cat) => (
+            <div key={cat.label} className="space-y-2">
+              <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-2">{cat.label}</div>
+              <div className="grid grid-cols-1 gap-1">
+                {cat.units.filter(u => u !== fromUnit).map((unit) => (
+                  <div key={unit} className="flex justify-between items-center p-3 bg-muted/30 rounded-xl hover:bg-muted/50 transition-colors">
+                    <span className="capitalize text-sm font-medium text-muted-foreground">{unit}</span>
+                    <span className="font-mono text-sm font-bold text-amber-400">
+                      {(inAcres / conversions[unit]).toLocaleString(undefined, { 
+                        maximumFractionDigits: unit === "sqft" || unit === "sqm" ? 0 : 4 
+                      })}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           ))}
         </div>
