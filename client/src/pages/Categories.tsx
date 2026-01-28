@@ -144,6 +144,7 @@ export default function Categories() {
     { title: "Seed Rate Calculator", category: "Agriculture", icon: Leaf, color: "bg-green-600", href: "/agriculture" },
     { title: "Fertilizer Dosage", category: "Agriculture", icon: Leaf, color: "bg-green-600", href: "/agriculture" },
     { title: "Land Area Converter", category: "Agriculture", icon: Leaf, color: "bg-green-600", href: "/agriculture" },
+    { title: "Plot Calculator", category: "Agriculture", icon: Calculator, color: "bg-green-600", href: "/agriculture" },
     { title: "Irrigation Water", category: "Agriculture", icon: Leaf, color: "bg-green-600", href: "/agriculture" },
     { title: "Tractor Fuel", category: "Agriculture", icon: Leaf, color: "bg-green-600", href: "/agriculture" },
     { title: "Farm Profit", category: "Agriculture", icon: Leaf, color: "bg-green-600", href: "/agriculture" },

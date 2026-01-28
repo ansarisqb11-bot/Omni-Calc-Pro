@@ -4,7 +4,7 @@ import { Leaf, Wheat, Droplets, MapPin, Fuel, Calculator, DollarSign } from "luc
 import { ToolCard, InputField, ResultDisplay, ToolButton } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
 
-type ToolType = "yield" | "seed" | "fertilizer" | "land" | "irrigation" | "tractor" | "profit";
+type ToolType = "yield" | "seed" | "fertilizer" | "land" | "plot" | "irrigation" | "tractor" | "profit";
 
 export default function AgricultureTools() {
   const [activeTool, setActiveTool] = useState<ToolType>("yield");
@@ -14,6 +14,7 @@ export default function AgricultureTools() {
     { id: "seed", label: "Seed Rate", icon: Leaf },
     { id: "fertilizer", label: "Fertilizer", icon: Droplets },
     { id: "land", label: "Land Area", icon: MapPin },
+    { id: "plot", label: "Plot Calc", icon: Calculator },
     { id: "irrigation", label: "Irrigation", icon: Droplets },
     { id: "tractor", label: "Tractor Fuel", icon: Fuel },
     { id: "profit", label: "Farm Profit", icon: DollarSign },
@@ -32,10 +33,148 @@ export default function AgricultureTools() {
       {activeTool === "seed" && <SeedRateCalculator />}
       {activeTool === "fertilizer" && <FertilizerDosage />}
       {activeTool === "land" && <LandAreaConverter />}
+      {activeTool === "plot" && <PlotCalculator />}
       {activeTool === "irrigation" && <IrrigationWater />}
       {activeTool === "tractor" && <TractorFuel />}
       {activeTool === "profit" && <FarmProfit />}
     </PageWrapper>
+  );
+}
+
+function PlotCalculator() {
+  const [mode, setMode] = useState<"dimensions" | "reverse">("dimensions");
+  const [length, setLength] = useState("60");
+  const [width, setWidth] = useState("40");
+  const [dimUnit, setDimUnit] = useState("ft");
+  const [totalValue, setTotalValue] = useState("1");
+  const [inputUnit, setInputUnit] = useState("acre");
+
+  const conversions: Record<string, number> = {
+    acre: 1,
+    hectare: 2.47105,
+    sqft: 0.0000229568,
+    sqm: 0.000247105,
+    sqyard: 0.000206612,
+    bigha: 0.625,
+    biswa: 0.03125,
+    gunta: 0.025,
+    cent: 0.01,
+    marla: 0.00625,
+    kanal: 0.125,
+  };
+
+  const dimToSqFt = (val: number, unit: string) => {
+    if (unit === "ft") return val;
+    if (unit === "m") return val * 3.28084;
+    if (unit === "yard") return val * 3;
+    return val;
+  };
+
+  const calculateArea = () => {
+    if (mode === "dimensions") {
+      const l = parseFloat(length) || 0;
+      const w = parseFloat(width) || 0;
+      const lFt = dimToSqFt(l, dimUnit);
+      const wFt = dimToSqFt(w, dimUnit);
+      const areaSqFt = lFt * wFt;
+      return areaSqFt * conversions.sqft; // Returns in Acres
+    } else {
+      const val = parseFloat(totalValue) || 0;
+      return val * conversions[inputUnit]; // Returns in Acres
+    }
+  };
+
+  const areaInAcres = calculateArea();
+
+  const results = [
+    { label: "Square Feet", unit: "sqft", icon: "📐" },
+    { label: "Square Meters", unit: "sqm", icon: "📏" },
+    { label: "Cent", unit: "cent", icon: "📍" },
+    { label: "Acre", unit: "acre", icon: "🚜" },
+    { label: "Hectare", unit: "hectare", icon: "🌍" },
+    { label: "Bigha", unit: "bigha", icon: "🇮🇳" },
+  ];
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Plot Calculator" icon={Calculator} iconColor="bg-green-500">
+        <div className="space-y-4">
+          <div className="flex gap-2 mb-2">
+            <button
+              onClick={() => setMode("dimensions")}
+              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${mode === "dimensions" ? "bg-green-600 text-white" : "bg-muted text-muted-foreground"}`}
+            >
+              DIMENSIONS
+            </button>
+            <button
+              onClick={() => setMode("reverse")}
+              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${mode === "reverse" ? "bg-green-600 text-white" : "bg-muted text-muted-foreground"}`}
+            >
+              REVERSE
+            </button>
+          </div>
+
+          {mode === "dimensions" ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <InputField label="Length" value={length} onChange={setLength} type="number" />
+                <InputField label="Width" value={width} onChange={setWidth} type="number" />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-muted-foreground mb-2 block">Unit</label>
+                <div className="flex gap-2">
+                  {["ft", "m", "yard"].map((u) => (
+                    <button
+                      key={u}
+                      onClick={() => setDimUnit(u)}
+                      className={`flex-1 py-2 rounded-lg text-sm uppercase font-bold ${dimUnit === u ? "bg-green-600 text-white" : "bg-muted text-muted-foreground"}`}
+                    >
+                      {u}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <InputField label="Total Area" value={totalValue} onChange={setTotalValue} type="number" />
+              <div>
+                <label className="text-sm font-medium text-muted-foreground mb-2 block">Input Unit</label>
+                <select
+                  value={inputUnit}
+                  onChange={(e) => setInputUnit(e.target.value)}
+                  className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-foreground"
+                >
+                  {Object.keys(conversions).map((u) => (
+                    <option key={u} value={u} className="capitalize">{u}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+        </div>
+      </ToolCard>
+
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+        <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+          <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4 border-b border-border pb-2">Plot Breakdown</div>
+          <div className="grid grid-cols-2 gap-3">
+            {results.map((res) => (
+              <div key={res.unit} className="p-3 bg-muted/30 rounded-xl">
+                <div className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1">
+                  <span>{res.icon}</span> {res.label}
+                </div>
+                <div className="text-lg font-black text-green-500 mt-1">
+                  {(areaInAcres / conversions[res.unit]).toLocaleString(undefined, { 
+                    maximumFractionDigits: res.unit === "sqft" || res.unit === "sqm" ? 0 : 3 
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+    </div>
   );
 }
 
