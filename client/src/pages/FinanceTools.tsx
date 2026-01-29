@@ -13,19 +13,16 @@ type NumberFormat = "US" | "IN";
 
 function CurrencySelector({ value, onChange }: { value: NumberFormat; onChange: (v: NumberFormat) => void }) {
   return (
-    <div className="flex items-center gap-2 p-1.5 bg-muted/30 rounded-xl mb-4">
-      <button
-        onClick={() => onChange("US")}
-        className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all ${value === "US" ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground"}`}
+    <div className="flex justify-end mb-4">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value as NumberFormat)}
+        className="bg-muted/50 border border-border rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none cursor-pointer"
+        data-testid="select-currency"
       >
-        USA ($)
-      </button>
-      <button
-        onClick={() => onChange("IN")}
-        className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all ${value === "IN" ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground"}`}
-      >
-        INDIAN (₹)
-      </button>
+        <option value="US">USA ($)</option>
+        <option value="IN">INDIAN (₹)</option>
+      </select>
     </div>
   );
 }
