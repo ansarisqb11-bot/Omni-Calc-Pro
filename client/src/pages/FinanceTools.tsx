@@ -4,14 +4,14 @@ import { Banknote, Percent, TrendingUp, Receipt, PiggyBank, CreditCard, Building
 import { ToolCard, InputField, ResultDisplay, ToolButton } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
 
-type ToolType = "emi" | "compound" | "tip" | "roi" | "gst" | "sip" | "salary" | "discount" | "currency" | "mortgage" | "profit" | "markup" | "margin";
+type ToolType = "emi" | "compound" | "tip" | "roi" | "gst" | "sip" | "salary" | "discount" | "currency" | "mortgage" | "profit" | "markup" | "margin" | "inflation";
 
 type NumberFormat = "US" | "IN";
 const FormatContext = createContext<{ format: NumberFormat; setFormat: (f: NumberFormat) => void }>({ format: "US", setFormat: () => {} });
 
 function formatMoney(num: number, format: NumberFormat): string {
   const symbol = format === "IN" ? "₹" : "$";
-  return symbol + num.toLocaleString(format === "IN" ? "en-IN" : "en-US", { maximumFractionDigits: 2 });
+  return symbol + num.toLocaleString(format === "IN" ? "en-IN" : "en-US", { maximumFractionDigits: 0 });
 }
 
 export default function FinanceTools() {
@@ -23,6 +23,7 @@ export default function FinanceTools() {
     { id: "mortgage", label: "Mortgage", icon: Building2 },
     { id: "compound", label: "Compound", icon: TrendingUp },
     { id: "sip", label: "SIP", icon: LineChart },
+    { id: "inflation", label: "Inflation", icon: TrendingDown },
     { id: "currency", label: "Currency", icon: Coins },
     { id: "gst", label: "GST/VAT", icon: Building2 },
     { id: "tip", label: "Tip", icon: Receipt },
@@ -76,8 +77,118 @@ export default function FinanceTools() {
         {activeTool === "profit" && <ProfitLossCalculator />}
         {activeTool === "markup" && <MarkupCalculator />}
         {activeTool === "margin" && <MarginCalculator />}
+        {activeTool === "inflation" && <InflationCalculator />}
       </PageWrapper>
     </FormatContext.Provider>
+  );
+}
+
+function InflationCalculator() {
+  const { format } = useContext(FormatContext);
+  const [mode, setMode] = useState<"historical" | "future">("historical");
+  const [amount, setAmount] = useState("1000");
+  const [year, setYear] = useState("2010");
+  const [inflationRate, setInflationRate] = useState(format === "IN" ? "6.0" : "2.5");
+
+  const currentYear = new Date().getFullYear();
+  const amt = parseFloat(amount) || 0;
+  const rate = parseFloat(inflationRate) || 0;
+  const targetYear = parseInt(year) || 2010;
+
+  const yearsDiff = mode === "historical" ? currentYear - targetYear : targetYear - currentYear;
+  const multiplier = Math.pow(1 + rate / 100, yearsDiff);
+  const resultValue = mode === "historical" ? amt * multiplier : amt / multiplier;
+
+  const symbol = format === "IN" ? "₹" : "$";
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Inflation Calculator" icon={TrendingDown} iconColor="bg-red-500">
+        <div className="space-y-4">
+          <div className="flex gap-2 mb-2">
+            <button
+              onClick={() => {
+                setMode("historical");
+                setYear("2010");
+              }}
+              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${mode === "historical" ? "bg-red-600 text-white" : "bg-muted text-muted-foreground"}`}
+            >
+              PURCHASING POWER
+            </button>
+            <button
+              onClick={() => {
+                setMode("future");
+                setYear("2030");
+              }}
+              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${mode === "future" ? "bg-red-600 text-white" : "bg-muted text-muted-foreground"}`}
+            >
+              FUTURE VALUE
+            </button>
+          </div>
+
+          <InputField 
+            label={mode === "historical" ? `Amount in ${year}` : "Current Amount"} 
+            value={amount} 
+            onChange={setAmount} 
+            type="number" 
+            suffix={symbol}
+          />
+          <InputField 
+            label={mode === "historical" ? "Starting Year" : "Target Future Year"} 
+            value={year} 
+            onChange={setYear} 
+            type="number" 
+          />
+          <InputField 
+            label="Avg. Annual Inflation Rate (%)" 
+            value={inflationRate} 
+            onChange={setInflationRate} 
+            type="number" 
+            step={0.1}
+          />
+        </div>
+      </ToolCard>
+
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+        <ToolCard title="Analysis" icon={Calculator} iconColor="bg-emerald-500">
+          <div className="space-y-6">
+            <div className="text-center p-4 bg-muted/30 rounded-xl">
+              <div className="text-sm text-muted-foreground mb-1">
+                {mode === "historical" 
+                  ? `${symbol}${amt.toLocaleString()} in ${year} is worth` 
+                  : `${symbol}${amt.toLocaleString()} today will buy`}
+              </div>
+              <div className="text-3xl font-black text-emerald-400">
+                {symbol}{resultValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              </div>
+              <div className="text-xs text-muted-foreground mt-2 font-medium">
+                {mode === "historical" 
+                  ? `Equivalent purchasing power in ${currentYear}`
+                  : `worth of goods in year ${year}`}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <ResultDisplay 
+                label="Total Change" 
+                value={`${((multiplier - 1) * 100).toFixed(1)}%`} 
+                color="text-red-400"
+              />
+              <ResultDisplay 
+                label="Cumulative Multiplier" 
+                value={`${multiplier.toFixed(2)}x`} 
+              />
+              <div className="p-3 bg-red-500/10 rounded-xl border border-red-500/20">
+                <p className="text-[10px] text-red-200 leading-relaxed italic">
+                  *This calculation assumes a constant annual inflation rate over {Math.abs(yearsDiff)} years. 
+                  Actual purchasing power varies by country and economic conditions.
+                </p>
+              </div>
+            </div>
+          </div>
+        </ToolCard>
+      </motion.div>
+    </div>
   );
 }
 

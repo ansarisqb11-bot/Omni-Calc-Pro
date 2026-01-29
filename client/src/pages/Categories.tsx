@@ -23,6 +23,7 @@ export default function Categories() {
     { title: "Salary Converter", category: "Finance", icon: Wallet, color: "bg-emerald-500", href: "/finance" },
     { title: "Discount Calculator", category: "Finance", icon: Wallet, color: "bg-emerald-500", href: "/finance" },
     { title: "Currency Converter", category: "Finance", icon: Wallet, color: "bg-emerald-500", href: "/finance" },
+    { title: "Inflation Calculator", category: "Finance", icon: TrendingDown, color: "bg-emerald-500", href: "/finance" },
     { title: "Tax Calculator", category: "Finance", icon: Wallet, color: "bg-emerald-500", href: "/finance" },
     { title: "Loan Amortization", category: "Finance", icon: Wallet, color: "bg-emerald-500", href: "/finance" },
     { title: "Profit & Loss", category: "Finance", icon: Wallet, color: "bg-emerald-500", href: "/finance" },
