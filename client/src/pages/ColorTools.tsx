@@ -877,6 +877,11 @@ function ColorGenerator() {
   const cmyk = rgbToCmyk(color);
   const closestName = findClosestColorName(color);
 
+  const handlePaletteSelect = (selectedHex: string) => {
+    const rgb = hexToRgb(selectedHex);
+    if (rgb) setColor(rgb);
+  };
+
   return (
     <div className="space-y-4 max-w-lg mx-auto">
       <ToolCard title="Color Generator" icon={Palette} iconColor="bg-rose-500">
@@ -905,6 +910,11 @@ function ColorGenerator() {
             <RefreshCw className="w-4 h-4" />
             Generate New Color
           </button>
+
+          <div className="border-t border-border pt-4">
+            <label className="text-sm font-medium text-muted-foreground mb-2 block">Or Pick from A-Z Palette</label>
+            <ColorPalettePicker onSelect={handlePaletteSelect} selectedHex={hex} />
+          </div>
         </div>
       </ToolCard>
 
