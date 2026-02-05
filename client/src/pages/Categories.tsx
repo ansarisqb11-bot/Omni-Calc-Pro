@@ -5,7 +5,7 @@ import {
   Search, ArrowLeft, Wallet, Calculator, Heart, Compass,
   Clock, Ruler, MessageSquare, StickyNote, Binary, FlaskConical,
   HardHat, Plane, Grid3X3, ChevronRight, Hash, GraduationCap,
-  Stethoscope, Home, Car, Leaf, Code, ShoppingCart, Globe, ShoppingBag, Users, Calendar, TrendingDown
+  Stethoscope, Home, Car, Leaf, Code, ShoppingCart, Globe, ShoppingBag, Users, Calendar, TrendingDown, Palette
 } from "lucide-react";
 
 export default function Categories() {
@@ -184,6 +184,11 @@ export default function Categories() {
     { title: "AI Calculator", category: "AI Tools", icon: MessageSquare, color: "bg-violet-500", href: "/ai-tools" },
     { title: "AI Image Generator", category: "AI Tools", icon: MessageSquare, color: "bg-violet-500", href: "/ai-tools" },
     { title: "AI Chat Assistant", category: "AI Tools", icon: MessageSquare, color: "bg-violet-500", href: "/ai-tools" },
+    { title: "Color Mixer", category: "Color Tools", icon: Palette, color: "bg-fuchsia-500", href: "/color-tools" },
+    { title: "Color Match %", category: "Color Tools", icon: Palette, color: "bg-fuchsia-500", href: "/color-tools" },
+    { title: "Gradient Generator", category: "Color Tools", icon: Palette, color: "bg-fuchsia-500", href: "/color-tools" },
+    { title: "Color Converter", category: "Color Tools", icon: Palette, color: "bg-fuchsia-500", href: "/color-tools" },
+    { title: "Color Generator", category: "Color Tools", icon: Palette, color: "bg-fuchsia-500", href: "/color-tools" },
   ];
 
   const categories = [
@@ -210,6 +215,7 @@ export default function Categories() {
     { title: "Smart Daily Life", icon: ShoppingBag, color: "bg-indigo-500", count: allTools.filter(t => t.category === "Smart Daily Life").length, href: "/smart-life" },
     { title: "Word Problems", icon: Calculator, color: "bg-orange-500", count: allTools.filter(t => t.category === "Word Problems").length, href: "/word-problems" },
     { title: "AI Tools", icon: MessageSquare, color: "bg-violet-500", count: allTools.filter(t => t.category === "AI Tools").length, href: "/ai-tools" },
+    { title: "Color Tools", icon: Palette, color: "bg-fuchsia-500", count: allTools.filter(t => t.category === "Color Tools").length, href: "/color-tools" },
     { title: "Notes", icon: StickyNote, color: "bg-yellow-500", count: 0, href: "/notes" },
   ];
 

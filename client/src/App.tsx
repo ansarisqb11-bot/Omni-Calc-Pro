@@ -34,6 +34,7 @@ import EcommerceTools from "@/pages/EcommerceTools";
 import EnvironmentTools from "@/pages/EnvironmentTools";
 import SmartLifeTools from "@/pages/SmartLifeTools";
 import WordProblemTools from "@/pages/WordProblemTools";
+import ColorTools from "@/pages/ColorTools";
 
 function Router() {
   return (
@@ -65,6 +66,7 @@ function Router() {
       <Route path="/environment" component={EnvironmentTools} />
       <Route path="/smart-life" component={SmartLifeTools} />
       <Route path="/word-problems" component={WordProblemTools} />
+      <Route path="/color-tools" component={ColorTools} />
       <Route component={NotFound} />
     </Switch>
   );
