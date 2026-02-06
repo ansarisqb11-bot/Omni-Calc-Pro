@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import {
   Search, ArrowLeft, Wallet, Calculator, Heart, Compass,
@@ -11,6 +11,7 @@ import {
 export default function Categories() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [, navigate] = useLocation();
 
   const allTools = [
     { title: "EMI Calculator", category: "Finance", icon: Wallet, color: "bg-emerald-500", href: "/finance" },
@@ -192,32 +193,40 @@ export default function Categories() {
   ];
 
   const categories = [
-    { title: "All Tools", icon: Grid3X3, color: "bg-primary", count: allTools.length },
-    { title: "Finance", icon: Wallet, color: "bg-emerald-500", count: allTools.filter(t => t.category === "Finance").length, href: "/finance" },
-    { title: "Calculator", icon: Calculator, color: "bg-blue-500", count: allTools.filter(t => t.category === "Calculator").length, href: "/calculator" },
-    { title: "Numbers", icon: Hash, color: "bg-teal-500", count: allTools.filter(t => t.category === "Numbers").length, href: "/numbers" },
-    { title: "Health", icon: Heart, color: "bg-pink-500", count: allTools.filter(t => t.category === "Health").length, href: "/health" },
-    { title: "Units", icon: Ruler, color: "bg-amber-500", count: allTools.filter(t => t.category === "Units").length, href: "/units" },
-    { title: "Date/Time", icon: Clock, color: "bg-purple-500", count: allTools.filter(t => t.category === "Date/Time").length, href: "/date-time" },
-    { title: "Math", icon: Binary, color: "bg-indigo-500", count: allTools.filter(t => t.category === "Math").length, href: "/math" },
-    { title: "Geometry", icon: Compass, color: "bg-cyan-500", count: allTools.filter(t => t.category === "Geometry").length, href: "/geometry" },
-    { title: "Science", icon: FlaskConical, color: "bg-rose-500", count: allTools.filter(t => t.category === "Science").length, href: "/science" },
-    { title: "Construction", icon: HardHat, color: "bg-orange-500", count: allTools.filter(t => t.category === "Construction").length, href: "/construction" },
-    { title: "Travel", icon: Plane, color: "bg-sky-500", count: allTools.filter(t => t.category === "Travel").length, href: "/travel" },
-    { title: "Education", icon: GraduationCap, color: "bg-blue-600", count: allTools.filter(t => t.category === "Education").length, href: "/education" },
-    { title: "Medical", icon: Stethoscope, color: "bg-red-500", count: allTools.filter(t => t.category === "Medical").length, href: "/medical" },
-    { title: "Lifestyle", icon: Home, color: "bg-lime-500", count: allTools.filter(t => t.category === "Lifestyle").length, href: "/lifestyle" },
-    { title: "Automobile", icon: Car, color: "bg-slate-500", count: allTools.filter(t => t.category === "Automobile").length, href: "/automobile" },
-    { title: "Agriculture", icon: Leaf, color: "bg-green-600", count: allTools.filter(t => t.category === "Agriculture").length, href: "/agriculture" },
-    { title: "Developer", icon: Code, color: "bg-gray-600", count: allTools.filter(t => t.category === "Developer").length, href: "/developer" },
-    { title: "E-Commerce", icon: ShoppingCart, color: "bg-fuchsia-500", count: allTools.filter(t => t.category === "E-Commerce").length, href: "/ecommerce" },
-    { title: "Environment", icon: Globe, color: "bg-emerald-600", count: allTools.filter(t => t.category === "Environment").length, href: "/environment" },
-    { title: "Smart Daily Life", icon: ShoppingBag, color: "bg-indigo-500", count: allTools.filter(t => t.category === "Smart Daily Life").length, href: "/smart-life" },
-    { title: "Word Problems", icon: Calculator, color: "bg-orange-500", count: allTools.filter(t => t.category === "Word Problems").length, href: "/word-problems" },
-    { title: "AI Tools", icon: MessageSquare, color: "bg-violet-500", count: allTools.filter(t => t.category === "AI Tools").length, href: "/ai-tools" },
-    { title: "Color Tools", icon: Palette, color: "bg-fuchsia-500", count: allTools.filter(t => t.category === "Color Tools").length, href: "/color-tools" },
-    { title: "Notes", icon: StickyNote, color: "bg-yellow-500", count: 0, href: "/notes" },
+    { title: "All Tools", icon: Grid3X3, color: "text-slate-600 dark:text-slate-300", bg: "bg-slate-100 dark:bg-slate-700", count: allTools.length },
+    { title: "Finance", icon: Wallet, color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-500/10", count: allTools.filter(t => t.category === "Finance").length, href: "/finance" },
+    { title: "Calculator", icon: Calculator, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-500/10", count: allTools.filter(t => t.category === "Calculator").length, href: "/calculator" },
+    { title: "Numbers", icon: Hash, color: "text-teal-500", bg: "bg-teal-50 dark:bg-teal-500/10", count: allTools.filter(t => t.category === "Numbers").length, href: "/numbers" },
+    { title: "Health", icon: Heart, color: "text-pink-500", bg: "bg-pink-50 dark:bg-pink-500/10", count: allTools.filter(t => t.category === "Health").length, href: "/health" },
+    { title: "Units", icon: Ruler, color: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-500/10", count: allTools.filter(t => t.category === "Units").length, href: "/units" },
+    { title: "Date/Time", icon: Clock, color: "text-purple-500", bg: "bg-purple-50 dark:bg-purple-500/10", count: allTools.filter(t => t.category === "Date/Time").length, href: "/date-time" },
+    { title: "Math", icon: Binary, color: "text-indigo-500", bg: "bg-indigo-50 dark:bg-indigo-500/10", count: allTools.filter(t => t.category === "Math").length, href: "/math" },
+    { title: "Geometry", icon: Compass, color: "text-cyan-500", bg: "bg-cyan-50 dark:bg-cyan-500/10", count: allTools.filter(t => t.category === "Geometry").length, href: "/geometry" },
+    { title: "Science", icon: FlaskConical, color: "text-rose-500", bg: "bg-rose-50 dark:bg-rose-500/10", count: allTools.filter(t => t.category === "Science").length, href: "/science" },
+    { title: "Construction", icon: HardHat, color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-500/10", count: allTools.filter(t => t.category === "Construction").length, href: "/construction" },
+    { title: "Travel", icon: Plane, color: "text-sky-500", bg: "bg-sky-50 dark:bg-sky-500/10", count: allTools.filter(t => t.category === "Travel").length, href: "/travel" },
+    { title: "Education", icon: GraduationCap, color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-600/10", count: allTools.filter(t => t.category === "Education").length, href: "/education" },
+    { title: "Medical", icon: Stethoscope, color: "text-red-500", bg: "bg-red-50 dark:bg-red-500/10", count: allTools.filter(t => t.category === "Medical").length, href: "/medical" },
+    { title: "Lifestyle", icon: Home, color: "text-lime-500", bg: "bg-lime-50 dark:bg-lime-500/10", count: allTools.filter(t => t.category === "Lifestyle").length, href: "/lifestyle" },
+    { title: "Automobile", icon: Car, color: "text-slate-500", bg: "bg-slate-50 dark:bg-slate-500/10", count: allTools.filter(t => t.category === "Automobile").length, href: "/automobile" },
+    { title: "Agriculture", icon: Leaf, color: "text-green-600", bg: "bg-green-50 dark:bg-green-600/10", count: allTools.filter(t => t.category === "Agriculture").length, href: "/agriculture" },
+    { title: "Developer", icon: Code, color: "text-gray-600 dark:text-gray-400", bg: "bg-gray-50 dark:bg-gray-600/10", count: allTools.filter(t => t.category === "Developer").length, href: "/developer" },
+    { title: "E-Commerce", icon: ShoppingCart, color: "text-fuchsia-500", bg: "bg-fuchsia-50 dark:bg-fuchsia-500/10", count: allTools.filter(t => t.category === "E-Commerce").length, href: "/ecommerce" },
+    { title: "Environment", icon: Globe, color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-600/10", count: allTools.filter(t => t.category === "Environment").length, href: "/environment" },
+    { title: "Smart Life", icon: ShoppingBag, color: "text-indigo-500", bg: "bg-indigo-50 dark:bg-indigo-500/10", count: allTools.filter(t => t.category === "Smart Daily Life").length, href: "/smart-life" },
+    { title: "Word Problems", icon: Calculator, color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-500/10", count: allTools.filter(t => t.category === "Word Problems").length, href: "/word-problems" },
+    { title: "AI Tools", icon: MessageSquare, color: "text-violet-500", bg: "bg-violet-50 dark:bg-violet-500/10", count: allTools.filter(t => t.category === "AI Tools").length, href: "/ai-tools" },
+    { title: "Color Tools", icon: Palette, color: "text-fuchsia-500", bg: "bg-fuchsia-50 dark:bg-fuchsia-500/10", count: allTools.filter(t => t.category === "Color Tools").length, href: "/color-tools" },
+    { title: "Notes", icon: StickyNote, color: "text-yellow-500", bg: "bg-yellow-50 dark:bg-yellow-500/10", count: 0, href: "/notes" },
   ];
+
+  const filterPills = ["All Tools", "Finance", "Health", "Math", "Science", "Units", "Date/Time", "Geometry", "Construction", "Travel", "Education", "Medical", "Lifestyle", "Developer", "E-Commerce", "Color Tools", "AI Tools"];
+
+  const categoriesWithHref = categories.filter(c => c.href);
+
+  const filteredCategories = searchQuery
+    ? categoriesWithHref.filter(c => c.title.toLowerCase().includes(searchQuery.toLowerCase()))
+    : categoriesWithHref;
 
   const filteredTools = allTools.filter((tool) => {
     const matchesSearch = tool.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -226,101 +235,164 @@ export default function Categories() {
     return matchesSearch && matchesCategory;
   });
 
+  const showToolsList = activeCategory && activeCategory !== "All Tools";
+
   return (
-    <div className="flex flex-col h-full bg-background overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-4 border-b border-border bg-background sticky top-0 z-10">
-        <Link href="/">
-          <button className="p-2 hover:bg-muted rounded-lg transition-colors" data-testid="button-back">
-            <ArrowLeft className="w-5 h-5 text-muted-foreground" />
-          </button>
-        </Link>
+    <div className="flex flex-col h-full bg-[#f5f7fb] dark:bg-background overflow-hidden">
+      <div className="flex items-center justify-between px-4 pt-4 pb-2">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-            <Grid3X3 className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold text-foreground">All Categories</h1>
-            <p className="text-xs text-muted-foreground">{allTools.length}+ tools available</p>
-          </div>
+          <Link href="/">
+            <button className="p-1" data-testid="button-back">
+              <ArrowLeft className="w-5 h-5 text-foreground" />
+            </button>
+          </Link>
+          <h1 className="text-xl font-bold text-foreground">CalcHub</h1>
         </div>
       </div>
 
-      {/* Search */}
-      <div className="px-4 py-3">
+      <div className="px-4 py-2">
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search all tools..."
-            className="w-full pl-12 pr-4 py-3 bg-muted/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
+            placeholder="Search 300+ tools..."
+            className="w-full pl-12 pr-4 py-3 bg-white dark:bg-card border border-transparent dark:border-border rounded-2xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all text-sm shadow-sm"
             data-testid="input-search-categories"
           />
         </div>
       </div>
 
-      {/* Category Filter Pills */}
-      <div className="px-4 pb-3">
+      <div className="px-4 py-2">
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-          {categories.map((cat) => (
+          {filterPills.map((pill) => (
             <button
-              key={cat.title}
-              onClick={() => setActiveCategory(cat.title === activeCategory ? null : cat.title)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-all ${
-                activeCategory === cat.title
-                  ? `${cat.color} text-white`
-                  : "bg-muted text-muted-foreground hover:text-foreground"
+              key={pill}
+              onClick={() => setActiveCategory(pill === activeCategory ? null : pill)}
+              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
+                activeCategory === pill || (!activeCategory && pill === "All Tools")
+                  ? "bg-slate-700 dark:bg-slate-300 text-white dark:text-slate-900"
+                  : "bg-white dark:bg-card text-foreground shadow-sm"
               }`}
-              data-testid={`filter-${cat.title.toLowerCase().replace(/\s+/g, "-")}`}
+              data-testid={`filter-${pill.toLowerCase().replace(/\s+/g, "-")}`}
             >
-              <cat.icon className="w-4 h-4" />
-              {cat.title}
-              <span className={`text-xs px-1.5 py-0.5 rounded ${
-                activeCategory === cat.title ? "bg-white/20" : "bg-background"
-              }`}>
-                {cat.count}
-              </span>
+              {pill}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Tools List */}
       <div className="flex-1 overflow-y-auto px-4 pb-6">
-        <div className="space-y-2">
-          {filteredTools.map((tool, i) => (
-            <Link key={`${tool.title}-${i}`} href={tool.href}>
-              <motion.div
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.01 }}
-                className="bg-card border border-border rounded-xl p-4 cursor-pointer hover:bg-muted transition-all flex items-center justify-between group"
-                data-testid={`tool-${tool.title.toLowerCase().replace(/\s+/g, "-")}`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl ${tool.color} flex items-center justify-center`}>
-                    <tool.icon className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-foreground text-sm">{tool.title}</h3>
-                    <p className="text-xs text-muted-foreground">{tool.category}</p>
-                  </div>
-                </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
-              </motion.div>
-            </Link>
-          ))}
-        </div>
-
-        {filteredTools.length === 0 && (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-              <Search className="w-8 h-8 text-muted-foreground" />
+        {!showToolsList && (
+          <>
+            <div className="flex items-center justify-between py-3">
+              <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Categories</span>
+              <span className="text-xs text-primary font-medium">{filteredCategories.length} categories</span>
             </div>
-            <p className="text-muted-foreground">No tools found matching "{searchQuery}"</p>
-          </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              {filteredCategories.map((cat, i) => (
+                <motion.div
+                  key={cat.title}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.02 }}
+                >
+                  <Link href={cat.href || "/categories"}>
+                    <div
+                      className="bg-white dark:bg-card rounded-2xl p-4 flex flex-col items-center gap-2 cursor-pointer shadow-sm"
+                      data-testid={`cat-card-${cat.title.toLowerCase().replace(/\s+/g, "-")}`}
+                    >
+                      <div className={`w-12 h-12 rounded-xl ${cat.bg} flex items-center justify-center`}>
+                        <cat.icon className={`w-6 h-6 ${cat.color}`} />
+                      </div>
+                      <span className="text-xs font-semibold text-foreground text-center leading-tight">{cat.title}</span>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-between pt-6 pb-3">
+              <span className="text-base font-bold text-foreground">Most Popular</span>
+              <button
+                onClick={() => setActiveCategory("All Tools")}
+                className="text-sm text-primary font-medium"
+                data-testid="button-see-all"
+              >
+                See all
+              </button>
+            </div>
+
+            <div className="space-y-2 pb-4">
+              {allTools.slice(0, 8).map((tool, i) => (
+                <Link key={`${tool.title}-${i}`} href={tool.href}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.02 }}
+                    className="bg-white dark:bg-card rounded-2xl p-3.5 cursor-pointer flex items-center justify-between shadow-sm"
+                    data-testid={`tool-popular-${tool.title.toLowerCase().replace(/\s+/g, "-")}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-xl ${tool.color} flex items-center justify-center`}>
+                        <tool.icon className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-sm text-foreground">{tool.title}</h3>
+                        <p className="text-xs text-muted-foreground">{tool.category}</p>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                  </motion.div>
+                </Link>
+              ))}
+            </div>
+          </>
+        )}
+
+        {showToolsList && (
+          <>
+            <div className="flex items-center justify-between py-3">
+              <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">{activeCategory}</span>
+              <span className="text-xs text-primary font-medium">{filteredTools.length} tools</span>
+            </div>
+
+            <div className="space-y-2 pb-4">
+              {filteredTools.map((tool, i) => (
+                <Link key={`${tool.title}-${i}`} href={tool.href}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.02 }}
+                    className="bg-white dark:bg-card rounded-2xl p-3.5 cursor-pointer flex items-center justify-between shadow-sm"
+                    data-testid={`tool-${tool.title.toLowerCase().replace(/\s+/g, "-")}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-xl ${tool.color} flex items-center justify-center`}>
+                        <tool.icon className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-sm text-foreground">{tool.title}</h3>
+                        <p className="text-xs text-muted-foreground">{tool.category}</p>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                  </motion.div>
+                </Link>
+              ))}
+            </div>
+
+            {filteredTools.length === 0 && (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 rounded-full bg-white dark:bg-card flex items-center justify-center mx-auto mb-4 shadow-sm">
+                  <Search className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <p className="text-muted-foreground">No tools found</p>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
