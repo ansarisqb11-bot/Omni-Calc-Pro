@@ -3,10 +3,10 @@ import { Link } from "wouter";
 import { evaluate } from "mathjs";
 import { motion } from "framer-motion";
 import { 
-  Search, Grid3X3, Delete, Divide, X, Minus, Plus, Equal, ArrowRight,
+  Search, Grid3X3, Delete, ChevronRight,
   Wallet, Heart, Ruler, Clock, Binary, Compass, FlaskConical, HardHat, 
   Plane, MessageSquare, Hash, GraduationCap, Stethoscope, Home as HomeIcon,
-  Car, Leaf, Code, ShoppingCart, Globe
+  Car, Leaf, Code, ShoppingCart, Globe, ShoppingBag, Palette, StickyNote, Calculator
 } from "lucide-react";
 import { useAddToHistory } from "@/hooks/use-history";
 
@@ -19,12 +19,12 @@ export default function Home() {
   const categories = [
     { title: "Finance", icon: Wallet, color: "bg-emerald-500", href: "/finance" },
     { title: "Health", icon: Heart, color: "bg-pink-500", href: "/health" },
+    { title: "Science", icon: FlaskConical, color: "bg-rose-500", href: "/science" },
     { title: "Units", icon: Ruler, color: "bg-amber-500", href: "/units" },
     { title: "Date/Time", icon: Clock, color: "bg-purple-500", href: "/date-time" },
     { title: "Math", icon: Binary, color: "bg-indigo-500", href: "/math" },
     { title: "Numbers", icon: Hash, color: "bg-teal-500", href: "/numbers" },
     { title: "Geometry", icon: Compass, color: "bg-cyan-500", href: "/geometry" },
-    { title: "Science", icon: FlaskConical, color: "bg-rose-500", href: "/science" },
     { title: "Construction", icon: HardHat, color: "bg-orange-500", href: "/construction" },
     { title: "Travel", icon: Plane, color: "bg-sky-500", href: "/travel" },
     { title: "Education", icon: GraduationCap, color: "bg-blue-600", href: "/education" },
@@ -35,8 +35,31 @@ export default function Home() {
     { title: "Developer", icon: Code, color: "bg-gray-600", href: "/developer" },
     { title: "E-Commerce", icon: ShoppingCart, color: "bg-fuchsia-500", href: "/ecommerce" },
     { title: "Environment", icon: Globe, color: "bg-emerald-600", href: "/environment" },
+    { title: "Smart Life", icon: ShoppingBag, color: "bg-indigo-500", href: "/smart-life" },
+    { title: "Color Tools", icon: Palette, color: "bg-fuchsia-500", href: "/color-tools" },
     { title: "AI Tools", icon: MessageSquare, color: "bg-violet-500", href: "/ai-tools" },
+    { title: "Notes", icon: StickyNote, color: "bg-yellow-500", href: "/notes" },
   ];
+
+  const formatDisplay = (val: string) => {
+    if (!val || val === "Error") return val;
+    const num = parseFloat(val);
+    if (isNaN(num)) return val;
+    if (!Number.isFinite(num)) return val;
+    if (val.includes(".") && val.endsWith(".")) return val;
+    const parts = val.split(".");
+    const intPart = parseInt(parts[0]).toLocaleString("en-US");
+    if (parts.length > 1) return intPart + "." + parts[1];
+    return intPart;
+  };
+
+  const formatExpression = (expr: string) => {
+    return expr
+      .replace(/\*/g, " \u00D7 ")
+      .replace(/\//g, " \u00F7 ")
+      .replace(/\+/g, " + ")
+      .replace(/(?<=\d)-/g, " - ");
+  };
 
   const handlePress = useCallback((key: string) => {
     if (key === "AC") {
@@ -96,132 +119,125 @@ export default function Home() {
 
   const buttons = [
     { label: "AC", value: "AC", variant: "function" },
-    { label: "(", value: "(", variant: "function" },
-    { label: ")", value: ")", variant: "function" },
-    { label: <Divide className="w-5 h-5" />, value: "/", variant: "operator" },
+    { label: "(", value: "(", variant: "paren" },
+    { label: ")", value: ")", variant: "paren" },
+    { label: "\u00F7", value: "/", variant: "operator" },
     { label: "7", value: "7", variant: "number" },
     { label: "8", value: "8", variant: "number" },
     { label: "9", value: "9", variant: "number" },
-    { label: <X className="w-5 h-5" />, value: "*", variant: "operator" },
+    { label: "\u00D7", value: "*", variant: "operator" },
     { label: "4", value: "4", variant: "number" },
     { label: "5", value: "5", variant: "number" },
     { label: "6", value: "6", variant: "number" },
-    { label: <Minus className="w-5 h-5" />, value: "-", variant: "operator" },
+    { label: "\u2212", value: "-", variant: "operator" },
     { label: "1", value: "1", variant: "number" },
     { label: "2", value: "2", variant: "number" },
     { label: "3", value: "3", variant: "number" },
-    { label: <Plus className="w-5 h-5" />, value: "+", variant: "operator" },
+    { label: "+", value: "+", variant: "operator" },
     { label: "0", value: "0", variant: "number" },
     { label: ".", value: ".", variant: "number" },
-    { label: <Delete className="w-5 h-5" />, value: "C", variant: "delete" },
-    { label: <Equal className="w-5 h-5" />, value: "=", variant: "equals" },
+    { label: "del", value: "C", variant: "delete" },
+    { label: "=", value: "=", variant: "equals" },
   ];
 
   const getButtonClass = (variant: string) => {
     switch (variant) {
       case "function": 
-        return "bg-gray-200 dark:bg-slate-600 hover:bg-gray-300 dark:hover:bg-slate-500 text-gray-700 dark:text-white";
+        return "bg-[#f0f3f8] dark:bg-slate-700 text-red-500 dark:text-red-400 font-bold";
+      case "paren":
+        return "bg-[#f0f3f8] dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium";
       case "operator": 
-        return "bg-amber-500 hover:bg-amber-400 text-white";
+        return "bg-[#f0f3f8] dark:bg-slate-700 text-orange-500 dark:text-orange-400 font-bold";
       case "delete":
-        return "bg-red-500 hover:bg-red-400 text-white";
+        return "bg-[#f0f3f8] dark:bg-slate-700 text-slate-400 dark:text-slate-400";
       case "equals": 
-        return "bg-emerald-500 hover:bg-emerald-400 text-white";
+        return "bg-blue-500 dark:bg-blue-600 text-white font-bold";
       default: 
-        return "bg-white dark:bg-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600 text-gray-900 dark:text-white border border-gray-200 dark:border-transparent";
+        return "bg-[#f0f3f8] dark:bg-slate-700 text-slate-800 dark:text-white font-semibold";
     }
   };
 
   return (
-    <div className="flex flex-col h-full bg-background">
-      {/* Search Bar */}
-      <div className="px-4 pt-4 pb-3">
+    <div className="flex flex-col h-full bg-[#f5f7fb] dark:bg-background overflow-y-auto">
+      <div className="px-4 pt-4 space-y-3">
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search 300+ tools..."
-            className="w-full pl-12 pr-4 py-3.5 bg-muted/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all text-sm"
+            placeholder="Search 300+ specialist tools..."
+            className="w-full pl-12 pr-4 py-3.5 bg-white dark:bg-card border border-transparent dark:border-border rounded-2xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all text-sm shadow-sm"
             data-testid="input-search-tools"
           />
         </div>
-      </div>
 
-      {/* Categories Bar - Horizontal Scroll */}
-      <div className="px-4 pb-3">
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+        <Link href="/categories">
+          <motion.div 
+            whileTap={{ scale: 0.98 }}
+            className="bg-white dark:bg-card rounded-2xl px-4 py-3.5 flex items-center justify-between cursor-pointer shadow-sm"
+            data-testid="card-all-categories"
+          >
+            <div className="flex items-center gap-3">
+              <div className="grid grid-cols-2 gap-0.5">
+                <div className="w-3 h-3 rounded-sm bg-blue-500" />
+                <div className="w-3 h-3 rounded-sm bg-blue-500" />
+                <div className="w-3 h-3 rounded-sm bg-blue-500" />
+                <div className="w-3 h-3 rounded-sm bg-blue-500" />
+              </div>
+              <span className="text-base font-bold text-foreground">All Categories</span>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          </motion.div>
+        </Link>
+
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 -mx-4 px-4">
           {categories.map((cat) => (
             <Link key={cat.title} href={cat.href}>
               <motion.div
                 whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-2 px-3 py-2 bg-card border border-border rounded-xl whitespace-nowrap cursor-pointer hover:bg-muted transition-colors"
+                className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-card rounded-2xl whitespace-nowrap cursor-pointer shadow-sm"
                 data-testid={`quick-cat-${cat.title.toLowerCase().replace(/\s+/g, "-")}`}
               >
-                <div className={`w-6 h-6 rounded-md ${cat.color} flex items-center justify-center`}>
-                  <cat.icon className="w-3.5 h-3.5 text-white" />
+                <div className={`w-7 h-7 rounded-lg ${cat.color} flex items-center justify-center`}>
+                  <cat.icon className="w-4 h-4 text-white" />
                 </div>
-                <span className="text-sm text-foreground">{cat.title}</span>
+                <span className="text-sm font-semibold text-foreground">{cat.title}</span>
               </motion.div>
             </Link>
           ))}
         </div>
       </div>
 
-      {/* Calculator Card - Responsive Light/Dark Theme */}
-      <div className="flex-1 px-4 pb-4 flex flex-col min-h-0">
-        <div className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-4 flex-1 flex flex-col shadow-sm dark:shadow-none">
-          {/* Display */}
-          <div className="bg-white dark:bg-slate-900/60 rounded-xl p-4 mb-4 shadow-sm dark:shadow-none">
-            <div className="text-right min-h-[70px] flex flex-col justify-end">
-              <p className="text-gray-500 dark:text-slate-400 text-sm h-5 overflow-x-auto scrollbar-hide">
-                {expression || " "}
-              </p>
-              <p className="text-4xl font-light text-gray-900 dark:text-white mt-1 overflow-x-auto scrollbar-hide">
-                {result}
-              </p>
-            </div>
+      <div className="flex-1 px-4 py-3 flex flex-col min-h-0">
+        <div className="bg-white dark:bg-card rounded-3xl p-4 flex-1 flex flex-col shadow-sm">
+          <div className="text-right pr-2 mb-4 min-h-[80px] flex flex-col justify-end">
+            <p className="text-muted-foreground text-sm h-5 overflow-x-auto scrollbar-hide whitespace-nowrap">
+              {expression ? formatExpression(expression) : " "}
+            </p>
+            <p className="text-4xl font-black text-slate-800 dark:text-white mt-1 overflow-x-auto scrollbar-hide whitespace-nowrap tracking-tight">
+              {formatDisplay(result)}
+            </p>
           </div>
 
-          {/* Keypad - 4x5 Grid */}
-          <div className="grid grid-cols-4 gap-2 flex-1">
+          <div className="grid grid-cols-4 gap-2.5 flex-1">
             {buttons.map((btn, index) => (
               <motion.button
                 key={index}
-                whileTap={{ scale: 0.95 }}
+                whileTap={{ scale: 0.92 }}
                 onClick={() => handlePress(btn.value)}
                 data-testid={`button-calc-${btn.value}`}
-                className={`rounded-xl font-medium text-xl flex items-center justify-center transition-all min-h-[52px] ${getButtonClass(btn.variant)}`}
+                className={`rounded-2xl text-xl flex items-center justify-center transition-all min-h-[56px] ${getButtonClass(btn.variant)}`}
               >
-                {btn.label}
+                {btn.variant === "delete" ? (
+                  <Delete className="w-5 h-5" />
+                ) : (
+                  <span className={btn.variant === "equals" ? "text-2xl" : ""}>{btn.label}</span>
+                )}
               </motion.button>
             ))}
           </div>
         </div>
-      </div>
-
-      {/* All Categories Button */}
-      <div className="px-4 pb-4">
-        <Link href="/categories">
-          <motion.div 
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
-            className="bg-gray-100 dark:bg-slate-800 rounded-2xl p-4 flex items-center justify-between cursor-pointer shadow-sm dark:shadow-none"
-            data-testid="card-all-categories"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
-                <Grid3X3 className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h2 className="font-semibold text-gray-900 dark:text-white">All Categories</h2>
-                <p className="text-sm text-gray-500 dark:text-slate-400">Browse 300+ tools</p>
-              </div>
-            </div>
-            <ArrowRight className="w-5 h-5 text-gray-400 dark:text-slate-400" />
-          </motion.div>
-        </Link>
       </div>
     </div>
   );
