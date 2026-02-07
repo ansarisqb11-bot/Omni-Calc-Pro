@@ -6,7 +6,7 @@ import {
   Search, Grid3X3, Delete, ChevronRight,
   Wallet, Heart, Ruler, Clock, Binary, Compass, FlaskConical, HardHat, 
   Plane, MessageSquare, Hash, GraduationCap, Stethoscope, Home as HomeIcon,
-  Car, Leaf, Code, ShoppingCart, Globe, ShoppingBag, Palette, StickyNote, Calculator
+  Car, Leaf, Code, ShoppingCart, Globe, ShoppingBag, Palette, StickyNote, Calculator, Shirt
 } from "lucide-react";
 import { useAddToHistory } from "@/hooks/use-history";
 
@@ -18,6 +18,7 @@ export default function Home() {
 
   const categories = [
     { title: "Finance", icon: Wallet, color: "bg-emerald-500", href: "/finance" },
+    { title: "Sizes", icon: Shirt, color: "bg-violet-500", href: "/size-converter" },
     { title: "Health", icon: Heart, color: "bg-pink-500", href: "/health" },
     { title: "Science", icon: FlaskConical, color: "bg-rose-500", href: "/science" },
     { title: "Units", icon: Ruler, color: "bg-amber-500", href: "/units" },

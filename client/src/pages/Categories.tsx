@@ -5,7 +5,7 @@ import {
   Search, ArrowLeft, Wallet, Calculator, Heart, Compass,
   Clock, Ruler, MessageSquare, StickyNote, Binary, FlaskConical,
   HardHat, Plane, Grid3X3, ChevronRight, Hash, GraduationCap,
-  Stethoscope, Home, Car, Leaf, Code, ShoppingCart, Globe, ShoppingBag, Users, Calendar, TrendingDown, Palette
+  Stethoscope, Home, Car, Leaf, Code, ShoppingCart, Globe, ShoppingBag, Users, Calendar, TrendingDown, Palette, Shirt
 } from "lucide-react";
 
 export default function Categories() {
@@ -185,6 +185,13 @@ export default function Categories() {
     { title: "AI Calculator", category: "AI Tools", icon: MessageSquare, color: "bg-violet-500", href: "/ai-tools" },
     { title: "AI Image Generator", category: "AI Tools", icon: MessageSquare, color: "bg-violet-500", href: "/ai-tools" },
     { title: "AI Chat Assistant", category: "AI Tools", icon: MessageSquare, color: "bg-violet-500", href: "/ai-tools" },
+    { title: "Men Clothing Size", category: "Size Converter", icon: Shirt, color: "bg-violet-500", href: "/size-converter" },
+    { title: "Women Clothing Size", category: "Size Converter", icon: Shirt, color: "bg-violet-500", href: "/size-converter" },
+    { title: "Kids Clothing Size", category: "Size Converter", icon: Shirt, color: "bg-violet-500", href: "/size-converter" },
+    { title: "Men Shoe Size", category: "Size Converter", icon: Shirt, color: "bg-violet-500", href: "/size-converter" },
+    { title: "Women Shoe Size", category: "Size Converter", icon: Shirt, color: "bg-violet-500", href: "/size-converter" },
+    { title: "Kids Shoe Size", category: "Size Converter", icon: Shirt, color: "bg-violet-500", href: "/size-converter" },
+    { title: "Slippers / Sandals", category: "Size Converter", icon: Shirt, color: "bg-violet-500", href: "/size-converter" },
     { title: "Color Mixer", category: "Color Tools", icon: Palette, color: "bg-fuchsia-500", href: "/color-tools" },
     { title: "Color Match %", category: "Color Tools", icon: Palette, color: "bg-fuchsia-500", href: "/color-tools" },
     { title: "Gradient Generator", category: "Color Tools", icon: Palette, color: "bg-fuchsia-500", href: "/color-tools" },
@@ -195,6 +202,7 @@ export default function Categories() {
   const categories = [
     { title: "All Tools", icon: Grid3X3, color: "text-slate-600 dark:text-slate-300", bg: "bg-slate-100 dark:bg-slate-700", count: allTools.length },
     { title: "Finance", icon: Wallet, color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-500/10", count: allTools.filter(t => t.category === "Finance").length, href: "/finance" },
+    { title: "Size Conv.", icon: Shirt, color: "text-violet-500", bg: "bg-violet-50 dark:bg-violet-500/10", count: allTools.filter(t => t.category === "Size Converter").length, href: "/size-converter" },
     { title: "Calculator", icon: Calculator, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-500/10", count: allTools.filter(t => t.category === "Calculator").length, href: "/calculator" },
     { title: "Numbers", icon: Hash, color: "text-teal-500", bg: "bg-teal-50 dark:bg-teal-500/10", count: allTools.filter(t => t.category === "Numbers").length, href: "/numbers" },
     { title: "Health", icon: Heart, color: "text-pink-500", bg: "bg-pink-50 dark:bg-pink-500/10", count: allTools.filter(t => t.category === "Health").length, href: "/health" },
@@ -220,7 +228,7 @@ export default function Categories() {
     { title: "Notes", icon: StickyNote, color: "text-yellow-500", bg: "bg-yellow-50 dark:bg-yellow-500/10", count: 0, href: "/notes" },
   ];
 
-  const filterPills = ["All Tools", "Finance", "Health", "Math", "Science", "Units", "Date/Time", "Geometry", "Construction", "Travel", "Education", "Medical", "Lifestyle", "Developer", "E-Commerce", "Color Tools", "AI Tools"];
+  const filterPills = ["All Tools", "Finance", "Size Converter", "Health", "Math", "Science", "Units", "Date/Time", "Geometry", "Construction", "Travel", "Education", "Medical", "Lifestyle", "Developer", "E-Commerce", "Color Tools", "AI Tools"];
 
   const categoriesWithHref = categories.filter(c => c.href);
 

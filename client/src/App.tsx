@@ -35,6 +35,7 @@ import EnvironmentTools from "@/pages/EnvironmentTools";
 import SmartLifeTools from "@/pages/SmartLifeTools";
 import WordProblemTools from "@/pages/WordProblemTools";
 import ColorTools from "@/pages/ColorTools";
+import ClothingSizeTools from "@/pages/ClothingSizeTools";
 
 function Router() {
   return (
@@ -67,6 +68,7 @@ function Router() {
       <Route path="/smart-life" component={SmartLifeTools} />
       <Route path="/word-problems" component={WordProblemTools} />
       <Route path="/color-tools" component={ColorTools} />
+      <Route path="/size-converter" component={ClothingSizeTools} />
       <Route component={NotFound} />
     </Switch>
   );
