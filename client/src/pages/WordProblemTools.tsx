@@ -11,11 +11,14 @@ import {
   BarChart3,
   FlaskConical,
   Zap,
+  Ruler,
+  Droplets,
+  Weight,
 } from "lucide-react";
 import { ToolCard } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
 
-type ToolType = "unit-price" | "ratio" | "speed" | "age" | "percentage" | "profit-loss" | "time-work" | "average" | "mixture" | "rate" | "basic";
+type ToolType = "unit-price" | "ratio" | "speed" | "age" | "percentage" | "profit-loss" | "time-work" | "average" | "mixture" | "rate" | "basic" | "volume" | "length" | "weight";
 
 const tools = [
   { id: "unit-price", label: "Unit Price", icon: ShoppingCart },
@@ -29,6 +32,9 @@ const tools = [
   { id: "mixture", label: "Mixture", icon: FlaskConical },
   { id: "rate", label: "Rate", icon: Zap },
   { id: "basic", label: "Basic", icon: Calculator },
+  { id: "volume", label: "Volume", icon: Droplets },
+  { id: "length", label: "Length", icon: Ruler },
+  { id: "weight", label: "Weight", icon: Weight },
 ];
 
 export default function WordProblemTools() {
@@ -47,6 +53,9 @@ export default function WordProblemTools() {
       case "mixture": return <MixtureSolver />;
       case "rate": return <RateSolver />;
       case "basic": return <BasicSolver />;
+      case "volume": return <VolumeSolver />;
+      case "length": return <LengthSolver />;
+      case "weight": return <WeightSolver />;
       default: return null;
     }
   };
@@ -1454,6 +1463,593 @@ function BasicSolver() {
             <>
               <SolverInput label="Result" value={resultVal} onChange={setResultVal} />
               <SolverInput label="Known Factor" value={factor} onChange={setFactor} />
+            </>
+          )}
+        </div>
+        <div className="mt-4 space-y-3">
+          <StepsDisplay steps={result.steps} />
+          <ResultBox label="Answer" value={result.value} />
+        </div>
+      </ToolCard>
+    </div>
+  );
+}
+
+const VOLUME_UNITS = [
+  { value: "ml", label: "Milliliter (ml)", factor: 0.001 },
+  { value: "l", label: "Liter (L)", factor: 1 },
+  { value: "cl", label: "Centiliter (cl)", factor: 0.01 },
+  { value: "dl", label: "Deciliter (dl)", factor: 0.1 },
+  { value: "kl", label: "Kiloliter (kL)", factor: 1000 },
+  { value: "gal_us", label: "US Gallon", factor: 3.78541 },
+  { value: "gal_uk", label: "UK Gallon", factor: 4.54609 },
+  { value: "qt", label: "Quart (US)", factor: 0.946353 },
+  { value: "pt", label: "Pint (US)", factor: 0.473176 },
+  { value: "cup", label: "Cup (US)", factor: 0.236588 },
+  { value: "fl_oz", label: "Fluid Ounce (US)", factor: 0.0295735 },
+  { value: "tbsp", label: "Tablespoon", factor: 0.0147868 },
+  { value: "tsp", label: "Teaspoon", factor: 0.00492892 },
+  { value: "m3", label: "Cubic Meter (m\u00B3)", factor: 1000 },
+  { value: "cm3", label: "Cubic cm (cm\u00B3)", factor: 0.001 },
+  { value: "ft3", label: "Cubic Foot (ft\u00B3)", factor: 28.3168 },
+  { value: "in3", label: "Cubic Inch (in\u00B3)", factor: 0.0163871 },
+];
+
+function VolumeSolver() {
+  const [mode, setMode] = useState("convert");
+  const [currency, setCurrency] = useState("\u20B9");
+  const [fromUnit, setFromUnit] = useState("l");
+  const [toUnit, setToUnit] = useState("ml");
+  const [value, setValue] = useState("5");
+  const [totalVol, setTotalVol] = useState("10");
+  const [totalPrice, setTotalPrice] = useState("200");
+  const [reqVol, setReqVol] = useState("3");
+  const [budget, setBudget] = useState("500");
+  const [containerVol, setContainerVol] = useState("2");
+  const [containerUnit, setContainerUnit] = useState("l");
+  const [fillVol, setFillVol] = useState("15");
+  const [fillUnit, setFillUnit] = useState("l");
+  const [mixQtyA, setMixQtyA] = useState("3");
+  const [mixUnitA, setMixUnitA] = useState("l");
+  const [mixQtyB, setMixQtyB] = useState("2");
+  const [mixUnitB, setMixUnitB] = useState("l");
+  const [resultUnit, setResultUnit] = useState("l");
+
+  const getF = (u: string) => VOLUME_UNITS.find(x => x.value === u)?.factor || 1;
+  const getLabel = (u: string) => VOLUME_UNITS.find(x => x.value === u)?.label || u;
+
+  const result = useMemo(() => {
+    switch (mode) {
+      case "convert": {
+        const v = parseFloat(value) || 0;
+        const liters = v * getF(fromUnit);
+        const converted = liters / getF(toUnit);
+        return {
+          value: `${fmt(converted)} ${toUnit}`,
+          steps: [
+            `Input: ${fmt(v)} ${getLabel(fromUnit)}`,
+            `Convert to liters: ${fmt(v)} \u00D7 ${getF(fromUnit)} = ${fmt(liters)} L`,
+            `Convert to ${getLabel(toUnit)}: ${fmt(liters)} \u00F7 ${getF(toUnit)} = ${fmt(converted)}`,
+          ],
+        };
+      }
+      case "price-per-vol": {
+        const tv = parseFloat(totalVol) || 0;
+        const tp = parseFloat(totalPrice) || 0;
+        const rq = parseFloat(reqVol) || 0;
+        if (tv === 0) return { value: "\u2014", steps: [] };
+        const pricePerUnit = tp / tv;
+        const reqPrice = pricePerUnit * rq;
+        return {
+          value: `${currency}${fmt(reqPrice)}`,
+          steps: [
+            `Total volume: ${fmt(tv)} ${fromUnit}`,
+            `Total price: ${currency}${fmt(tp)}`,
+            `Price per ${fromUnit}: ${currency}${fmt(tp)} \u00F7 ${fmt(tv)} = ${currency}${fmt(pricePerUnit)}`,
+            `Cost for ${fmt(rq)} ${fromUnit}: ${currency}${fmt(pricePerUnit)} \u00D7 ${fmt(rq)} = ${currency}${fmt(reqPrice)}`,
+          ],
+        };
+      }
+      case "reverse-vol": {
+        const tp = parseFloat(totalPrice) || 0;
+        const tv = parseFloat(totalVol) || 0;
+        const bd = parseFloat(budget) || 0;
+        if (tv === 0 || tp === 0) return { value: "\u2014", steps: [] };
+        const pricePerUnit = tp / tv;
+        const canBuy = bd / pricePerUnit;
+        return {
+          value: `${fmt(canBuy)} ${fromUnit}`,
+          steps: [
+            `Price for ${fmt(tv)} ${fromUnit} = ${currency}${fmt(tp)}`,
+            `Price per ${fromUnit}: ${currency}${fmt(tp)} \u00F7 ${fmt(tv)} = ${currency}${fmt(pricePerUnit)}`,
+            `Budget: ${currency}${fmt(bd)}`,
+            `Volume you can get: ${currency}${fmt(bd)} \u00F7 ${currency}${fmt(pricePerUnit)} = ${fmt(canBuy)} ${fromUnit}`,
+          ],
+        };
+      }
+      case "containers": {
+        const cv = parseFloat(containerVol) || 0;
+        const fv = parseFloat(fillVol) || 0;
+        if (cv === 0) return { value: "\u2014", steps: [] };
+        const cvLiters = cv * getF(containerUnit);
+        const fvLiters = fv * getF(fillUnit);
+        const containers = fvLiters / cvLiters;
+        const remainder = fvLiters % cvLiters;
+        const remConverted = remainder / getF(containerUnit);
+        return {
+          value: `${Math.floor(containers)} containers${remainder > 0.001 ? ` + ${fmt(remConverted)} ${containerUnit} left` : ""}`,
+          steps: [
+            `Container size: ${fmt(cv)} ${getLabel(containerUnit)} = ${fmt(cvLiters)} L`,
+            `Total to fill: ${fmt(fv)} ${getLabel(fillUnit)} = ${fmt(fvLiters)} L`,
+            `Containers needed: ${fmt(fvLiters)} \u00F7 ${fmt(cvLiters)} = ${fmt(containers)}`,
+            ...(remainder > 0.001 ? [`Remaining: ${fmt(remConverted)} ${containerUnit}`] : []),
+          ],
+        };
+      }
+      case "mix": {
+        const qa = parseFloat(mixQtyA) || 0;
+        const qb = parseFloat(mixQtyB) || 0;
+        const aLiters = qa * getF(mixUnitA);
+        const bLiters = qb * getF(mixUnitB);
+        const totalLiters = aLiters + bLiters;
+        const converted = totalLiters / getF(resultUnit);
+        const ratioA = aLiters / (totalLiters || 1);
+        const ratioB = bLiters / (totalLiters || 1);
+        return {
+          value: `${fmt(converted)} ${resultUnit}`,
+          steps: [
+            `Liquid A: ${fmt(qa)} ${getLabel(mixUnitA)} = ${fmt(aLiters)} L`,
+            `Liquid B: ${fmt(qb)} ${getLabel(mixUnitB)} = ${fmt(bLiters)} L`,
+            `Total: ${fmt(aLiters)} + ${fmt(bLiters)} = ${fmt(totalLiters)} L`,
+            `In ${getLabel(resultUnit)}: ${fmt(converted)}`,
+            `Ratio A:B = ${fmt(ratioA * 100)}% : ${fmt(ratioB * 100)}%`,
+          ],
+        };
+      }
+      default: return { value: "\u2014", steps: [] };
+    }
+  }, [mode, value, fromUnit, toUnit, totalVol, totalPrice, reqVol, budget, currency, containerVol, containerUnit, fillVol, fillUnit, mixQtyA, mixUnitA, mixQtyB, mixUnitB, resultUnit]);
+
+  const unitOptions = VOLUME_UNITS.map(u => ({ value: u.value, label: u.label }));
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Volume Word Problem Solver" icon={Droplets} iconColor="bg-orange-500">
+        <ModeToggle
+          modes={[
+            { id: "convert", label: "Convert" },
+            { id: "price-per-vol", label: "Price/Vol" },
+            { id: "reverse-vol", label: "Reverse" },
+            { id: "containers", label: "Containers" },
+            { id: "mix", label: "Mix Liquids" },
+          ]}
+          mode={mode} setMode={setMode}
+        />
+        <div className="space-y-3">
+          {mode === "convert" && (
+            <>
+              <SolverInput label="Value" value={value} onChange={setValue} />
+              <SolverSelect label="From Unit" value={fromUnit} onChange={setFromUnit} options={unitOptions} />
+              <SolverSelect label="To Unit" value={toUnit} onChange={setToUnit} options={unitOptions} />
+            </>
+          )}
+          {mode === "price-per-vol" && (
+            <>
+              <div className="flex justify-end"><CurrencySelector currency={currency} setCurrency={setCurrency} /></div>
+              <SolverInput label="Total Volume" value={totalVol} onChange={setTotalVol} />
+              <SolverSelect label="Volume Unit" value={fromUnit} onChange={setFromUnit} options={unitOptions} />
+              <SolverInput label={`Total Price (${currency})`} value={totalPrice} onChange={setTotalPrice} />
+              <SolverInput label={`Required Volume (${fromUnit})`} value={reqVol} onChange={setReqVol} />
+            </>
+          )}
+          {mode === "reverse-vol" && (
+            <>
+              <div className="flex justify-end"><CurrencySelector currency={currency} setCurrency={setCurrency} /></div>
+              <SolverInput label="Total Volume" value={totalVol} onChange={setTotalVol} />
+              <SolverSelect label="Volume Unit" value={fromUnit} onChange={setFromUnit} options={unitOptions} />
+              <SolverInput label={`Total Price (${currency})`} value={totalPrice} onChange={setTotalPrice} />
+              <SolverInput label={`Your Budget (${currency})`} value={budget} onChange={setBudget} />
+            </>
+          )}
+          {mode === "containers" && (
+            <>
+              <SolverInput label="Container Size" value={containerVol} onChange={setContainerVol} />
+              <SolverSelect label="Container Unit" value={containerUnit} onChange={setContainerUnit} options={unitOptions} />
+              <SolverInput label="Total Volume to Fill" value={fillVol} onChange={setFillVol} />
+              <SolverSelect label="Fill Unit" value={fillUnit} onChange={setFillUnit} options={unitOptions} />
+            </>
+          )}
+          {mode === "mix" && (
+            <>
+              <SolverInput label="Liquid A Quantity" value={mixQtyA} onChange={setMixQtyA} />
+              <SolverSelect label="Liquid A Unit" value={mixUnitA} onChange={setMixUnitA} options={unitOptions} />
+              <SolverInput label="Liquid B Quantity" value={mixQtyB} onChange={setMixQtyB} />
+              <SolverSelect label="Liquid B Unit" value={mixUnitB} onChange={setMixUnitB} options={unitOptions} />
+              <SolverSelect label="Result Unit" value={resultUnit} onChange={setResultUnit} options={unitOptions} />
+            </>
+          )}
+        </div>
+        <div className="mt-4 space-y-3">
+          <StepsDisplay steps={result.steps} />
+          <ResultBox label="Answer" value={result.value} />
+        </div>
+      </ToolCard>
+    </div>
+  );
+}
+
+const LENGTH_UNITS = [
+  { value: "mm", label: "Millimeter (mm)", factor: 0.001 },
+  { value: "cm", label: "Centimeter (cm)", factor: 0.01 },
+  { value: "m", label: "Meter (m)", factor: 1 },
+  { value: "km", label: "Kilometer (km)", factor: 1000 },
+  { value: "in", label: "Inch (in)", factor: 0.0254 },
+  { value: "ft", label: "Foot (ft)", factor: 0.3048 },
+  { value: "yd", label: "Yard (yd)", factor: 0.9144 },
+  { value: "mi", label: "Mile (mi)", factor: 1609.34 },
+  { value: "nm", label: "Nautical Mile", factor: 1852 },
+  { value: "dm", label: "Decimeter (dm)", factor: 0.1 },
+  { value: "µm", label: "Micrometer (\u00B5m)", factor: 0.000001 },
+  { value: "ly", label: "Light Year", factor: 9.461e15 },
+];
+
+function LengthSolver() {
+  const [mode, setMode] = useState("convert");
+  const [currency, setCurrency] = useState("\u20B9");
+  const [fromUnit, setFromUnit] = useState("m");
+  const [toUnit, setToUnit] = useState("ft");
+  const [value, setValue] = useState("10");
+  const [totalLen, setTotalLen] = useState("100");
+  const [totalPrice, setTotalPrice] = useState("500");
+  const [reqLen, setReqLen] = useState("25");
+  const [budget, setBudget] = useState("1000");
+  const [pieceLen, setPieceLen] = useState("2.5");
+  const [pieceUnit, setPieceUnit] = useState("m");
+  const [totalRod, setTotalRod] = useState("20");
+  const [rodUnit, setRodUnit] = useState("m");
+  const [perimeter, setPerimeter] = useState("");
+  const [perimSides, setPerimSides] = useState("4");
+  const [perimLen, setPerimLen] = useState("10");
+  const [perimUnit, setPerimUnit] = useState("m");
+  const [resultPUnit, setResultPUnit] = useState("m");
+
+  const getF = (u: string) => LENGTH_UNITS.find(x => x.value === u)?.factor || 1;
+  const getLabel = (u: string) => LENGTH_UNITS.find(x => x.value === u)?.label || u;
+
+  const result = useMemo(() => {
+    switch (mode) {
+      case "convert": {
+        const v = parseFloat(value) || 0;
+        const meters = v * getF(fromUnit);
+        const converted = meters / getF(toUnit);
+        return {
+          value: `${fmt(converted)} ${toUnit}`,
+          steps: [
+            `Input: ${fmt(v)} ${getLabel(fromUnit)}`,
+            `Convert to meters: ${fmt(v)} \u00D7 ${getF(fromUnit)} = ${fmt(meters)} m`,
+            `Convert to ${getLabel(toUnit)}: ${fmt(meters)} \u00F7 ${getF(toUnit)} = ${fmt(converted)}`,
+          ],
+        };
+      }
+      case "price-per-len": {
+        const tl = parseFloat(totalLen) || 0;
+        const tp = parseFloat(totalPrice) || 0;
+        const rq = parseFloat(reqLen) || 0;
+        if (tl === 0) return { value: "\u2014", steps: [] };
+        const pricePerUnit = tp / tl;
+        const reqPrice = pricePerUnit * rq;
+        return {
+          value: `${currency}${fmt(reqPrice)}`,
+          steps: [
+            `Total length: ${fmt(tl)} ${fromUnit}`,
+            `Total price: ${currency}${fmt(tp)}`,
+            `Price per ${fromUnit}: ${currency}${fmt(tp)} \u00F7 ${fmt(tl)} = ${currency}${fmt(pricePerUnit)}`,
+            `Cost for ${fmt(rq)} ${fromUnit}: ${currency}${fmt(pricePerUnit)} \u00D7 ${fmt(rq)} = ${currency}${fmt(reqPrice)}`,
+          ],
+        };
+      }
+      case "reverse-len": {
+        const tp = parseFloat(totalPrice) || 0;
+        const tl = parseFloat(totalLen) || 0;
+        const bd = parseFloat(budget) || 0;
+        if (tl === 0 || tp === 0) return { value: "\u2014", steps: [] };
+        const pricePerUnit = tp / tl;
+        const canBuy = bd / pricePerUnit;
+        return {
+          value: `${fmt(canBuy)} ${fromUnit}`,
+          steps: [
+            `Price for ${fmt(tl)} ${fromUnit} = ${currency}${fmt(tp)}`,
+            `Price per ${fromUnit}: ${currency}${fmt(tp)} \u00F7 ${fmt(tl)} = ${currency}${fmt(pricePerUnit)}`,
+            `Budget: ${currency}${fmt(bd)}`,
+            `Length you can buy: ${currency}${fmt(bd)} \u00F7 ${currency}${fmt(pricePerUnit)} = ${fmt(canBuy)} ${fromUnit}`,
+          ],
+        };
+      }
+      case "cut-pieces": {
+        const pl = parseFloat(pieceLen) || 0;
+        const tr = parseFloat(totalRod) || 0;
+        if (pl === 0) return { value: "\u2014", steps: [] };
+        const plMeters = pl * getF(pieceUnit);
+        const trMeters = tr * getF(rodUnit);
+        const pieces = trMeters / plMeters;
+        const remainder = trMeters % plMeters;
+        const remDisplay = remainder / getF(pieceUnit);
+        return {
+          value: `${Math.floor(pieces)} pieces${remainder > 0.0001 ? ` + ${fmt(remDisplay)} ${pieceUnit} leftover` : ""}`,
+          steps: [
+            `Total material: ${fmt(tr)} ${getLabel(rodUnit)} = ${fmt(trMeters)} m`,
+            `Each piece: ${fmt(pl)} ${getLabel(pieceUnit)} = ${fmt(plMeters)} m`,
+            `Pieces = ${fmt(trMeters)} \u00F7 ${fmt(plMeters)} = ${fmt(pieces)}`,
+            ...(remainder > 0.0001 ? [`Leftover = ${fmt(remDisplay)} ${pieceUnit}`] : []),
+          ],
+        };
+      }
+      case "perimeter": {
+        const sides = parseInt(perimSides) || 0;
+        const sideLen = parseFloat(perimLen) || 0;
+        const sideLenM = sideLen * getF(perimUnit);
+        const perimM = sides * sideLenM;
+        const perimResult = perimM / getF(resultPUnit);
+        return {
+          value: `${fmt(perimResult)} ${resultPUnit}`,
+          steps: [
+            `Number of sides: ${sides}`,
+            `Each side: ${fmt(sideLen)} ${getLabel(perimUnit)} = ${fmt(sideLenM)} m`,
+            `Perimeter = ${sides} \u00D7 ${fmt(sideLenM)} = ${fmt(perimM)} m`,
+            `In ${getLabel(resultPUnit)}: ${fmt(perimResult)}`,
+          ],
+        };
+      }
+      default: return { value: "\u2014", steps: [] };
+    }
+  }, [mode, value, fromUnit, toUnit, totalLen, totalPrice, reqLen, budget, currency, pieceLen, pieceUnit, totalRod, rodUnit, perimSides, perimLen, perimUnit, resultPUnit]);
+
+  const unitOptions = LENGTH_UNITS.map(u => ({ value: u.value, label: u.label }));
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Length Word Problem Solver" icon={Ruler} iconColor="bg-orange-500">
+        <ModeToggle
+          modes={[
+            { id: "convert", label: "Convert" },
+            { id: "price-per-len", label: "Price/Len" },
+            { id: "reverse-len", label: "Reverse" },
+            { id: "cut-pieces", label: "Cut Pieces" },
+            { id: "perimeter", label: "Perimeter" },
+          ]}
+          mode={mode} setMode={setMode}
+        />
+        <div className="space-y-3">
+          {mode === "convert" && (
+            <>
+              <SolverInput label="Value" value={value} onChange={setValue} />
+              <SolverSelect label="From Unit" value={fromUnit} onChange={setFromUnit} options={unitOptions} />
+              <SolverSelect label="To Unit" value={toUnit} onChange={setToUnit} options={unitOptions} />
+            </>
+          )}
+          {mode === "price-per-len" && (
+            <>
+              <div className="flex justify-end"><CurrencySelector currency={currency} setCurrency={setCurrency} /></div>
+              <SolverInput label="Total Length" value={totalLen} onChange={setTotalLen} />
+              <SolverSelect label="Length Unit" value={fromUnit} onChange={setFromUnit} options={unitOptions} />
+              <SolverInput label={`Total Price (${currency})`} value={totalPrice} onChange={setTotalPrice} />
+              <SolverInput label={`Required Length (${fromUnit})`} value={reqLen} onChange={setReqLen} />
+            </>
+          )}
+          {mode === "reverse-len" && (
+            <>
+              <div className="flex justify-end"><CurrencySelector currency={currency} setCurrency={setCurrency} /></div>
+              <SolverInput label="Total Length" value={totalLen} onChange={setTotalLen} />
+              <SolverSelect label="Length Unit" value={fromUnit} onChange={setFromUnit} options={unitOptions} />
+              <SolverInput label={`Total Price (${currency})`} value={totalPrice} onChange={setTotalPrice} />
+              <SolverInput label={`Your Budget (${currency})`} value={budget} onChange={setBudget} />
+            </>
+          )}
+          {mode === "cut-pieces" && (
+            <>
+              <SolverInput label="Total Material Length" value={totalRod} onChange={setTotalRod} />
+              <SolverSelect label="Material Unit" value={rodUnit} onChange={setRodUnit} options={unitOptions} />
+              <SolverInput label="Each Piece Length" value={pieceLen} onChange={setPieceLen} />
+              <SolverSelect label="Piece Unit" value={pieceUnit} onChange={setPieceUnit} options={unitOptions} />
+            </>
+          )}
+          {mode === "perimeter" && (
+            <>
+              <SolverInput label="Number of Sides" value={perimSides} onChange={setPerimSides} />
+              <SolverInput label="Side Length" value={perimLen} onChange={setPerimLen} />
+              <SolverSelect label="Side Unit" value={perimUnit} onChange={setPerimUnit} options={unitOptions} />
+              <SolverSelect label="Result Unit" value={resultPUnit} onChange={setResultPUnit} options={unitOptions} />
+            </>
+          )}
+        </div>
+        <div className="mt-4 space-y-3">
+          <StepsDisplay steps={result.steps} />
+          <ResultBox label="Answer" value={result.value} />
+        </div>
+      </ToolCard>
+    </div>
+  );
+}
+
+const WEIGHT_UNITS = [
+  { value: "mg", label: "Milligram (mg)", factor: 0.000001 },
+  { value: "g", label: "Gram (g)", factor: 0.001 },
+  { value: "kg", label: "Kilogram (kg)", factor: 1 },
+  { value: "quintal", label: "Quintal", factor: 100 },
+  { value: "ton_m", label: "Metric Ton", factor: 1000 },
+  { value: "oz", label: "Ounce (oz)", factor: 0.0283495 },
+  { value: "lb", label: "Pound (lb)", factor: 0.453592 },
+  { value: "st", label: "Stone (st)", factor: 6.35029 },
+  { value: "ton_us", label: "US Ton (short)", factor: 907.185 },
+  { value: "ton_uk", label: "UK Ton (long)", factor: 1016.05 },
+  { value: "ct", label: "Carat (ct)", factor: 0.0002 },
+  { value: "tola", label: "Tola (India)", factor: 0.01166 },
+];
+
+function WeightSolver() {
+  const [mode, setMode] = useState("convert");
+  const [currency, setCurrency] = useState("\u20B9");
+  const [fromUnit, setFromUnit] = useState("kg");
+  const [toUnit, setToUnit] = useState("lb");
+  const [value, setValue] = useState("5");
+  const [totalWt, setTotalWt] = useState("10");
+  const [totalPrice, setTotalPrice] = useState("500");
+  const [reqWt, setReqWt] = useState("3");
+  const [budget, setBudget] = useState("1000");
+  const [numItems, setNumItems] = useState("6");
+  const [perItemWt, setPerItemWt] = useState("250");
+  const [perItemUnit, setPerItemUnit] = useState("g");
+  const [resultWtUnit, setResultWtUnit] = useState("kg");
+  const [packWt, setPackWt] = useState("50");
+  const [packUnit, setPackUnit] = useState("kg");
+  const [totalBulk, setTotalBulk] = useState("500");
+  const [bulkUnit, setBulkUnit] = useState("kg");
+
+  const getF = (u: string) => WEIGHT_UNITS.find(x => x.value === u)?.factor || 1;
+  const getLabel = (u: string) => WEIGHT_UNITS.find(x => x.value === u)?.label || u;
+
+  const result = useMemo(() => {
+    switch (mode) {
+      case "convert": {
+        const v = parseFloat(value) || 0;
+        const kg = v * getF(fromUnit);
+        const converted = kg / getF(toUnit);
+        return {
+          value: `${fmt(converted)} ${toUnit}`,
+          steps: [
+            `Input: ${fmt(v)} ${getLabel(fromUnit)}`,
+            `Convert to kg: ${fmt(v)} \u00D7 ${getF(fromUnit)} = ${fmt(kg)} kg`,
+            `Convert to ${getLabel(toUnit)}: ${fmt(kg)} \u00F7 ${getF(toUnit)} = ${fmt(converted)}`,
+          ],
+        };
+      }
+      case "price-per-wt": {
+        const tw = parseFloat(totalWt) || 0;
+        const tp = parseFloat(totalPrice) || 0;
+        const rq = parseFloat(reqWt) || 0;
+        if (tw === 0) return { value: "\u2014", steps: [] };
+        const pricePerUnit = tp / tw;
+        const reqPrice = pricePerUnit * rq;
+        return {
+          value: `${currency}${fmt(reqPrice)}`,
+          steps: [
+            `Total weight: ${fmt(tw)} ${fromUnit}`,
+            `Total price: ${currency}${fmt(tp)}`,
+            `Price per ${fromUnit}: ${currency}${fmt(tp)} \u00F7 ${fmt(tw)} = ${currency}${fmt(pricePerUnit)}`,
+            `Cost for ${fmt(rq)} ${fromUnit}: ${currency}${fmt(pricePerUnit)} \u00D7 ${fmt(rq)} = ${currency}${fmt(reqPrice)}`,
+          ],
+        };
+      }
+      case "reverse-wt": {
+        const tp = parseFloat(totalPrice) || 0;
+        const tw = parseFloat(totalWt) || 0;
+        const bd = parseFloat(budget) || 0;
+        if (tw === 0 || tp === 0) return { value: "\u2014", steps: [] };
+        const pricePerUnit = tp / tw;
+        const canBuy = bd / pricePerUnit;
+        return {
+          value: `${fmt(canBuy)} ${fromUnit}`,
+          steps: [
+            `Price for ${fmt(tw)} ${fromUnit} = ${currency}${fmt(tp)}`,
+            `Price per ${fromUnit}: ${currency}${fmt(tp)} \u00F7 ${fmt(tw)} = ${currency}${fmt(pricePerUnit)}`,
+            `Budget: ${currency}${fmt(bd)}`,
+            `Weight you can buy: ${currency}${fmt(bd)} \u00F7 ${currency}${fmt(pricePerUnit)} = ${fmt(canBuy)} ${fromUnit}`,
+          ],
+        };
+      }
+      case "total-weight": {
+        const ni = parseFloat(numItems) || 0;
+        const pw = parseFloat(perItemWt) || 0;
+        const totalKg = ni * pw * getF(perItemUnit);
+        const converted = totalKg / getF(resultWtUnit);
+        return {
+          value: `${fmt(converted)} ${resultWtUnit}`,
+          steps: [
+            `Number of items: ${fmt(ni)}`,
+            `Weight per item: ${fmt(pw)} ${getLabel(perItemUnit)}`,
+            `Total weight = ${fmt(ni)} \u00D7 ${fmt(pw)} ${perItemUnit} = ${fmt(ni * pw)} ${perItemUnit}`,
+            `Convert to ${getLabel(resultWtUnit)}: ${fmt(totalKg)} kg \u00F7 ${getF(resultWtUnit)} = ${fmt(converted)} ${resultWtUnit}`,
+          ],
+        };
+      }
+      case "packing": {
+        const pw = parseFloat(packWt) || 0;
+        const tb = parseFloat(totalBulk) || 0;
+        if (pw === 0) return { value: "\u2014", steps: [] };
+        const packKg = pw * getF(packUnit);
+        const bulkKg = tb * getF(bulkUnit);
+        const packs = bulkKg / packKg;
+        const remainder = bulkKg % packKg;
+        const remDisplay = remainder / getF(packUnit);
+        return {
+          value: `${Math.floor(packs)} packs${remainder > 0.0001 ? ` + ${fmt(remDisplay)} ${packUnit} left` : ""}`,
+          steps: [
+            `Each pack: ${fmt(pw)} ${getLabel(packUnit)} = ${fmt(packKg)} kg`,
+            `Total bulk: ${fmt(tb)} ${getLabel(bulkUnit)} = ${fmt(bulkKg)} kg`,
+            `Packs = ${fmt(bulkKg)} \u00F7 ${fmt(packKg)} = ${fmt(packs)}`,
+            ...(remainder > 0.0001 ? [`Leftover = ${fmt(remDisplay)} ${packUnit}`] : []),
+          ],
+        };
+      }
+      default: return { value: "\u2014", steps: [] };
+    }
+  }, [mode, value, fromUnit, toUnit, totalWt, totalPrice, reqWt, budget, currency, numItems, perItemWt, perItemUnit, resultWtUnit, packWt, packUnit, totalBulk, bulkUnit]);
+
+  const unitOptions = WEIGHT_UNITS.map(u => ({ value: u.value, label: u.label }));
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Weight Word Problem Solver" icon={Weight} iconColor="bg-orange-500">
+        <ModeToggle
+          modes={[
+            { id: "convert", label: "Convert" },
+            { id: "price-per-wt", label: "Price/Wt" },
+            { id: "reverse-wt", label: "Reverse" },
+            { id: "total-weight", label: "Total Wt" },
+            { id: "packing", label: "Packing" },
+          ]}
+          mode={mode} setMode={setMode}
+        />
+        <div className="space-y-3">
+          {mode === "convert" && (
+            <>
+              <SolverInput label="Value" value={value} onChange={setValue} />
+              <SolverSelect label="From Unit" value={fromUnit} onChange={setFromUnit} options={unitOptions} />
+              <SolverSelect label="To Unit" value={toUnit} onChange={setToUnit} options={unitOptions} />
+            </>
+          )}
+          {mode === "price-per-wt" && (
+            <>
+              <div className="flex justify-end"><CurrencySelector currency={currency} setCurrency={setCurrency} /></div>
+              <SolverInput label="Total Weight" value={totalWt} onChange={setTotalWt} />
+              <SolverSelect label="Weight Unit" value={fromUnit} onChange={setFromUnit} options={unitOptions} />
+              <SolverInput label={`Total Price (${currency})`} value={totalPrice} onChange={setTotalPrice} />
+              <SolverInput label={`Required Weight (${fromUnit})`} value={reqWt} onChange={setReqWt} />
+            </>
+          )}
+          {mode === "reverse-wt" && (
+            <>
+              <div className="flex justify-end"><CurrencySelector currency={currency} setCurrency={setCurrency} /></div>
+              <SolverInput label="Total Weight" value={totalWt} onChange={setTotalWt} />
+              <SolverSelect label="Weight Unit" value={fromUnit} onChange={setFromUnit} options={unitOptions} />
+              <SolverInput label={`Total Price (${currency})`} value={totalPrice} onChange={setTotalPrice} />
+              <SolverInput label={`Your Budget (${currency})`} value={budget} onChange={setBudget} />
+            </>
+          )}
+          {mode === "total-weight" && (
+            <>
+              <SolverInput label="Number of Items" value={numItems} onChange={setNumItems} />
+              <SolverInput label="Weight per Item" value={perItemWt} onChange={setPerItemWt} />
+              <SolverSelect label="Per Item Unit" value={perItemUnit} onChange={setPerItemUnit} options={unitOptions} />
+              <SolverSelect label="Result Unit" value={resultWtUnit} onChange={setResultWtUnit} options={unitOptions} />
+            </>
+          )}
+          {mode === "packing" && (
+            <>
+              <SolverInput label="Pack Size" value={packWt} onChange={setPackWt} />
+              <SolverSelect label="Pack Unit" value={packUnit} onChange={setPackUnit} options={unitOptions} />
+              <SolverInput label="Total Bulk Weight" value={totalBulk} onChange={setTotalBulk} />
+              <SolverSelect label="Bulk Unit" value={bulkUnit} onChange={setBulkUnit} options={unitOptions} />
             </>
           )}
         </div>
