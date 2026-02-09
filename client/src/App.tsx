@@ -36,6 +36,8 @@ import SmartLifeTools from "@/pages/SmartLifeTools";
 import WordProblemTools from "@/pages/WordProblemTools";
 import ColorTools from "@/pages/ColorTools";
 import ClothingSizeTools from "@/pages/ClothingSizeTools";
+import PopulationTools from "@/pages/PopulationTools";
+import DevelopmentToolsPage from "@/pages/DevelopmentTools";
 
 function Router() {
   return (
@@ -69,6 +71,8 @@ function Router() {
       <Route path="/word-problems" component={WordProblemTools} />
       <Route path="/color-tools" component={ColorTools} />
       <Route path="/size-converter" component={ClothingSizeTools} />
+      <Route path="/population" component={PopulationTools} />
+      <Route path="/development" component={DevelopmentToolsPage} />
       <Route component={NotFound} />
     </Switch>
   );

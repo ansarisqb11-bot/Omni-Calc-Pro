@@ -5,7 +5,8 @@ import {
   Search, ArrowLeft, Wallet, Calculator, Heart, Compass,
   Clock, Ruler, MessageSquare, StickyNote, Binary, FlaskConical,
   HardHat, Plane, Grid3X3, ChevronRight, Hash, GraduationCap,
-  Stethoscope, Home, Car, Leaf, Code, ShoppingCart, Globe, ShoppingBag, Users, Calendar, TrendingDown, Palette, Shirt
+  Stethoscope, Home, Car, Leaf, Code, ShoppingCart, Globe, ShoppingBag, Users, Calendar, TrendingDown, Palette, Shirt,
+  Baby, BarChart3, Zap
 } from "lucide-react";
 
 export default function Categories() {
@@ -230,6 +231,21 @@ export default function Categories() {
     { title: "Gradient Generator", category: "Color Tools", icon: Palette, color: "bg-fuchsia-500", href: "/color-tools" },
     { title: "Color Converter", category: "Color Tools", icon: Palette, color: "bg-fuchsia-500", href: "/color-tools" },
     { title: "Color Generator", category: "Color Tools", icon: Palette, color: "bg-fuchsia-500", href: "/color-tools" },
+    { title: "Population Growth", category: "Population", icon: Users, color: "bg-rose-500", href: "/population" },
+    { title: "Population Density", category: "Population", icon: Users, color: "bg-rose-500", href: "/population" },
+    { title: "Birth Rate Calculator", category: "Population", icon: Baby, color: "bg-rose-500", href: "/population" },
+    { title: "Death Rate Calculator", category: "Population", icon: Users, color: "bg-rose-500", href: "/population" },
+    { title: "Migration Rate", category: "Population", icon: Plane, color: "bg-rose-500", href: "/population" },
+    { title: "Working Population", category: "Population", icon: Users, color: "bg-rose-500", href: "/population" },
+    { title: "Dependency Ratio", category: "Population", icon: Users, color: "bg-rose-500", href: "/population" },
+    { title: "Youth Population", category: "Population", icon: Users, color: "bg-rose-500", href: "/population" },
+    { title: "HDI Calculator", category: "Development", icon: BarChart3, color: "bg-amber-500", href: "/development" },
+    { title: "Poverty Rate Tool", category: "Development", icon: TrendingDown, color: "bg-amber-500", href: "/development" },
+    { title: "Literacy Rate Tool", category: "Development", icon: BarChart3, color: "bg-amber-500", href: "/development" },
+    { title: "Health Index Tool", category: "Development", icon: Heart, color: "bg-amber-500", href: "/development" },
+    { title: "Infrastructure Index", category: "Development", icon: BarChart3, color: "bg-amber-500", href: "/development" },
+    { title: "Digital Economy Tool", category: "Development", icon: BarChart3, color: "bg-amber-500", href: "/development" },
+    { title: "Energy per Capita", category: "Development", icon: Zap, color: "bg-amber-500", href: "/development" },
   ];
 
   const categories = [
@@ -258,10 +274,12 @@ export default function Categories() {
     { title: "Smart Life", icon: ShoppingBag, color: "text-indigo-500", bg: "bg-indigo-50 dark:bg-indigo-500/10", count: allTools.filter(t => t.category === "Smart Daily Life").length, href: "/smart-life" },
     { title: "AI Tools", icon: MessageSquare, color: "text-violet-500", bg: "bg-violet-50 dark:bg-violet-500/10", count: allTools.filter(t => t.category === "AI Tools").length, href: "/ai-tools" },
     { title: "Color Tools", icon: Palette, color: "text-fuchsia-500", bg: "bg-fuchsia-50 dark:bg-fuchsia-500/10", count: allTools.filter(t => t.category === "Color Tools").length, href: "/color-tools" },
+    { title: "Population", icon: Users, color: "text-rose-500", bg: "bg-rose-50 dark:bg-rose-500/10", count: allTools.filter(t => t.category === "Population").length, href: "/population" },
+    { title: "Development", icon: BarChart3, color: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-500/10", count: allTools.filter(t => t.category === "Development").length, href: "/development" },
     { title: "Notes", icon: StickyNote, color: "text-yellow-500", bg: "bg-yellow-50 dark:bg-yellow-500/10", count: 0, href: "/notes" },
   ];
 
-  const filterPills = ["All Tools", "Finance", "Size Converter", "Health", "Math", "Science", "Units", "Date/Time", "Geometry", "Construction", "Travel", "Education", "Medical", "Lifestyle", "Developer", "E-Commerce", "Color Tools", "AI Tools"];
+  const filterPills = ["All Tools", "Finance", "Size Converter", "Health", "Math", "Science", "Units", "Date/Time", "Geometry", "Construction", "Travel", "Education", "Medical", "Lifestyle", "Developer", "E-Commerce", "Color Tools", "Population", "Development", "AI Tools"];
 
   const categoriesWithHref = categories.filter(c => c.href);
 
