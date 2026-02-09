@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Atom, Zap, Thermometer, Scale, FlaskConical, Calculator } from "lucide-react";
+import { Atom, Zap, Thermometer, Scale, FlaskConical, Calculator, Droplets } from "lucide-react";
 import { ToolCard, InputField, ResultDisplay, ToolButton } from "@/components/ToolCard";
 
 const tools = [
@@ -9,6 +9,7 @@ const tools = [
   { id: "physics", label: "Motion", icon: Atom },
   { id: "temperature", label: "Temperature", icon: Thermometer },
   { id: "density", label: "Density", icon: Scale },
+  { id: "ph", label: "pH", icon: Droplets },
 ];
 
 export default function ScienceTools() {
@@ -47,6 +48,7 @@ export default function ScienceTools() {
         {activeTool === "physics" && <MotionEquations />}
         {activeTool === "temperature" && <TemperatureConverter />}
         {activeTool === "density" && <DensityCalculator />}
+        {activeTool === "ph" && <PHCalculator />}
       </div>
     </div>
   );
@@ -223,6 +225,232 @@ function DensityCalculator() {
           <p className="text-muted-foreground">Density = Mass / Volume</p>
           <p className="text-4xl font-bold text-teal-400">{density.toFixed(4)} g/cm3</p>
         </div>
+      </ToolCard>
+    </div>
+  );
+}
+
+function PHCalculator() {
+  const [mode, setMode] = useState<"ph-to-h" | "h-to-ph" | "dilution" | "buffer">("ph-to-h");
+  const [phValue, setPhValue] = useState("7");
+  const [hConc, setHConc] = useState("0.001");
+  const [c1, setC1] = useState("0.1");
+  const [v1, setV1] = useState("50");
+  const [v2, setV2] = useState("500");
+  const [pka, setPka] = useState("4.76");
+  const [acidConc, setAcidConc] = useState("0.1");
+  const [baseConc, setBaseConc] = useState("0.15");
+
+  const modes = [
+    { id: "ph-to-h", label: "pH \u2192 [H\u207A]" },
+    { id: "h-to-ph", label: "[H\u207A] \u2192 pH" },
+    { id: "dilution", label: "Dilution" },
+    { id: "buffer", label: "Buffer pH" },
+  ];
+
+  const fmt = (n: number, d = 4) => {
+    if (isNaN(n) || !isFinite(n)) return "\u2014";
+    return parseFloat(n.toFixed(d)).toString();
+  };
+
+  const getCategory = (ph: number) => {
+    if (ph < 3) return "Strongly Acidic";
+    if (ph < 6) return "Weakly Acidic";
+    if (ph < 6.5) return "Slightly Acidic";
+    if (ph <= 7.5) return "Neutral";
+    if (ph <= 8) return "Slightly Basic";
+    if (ph <= 11) return "Weakly Basic";
+    return "Strongly Basic";
+  };
+
+  const getExamples = (ph: number) => {
+    if (ph < 1) return "Battery acid";
+    if (ph < 2.5) return "Stomach acid, lemon juice";
+    if (ph < 4) return "Vinegar, orange juice";
+    if (ph < 5.5) return "Coffee, beer";
+    if (ph < 6.5) return "Milk, rain water";
+    if (ph <= 7.5) return "Pure water, blood";
+    if (ph <= 8.5) return "Sea water, baking soda";
+    if (ph <= 10) return "Milk of magnesia";
+    if (ph <= 12) return "Ammonia, soapy water";
+    return "Bleach, drain cleaner";
+  };
+
+  const renderResult = () => {
+    switch (mode) {
+      case "ph-to-h": {
+        const ph = parseFloat(phValue) || 0;
+        const h = Math.pow(10, -ph);
+        const oh = Math.pow(10, -(14 - ph));
+        const poh = 14 - ph;
+        return (
+          <div className="space-y-3 mt-4">
+            <div className="bg-muted/20 p-3 rounded-xl border border-border/50 space-y-1.5">
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Step-by-step</p>
+              <p className="text-xs text-foreground"><span className="font-bold text-violet-400 mr-1">Step 1:</span> pH = {fmt(ph, 2)}</p>
+              <p className="text-xs text-foreground"><span className="font-bold text-violet-400 mr-1">Step 2:</span> [H\u207A] = 10^(-pH) = 10^(-{fmt(ph, 2)}) = {h.toExponential(4)} M</p>
+              <p className="text-xs text-foreground"><span className="font-bold text-violet-400 mr-1">Step 3:</span> pOH = 14 - pH = 14 - {fmt(ph, 2)} = {fmt(poh, 2)}</p>
+              <p className="text-xs text-foreground"><span className="font-bold text-violet-400 mr-1">Step 4:</span> [OH\u207B] = 10^(-pOH) = {oh.toExponential(4)} M</p>
+              <p className="text-xs text-foreground"><span className="font-bold text-violet-400 mr-1">Step 5:</span> Category: {getCategory(ph)} (e.g., {getExamples(ph)})</p>
+            </div>
+            <div className="space-y-2">
+              {[
+                { label: "[H\u207A] Concentration", value: `${h.toExponential(4)} M` },
+                { label: "[OH\u207B] Concentration", value: `${oh.toExponential(4)} M` },
+                { label: "pOH", value: fmt(poh, 2) },
+                { label: "Nature", value: getCategory(ph) },
+                { label: "Example", value: getExamples(ph) },
+              ].map((r, i) => (
+                <div key={i} className="flex justify-between items-center p-2.5 bg-muted/30 rounded-xl">
+                  <span className="text-xs font-semibold text-muted-foreground">{r.label}</span>
+                  <span className="text-sm font-bold text-violet-400" data-testid={`result-${i}`}>{r.value}</span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3">
+              <p className="text-xs font-bold text-muted-foreground uppercase mb-2">pH Scale</p>
+              <div className="relative h-6 rounded-full overflow-hidden" style={{ background: "linear-gradient(to right, #ff0000, #ff6600, #ffcc00, #66cc00, #00aa00, #0066cc, #0000ff, #6600cc)" }}>
+                <div className="absolute top-0 h-full w-0.5 bg-white shadow" style={{ left: `${(ph / 14) * 100}%` }} />
+              </div>
+              <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                <span>0 (Acid)</span><span>7 (Neutral)</span><span>14 (Base)</span>
+              </div>
+            </div>
+          </div>
+        );
+      }
+      case "h-to-ph": {
+        const h = parseFloat(hConc) || 0;
+        if (h <= 0) return null;
+        const ph = -Math.log10(h);
+        const poh = 14 - ph;
+        const oh = Math.pow(10, -poh);
+        return (
+          <div className="space-y-3 mt-4">
+            <div className="bg-muted/20 p-3 rounded-xl border border-border/50 space-y-1.5">
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Step-by-step</p>
+              <p className="text-xs text-foreground"><span className="font-bold text-violet-400 mr-1">Step 1:</span> [H\u207A] = {h.toExponential(4)} M</p>
+              <p className="text-xs text-foreground"><span className="font-bold text-violet-400 mr-1">Step 2:</span> pH = -log\u2081\u2080({h.toExponential(4)}) = {fmt(ph, 4)}</p>
+              <p className="text-xs text-foreground"><span className="font-bold text-violet-400 mr-1">Step 3:</span> pOH = 14 - {fmt(ph, 2)} = {fmt(poh, 2)}</p>
+            </div>
+            <div className="space-y-2">
+              {[
+                { label: "pH", value: fmt(ph, 4) },
+                { label: "pOH", value: fmt(poh, 4) },
+                { label: "[OH\u207B]", value: `${oh.toExponential(4)} M` },
+                { label: "Nature", value: getCategory(ph) },
+              ].map((r, i) => (
+                <div key={i} className="flex justify-between items-center p-2.5 bg-muted/30 rounded-xl">
+                  <span className="text-xs font-semibold text-muted-foreground">{r.label}</span>
+                  <span className="text-sm font-bold text-violet-400" data-testid={`result-${i}`}>{r.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
+      case "dilution": {
+        const conc1 = parseFloat(c1) || 0;
+        const vol1 = parseFloat(v1) || 0;
+        const vol2 = parseFloat(v2) || 0;
+        if (vol2 <= 0) return null;
+        const c2 = (conc1 * vol1) / vol2;
+        const ph1 = conc1 > 0 ? -Math.log10(conc1) : 0;
+        const ph2 = c2 > 0 ? -Math.log10(c2) : 0;
+        return (
+          <div className="space-y-3 mt-4">
+            <div className="bg-muted/20 p-3 rounded-xl border border-border/50 space-y-1.5">
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Step-by-step</p>
+              <p className="text-xs text-foreground"><span className="font-bold text-violet-400 mr-1">Step 1:</span> C\u2081V\u2081 = C\u2082V\u2082 (dilution formula)</p>
+              <p className="text-xs text-foreground"><span className="font-bold text-violet-400 mr-1">Step 2:</span> {fmt(conc1)} \u00D7 {fmt(vol1, 0)} = C\u2082 \u00D7 {fmt(vol2, 0)}</p>
+              <p className="text-xs text-foreground"><span className="font-bold text-violet-400 mr-1">Step 3:</span> C\u2082 = {fmt(conc1 * vol1)} / {fmt(vol2, 0)} = {c2.toExponential(4)} M</p>
+              <p className="text-xs text-foreground"><span className="font-bold text-violet-400 mr-1">Step 4:</span> pH changes: {fmt(ph1, 2)} \u2192 {fmt(ph2, 2)}</p>
+            </div>
+            <div className="space-y-2">
+              {[
+                { label: "New Concentration", value: `${c2.toExponential(4)} M` },
+                { label: "Dilution Factor", value: `${fmt(vol2 / vol1, 1)}\u00D7` },
+                { label: "pH Before", value: fmt(ph1, 2) },
+                { label: "pH After", value: fmt(ph2, 2) },
+              ].map((r, i) => (
+                <div key={i} className="flex justify-between items-center p-2.5 bg-muted/30 rounded-xl">
+                  <span className="text-xs font-semibold text-muted-foreground">{r.label}</span>
+                  <span className="text-sm font-bold text-violet-400" data-testid={`result-${i}`}>{r.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
+      case "buffer": {
+        const pkaVal = parseFloat(pka) || 0;
+        const acid = parseFloat(acidConc) || 0;
+        const base = parseFloat(baseConc) || 0;
+        if (acid <= 0) return null;
+        const ratio = base / acid;
+        const ph = pkaVal + Math.log10(ratio);
+        return (
+          <div className="space-y-3 mt-4">
+            <div className="bg-muted/20 p-3 rounded-xl border border-border/50 space-y-1.5">
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Henderson-Hasselbalch</p>
+              <p className="text-xs text-foreground"><span className="font-bold text-violet-400 mr-1">Step 1:</span> pH = pKa + log([A\u207B]/[HA])</p>
+              <p className="text-xs text-foreground"><span className="font-bold text-violet-400 mr-1">Step 2:</span> pH = {fmt(pkaVal, 2)} + log({fmt(base)}/{fmt(acid)})</p>
+              <p className="text-xs text-foreground"><span className="font-bold text-violet-400 mr-1">Step 3:</span> pH = {fmt(pkaVal, 2)} + log({fmt(ratio, 4)})</p>
+              <p className="text-xs text-foreground"><span className="font-bold text-violet-400 mr-1">Step 4:</span> pH = {fmt(pkaVal, 2)} + {fmt(Math.log10(ratio), 4)} = {fmt(ph, 4)}</p>
+            </div>
+            <div className="space-y-2">
+              {[
+                { label: "Buffer pH", value: fmt(ph, 4) },
+                { label: "pKa", value: fmt(pkaVal, 2) },
+                { label: "[Base]/[Acid] Ratio", value: fmt(ratio, 4) },
+                { label: "Nature", value: getCategory(ph) },
+              ].map((r, i) => (
+                <div key={i} className="flex justify-between items-center p-2.5 bg-muted/30 rounded-xl">
+                  <span className="text-xs font-semibold text-muted-foreground">{r.label}</span>
+                  <span className="text-sm font-bold text-violet-400" data-testid={`result-${i}`}>{r.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
+    }
+  };
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="pH Calculator" icon={Droplets} iconColor="bg-violet-500">
+        <div className="flex gap-2 p-1 bg-muted rounded-xl mb-4 flex-wrap">
+          {modes.map((m) => (
+            <button key={m.id} onClick={() => setMode(m.id as typeof mode)} data-testid={`mode-${m.id}`}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${mode === m.id ? "bg-violet-500 text-white shadow-sm" : "text-muted-foreground"}`}>
+              {m.label}
+            </button>
+          ))}
+        </div>
+        <div className="space-y-3">
+          {mode === "ph-to-h" && (
+            <InputField label="pH Value" value={phValue} onChange={setPhValue} type="number" placeholder="7" />
+          )}
+          {mode === "h-to-ph" && (
+            <InputField label="[H\u207A] Concentration (M)" value={hConc} onChange={setHConc} type="number" placeholder="0.001" />
+          )}
+          {mode === "dilution" && (
+            <>
+              <InputField label="Initial Concentration (M)" value={c1} onChange={setC1} type="number" placeholder="0.1" />
+              <InputField label="Initial Volume (mL)" value={v1} onChange={setV1} type="number" placeholder="50" />
+              <InputField label="Final Volume (mL)" value={v2} onChange={setV2} type="number" placeholder="500" />
+            </>
+          )}
+          {mode === "buffer" && (
+            <>
+              <InputField label="pKa of Acid" value={pka} onChange={setPka} type="number" placeholder="4.76" />
+              <InputField label="[Acid] Concentration (M)" value={acidConc} onChange={setAcidConc} type="number" placeholder="0.1" />
+              <InputField label="[Conjugate Base] (M)" value={baseConc} onChange={setBaseConc} type="number" placeholder="0.15" />
+            </>
+          )}
+        </div>
+        {renderResult()}
       </ToolCard>
     </div>
   );

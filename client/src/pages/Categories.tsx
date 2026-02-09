@@ -6,7 +6,7 @@ import {
   Clock, Ruler, MessageSquare, StickyNote, Binary, FlaskConical,
   HardHat, Plane, Grid3X3, ChevronRight, Hash, GraduationCap,
   Stethoscope, Home, Car, Leaf, Code, ShoppingCart, Globe, ShoppingBag, Users, Calendar, TrendingDown, Palette, Shirt,
-  Baby, BarChart3, Zap
+  Baby, BarChart3, Zap, Proportions, Monitor, ImageIcon, RulerIcon, FileText, Droplets, Columns3, LineChart
 } from "lucide-react";
 
 export default function Categories() {
@@ -246,6 +246,14 @@ export default function Categories() {
     { title: "Infrastructure Index", category: "Development", icon: BarChart3, color: "bg-amber-500", href: "/development" },
     { title: "Digital Economy Tool", category: "Development", icon: BarChart3, color: "bg-amber-500", href: "/development" },
     { title: "Energy per Capita", category: "Development", icon: Zap, color: "bg-amber-500", href: "/development" },
+    { title: "Aspect Ratio Calculator", category: "Designer", icon: Proportions, color: "bg-pink-500", href: "/designer" },
+    { title: "Screen DPI / PPI", category: "Designer", icon: Monitor, color: "bg-pink-500", href: "/designer" },
+    { title: "Image Resize Calculator", category: "Designer", icon: ImageIcon, color: "bg-pink-500", href: "/designer" },
+    { title: "CM / Pixel / Inch", category: "Designer", icon: RulerIcon, color: "bg-pink-500", href: "/designer" },
+    { title: "Paper Size Calculator", category: "Designer", icon: FileText, color: "bg-pink-500", href: "/designer" },
+    { title: "pH Calculator", category: "Science", icon: Droplets, color: "bg-rose-500", href: "/science" },
+    { title: "Roman Numerals", category: "Numbers", icon: Columns3, color: "bg-teal-500", href: "/numbers" },
+    { title: "Stock Profit/Loss", category: "Finance", icon: LineChart, color: "bg-emerald-500", href: "/finance" },
   ];
 
   const categories = [
@@ -276,10 +284,11 @@ export default function Categories() {
     { title: "Color Tools", icon: Palette, color: "text-fuchsia-500", bg: "bg-fuchsia-50 dark:bg-fuchsia-500/10", count: allTools.filter(t => t.category === "Color Tools").length, href: "/color-tools" },
     { title: "Population", icon: Users, color: "text-rose-500", bg: "bg-rose-50 dark:bg-rose-500/10", count: allTools.filter(t => t.category === "Population").length, href: "/population" },
     { title: "Development", icon: BarChart3, color: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-500/10", count: allTools.filter(t => t.category === "Development").length, href: "/development" },
+    { title: "Designer", icon: Proportions, color: "text-pink-500", bg: "bg-pink-50 dark:bg-pink-500/10", count: allTools.filter(t => t.category === "Designer").length, href: "/designer" },
     { title: "Notes", icon: StickyNote, color: "text-yellow-500", bg: "bg-yellow-50 dark:bg-yellow-500/10", count: 0, href: "/notes" },
   ];
 
-  const filterPills = ["All Tools", "Finance", "Size Converter", "Health", "Math", "Science", "Units", "Date/Time", "Geometry", "Construction", "Travel", "Education", "Medical", "Lifestyle", "Developer", "E-Commerce", "Color Tools", "Population", "Development", "AI Tools"];
+  const filterPills = ["All Tools", "Finance", "Size Converter", "Health", "Math", "Science", "Units", "Date/Time", "Geometry", "Construction", "Travel", "Education", "Medical", "Lifestyle", "Developer", "E-Commerce", "Color Tools", "Population", "Development", "Designer", "AI Tools"];
 
   const categoriesWithHref = categories.filter(c => c.href);
 

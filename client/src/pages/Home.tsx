@@ -7,7 +7,7 @@ import {
   Wallet, Heart, Ruler, Clock, Binary, Compass, FlaskConical, HardHat, 
   Plane, MessageSquare, Hash, GraduationCap, Stethoscope, Home as HomeIcon,
   Car, Leaf, Code, ShoppingCart, Globe, ShoppingBag, Palette, StickyNote, Calculator, Shirt,
-  Users, BarChart3
+  Users, BarChart3, Proportions
 } from "lucide-react";
 import { useAddToHistory } from "@/hooks/use-history";
 
@@ -41,6 +41,7 @@ export default function Home() {
     { title: "Color Tools", icon: Palette, color: "bg-fuchsia-500", href: "/color-tools" },
     { title: "Population", icon: Users, color: "bg-rose-500", href: "/population" },
     { title: "Development", icon: BarChart3, color: "bg-amber-500", href: "/development" },
+    { title: "Designer", icon: Proportions, color: "bg-pink-500", href: "/designer" },
     { title: "AI Tools", icon: MessageSquare, color: "bg-violet-500", href: "/ai-tools" },
     { title: "Notes", icon: StickyNote, color: "bg-yellow-500", href: "/notes" },
   ];

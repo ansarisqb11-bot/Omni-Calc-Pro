@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Hash, ArrowRightLeft, DollarSign, IndianRupee, Calculator } from "lucide-react";
+import { Hash, ArrowRightLeft, DollarSign, IndianRupee, Calculator, Columns3 } from "lucide-react";
 import { ToolCard, InputField, ResultDisplay, ToolButton } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
 
-type ToolType = "billion-million" | "crore-lakh" | "us-indian" | "number-words";
+type ToolType = "billion-million" | "crore-lakh" | "us-indian" | "number-words" | "roman";
 
 export default function NumberTools() {
   const [activeTool, setActiveTool] = useState<ToolType>("billion-million");
@@ -14,6 +14,7 @@ export default function NumberTools() {
     { id: "crore-lakh", label: "Crore/Lakh", icon: IndianRupee },
     { id: "us-indian", label: "US ↔ Indian", icon: ArrowRightLeft },
     { id: "number-words", label: "To Words", icon: Hash },
+    { id: "roman", label: "Roman", icon: Columns3 },
   ];
 
   return (
@@ -29,6 +30,7 @@ export default function NumberTools() {
       {activeTool === "crore-lakh" && <CroreLakhConverter />}
       {activeTool === "us-indian" && <USIndianConverter />}
       {activeTool === "number-words" && <NumberToWords />}
+      {activeTool === "roman" && <RomanNumeralConverter />}
     </PageWrapper>
   );
 }
@@ -330,6 +332,144 @@ function NumberToWords() {
               {system === "us" ? num.toLocaleString("en-US") : num.toLocaleString("en-IN")}
             </span>
           </p>
+        </div>
+      </ToolCard>
+    </div>
+  );
+}
+
+function RomanNumeralConverter() {
+  const [mode, setMode] = useState<"to-roman" | "to-number">("to-roman");
+  const [numberInput, setNumberInput] = useState("2024");
+  const [romanInput, setRomanInput] = useState("MMXXIV");
+
+  const romanNumerals: [number, string][] = [
+    [1000, "M"], [900, "CM"], [500, "D"], [400, "CD"],
+    [100, "C"], [90, "XC"], [50, "L"], [40, "XL"],
+    [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"],
+  ];
+
+  const toRoman = (num: number): { result: string; steps: string[] } => {
+    if (num <= 0 || num > 3999 || !Number.isInteger(num)) {
+      return { result: "Invalid (1\u20133999)", steps: ["Input must be an integer between 1 and 3999"] };
+    }
+    let remaining = num;
+    let result = "";
+    const steps: string[] = [`Starting with ${num}`];
+    for (const [value, symbol] of romanNumerals) {
+      while (remaining >= value) {
+        result += symbol;
+        remaining -= value;
+        steps.push(`Subtract ${value} (${symbol}) \u2192 remaining: ${remaining}, result: ${result}`);
+      }
+    }
+    return { result, steps };
+  };
+
+  const fromRoman = (str: string): { result: number; steps: string[] } => {
+    const romanMap: Record<string, number> = { I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000 };
+    const upper = str.toUpperCase().trim();
+    if (!/^[IVXLCDM]+$/.test(upper)) {
+      return { result: 0, steps: ["Invalid roman numeral. Use I, V, X, L, C, D, M only."] };
+    }
+    let total = 0;
+    const steps: string[] = [`Parsing: ${upper}`];
+    for (let i = 0; i < upper.length; i++) {
+      const current = romanMap[upper[i]];
+      const next = i + 1 < upper.length ? romanMap[upper[i + 1]] : 0;
+      if (current < next) {
+        total -= current;
+        steps.push(`${upper[i]} (${current}) < ${upper[i + 1]} (${next}) \u2192 subtract ${current}, total: ${total}`);
+      } else {
+        total += current;
+        steps.push(`${upper[i]} (${current}) \u2192 add ${current}, total: ${total}`);
+      }
+    }
+    return { result: total, steps };
+  };
+
+  const commonExamples = [
+    { num: 1, roman: "I" }, { num: 4, roman: "IV" }, { num: 5, roman: "V" },
+    { num: 9, roman: "IX" }, { num: 10, roman: "X" }, { num: 40, roman: "XL" },
+    { num: 50, roman: "L" }, { num: 90, roman: "XC" }, { num: 100, roman: "C" },
+    { num: 400, roman: "CD" }, { num: 500, roman: "D" }, { num: 900, roman: "CM" },
+    { num: 1000, roman: "M" }, { num: 2024, roman: "MMXXIV" },
+  ];
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Roman Numerals Converter" icon={Columns3} iconColor="bg-teal-500">
+        <div className="flex gap-2 p-1 bg-muted rounded-xl mb-4">
+          <button onClick={() => setMode("to-roman")} data-testid="mode-to-roman"
+            className={`flex-1 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${mode === "to-roman" ? "bg-teal-500 text-white shadow-sm" : "text-muted-foreground"}`}>
+            Number \u2192 Roman
+          </button>
+          <button onClick={() => setMode("to-number")} data-testid="mode-to-number"
+            className={`flex-1 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${mode === "to-number" ? "bg-teal-500 text-white shadow-sm" : "text-muted-foreground"}`}>
+            Roman \u2192 Number
+          </button>
+        </div>
+
+        {mode === "to-roman" ? (
+          <>
+            <InputField label="Enter Number (1\u20133999)" value={numberInput} onChange={setNumberInput} type="number" placeholder="2024" />
+            {(() => {
+              const num = parseInt(numberInput) || 0;
+              const { result, steps } = toRoman(num);
+              return (
+                <div className="mt-4 space-y-3">
+                  <div className="bg-muted/20 p-3 rounded-xl border border-border/50 space-y-1.5">
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Step-by-step</p>
+                    {steps.map((s, i) => (
+                      <p key={i} className="text-xs text-foreground"><span className="font-bold text-teal-500 mr-1">Step {i + 1}:</span> {s}</p>
+                    ))}
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-muted/30 rounded-xl">
+                    <span className="text-sm font-semibold text-muted-foreground">Roman Numeral</span>
+                    <span className="text-xl font-bold text-teal-500" data-testid="result-roman">{result}</span>
+                  </div>
+                </div>
+              );
+            })()}
+          </>
+        ) : (
+          <>
+            <div>
+              <label className="text-sm font-medium text-muted-foreground mb-1.5 block">Enter Roman Numeral</label>
+              <input type="text" value={romanInput} onChange={(e) => setRomanInput(e.target.value.toUpperCase())} placeholder="MMXXIV"
+                data-testid="input-roman"
+                className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-mono tracking-widest text-lg" />
+            </div>
+            {(() => {
+              const { result, steps } = fromRoman(romanInput);
+              return (
+                <div className="mt-4 space-y-3">
+                  <div className="bg-muted/20 p-3 rounded-xl border border-border/50 space-y-1.5">
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Step-by-step</p>
+                    {steps.map((s, i) => (
+                      <p key={i} className="text-xs text-foreground"><span className="font-bold text-teal-500 mr-1">Step {i + 1}:</span> {s}</p>
+                    ))}
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-muted/30 rounded-xl">
+                    <span className="text-sm font-semibold text-muted-foreground">Decimal Number</span>
+                    <span className="text-xl font-bold text-teal-500" data-testid="result-number">{result.toLocaleString()}</span>
+                  </div>
+                </div>
+              );
+            })()}
+          </>
+        )}
+
+        <div className="mt-4">
+          <p className="text-xs font-bold text-muted-foreground uppercase mb-2">Reference Chart</p>
+          <div className="grid grid-cols-2 gap-1.5">
+            {commonExamples.map((ex) => (
+              <div key={ex.num} className="flex justify-between items-center px-3 py-1.5 bg-muted/20 rounded-lg">
+                <span className="text-xs text-muted-foreground">{ex.num}</span>
+                <span className="text-xs font-bold text-teal-500 font-mono">{ex.roman}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </ToolCard>
     </div>

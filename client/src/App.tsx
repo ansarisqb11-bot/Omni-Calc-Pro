@@ -38,6 +38,7 @@ import ColorTools from "@/pages/ColorTools";
 import ClothingSizeTools from "@/pages/ClothingSizeTools";
 import PopulationTools from "@/pages/PopulationTools";
 import DevelopmentToolsPage from "@/pages/DevelopmentTools";
+import DesignerTools from "@/pages/DesignerTools";
 
 function Router() {
   return (
@@ -73,6 +74,7 @@ function Router() {
       <Route path="/size-converter" component={ClothingSizeTools} />
       <Route path="/population" component={PopulationTools} />
       <Route path="/development" component={DevelopmentToolsPage} />
+      <Route path="/designer" component={DesignerTools} />
       <Route component={NotFound} />
     </Switch>
   );

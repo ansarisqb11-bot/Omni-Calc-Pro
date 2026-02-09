@@ -7,7 +7,7 @@ import {
 import { ToolCard, InputField, ResultDisplay, ToolButton } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
 
-type ToolType = "emi" | "compound" | "tip" | "roi" | "gst" | "sip" | "salary" | "discount" | "currency" | "mortgage" | "profit" | "markup" | "margin" | "inflation";
+type ToolType = "emi" | "compound" | "tip" | "roi" | "gst" | "sip" | "salary" | "discount" | "currency" | "mortgage" | "profit" | "markup" | "margin" | "inflation" | "stock";
 
 type NumberFormat = "US" | "IN";
 
@@ -45,6 +45,7 @@ export default function FinanceTools() {
     { id: "profit", label: "Profit/Loss", icon: TrendingDown },
     { id: "markup", label: "Markup", icon: Tag },
     { id: "margin", label: "Margin", icon: Percent },
+    { id: "stock", label: "Stock P/L", icon: LineChart },
   ];
 
   return (
@@ -70,6 +71,7 @@ export default function FinanceTools() {
       {activeTool === "markup" && <MarkupCalculator />}
       {activeTool === "margin" && <MarginCalculator />}
       {activeTool === "inflation" && <InflationCalculator />}
+      {activeTool === "stock" && <StockCalculator />}
     </PageWrapper>
   );
 }
@@ -749,6 +751,226 @@ function MarginCalculator() {
           <ResultDisplay label="Selling Price" value={`${symbol}${sell.toLocaleString(undefined, { maximumFractionDigits: 2 })}`} highlight color="text-emerald-400" />
           <ResultDisplay label="Gross Profit" value={`${symbol}${profit.toLocaleString(undefined, { maximumFractionDigits: 2 })}`} />
         </div>
+      </ToolCard>
+    </div>
+  );
+}
+
+function StockCalculator() {
+  const [format, setFormat] = useState<NumberFormat>("US");
+  const [mode, setMode] = useState<"profit-loss" | "breakeven" | "avg-cost">("profit-loss");
+  const [buyPrice, setBuyPrice] = useState("150");
+  const [sellPrice, setSellPrice] = useState("180");
+  const [shares, setShares] = useState("100");
+  const [buyCommission, setBuyCommission] = useState("0");
+  const [sellCommission, setSellCommission] = useState("0");
+  const [sttRate, setSttRate] = useState("0.025");
+  const [targetProfit, setTargetProfit] = useState("5000");
+  const [buy1Price, setBuy1Price] = useState("100");
+  const [buy1Qty, setBuy1Qty] = useState("50");
+  const [buy2Price, setBuy2Price] = useState("120");
+  const [buy2Qty, setBuy2Qty] = useState("30");
+  const [buy3Price, setBuy3Price] = useState("90");
+  const [buy3Qty, setBuy3Qty] = useState("20");
+
+  const symbol = format === "US" ? "$" : "\u20B9";
+  const fmt = (n: number) => {
+    if (isNaN(n) || !isFinite(n)) return "\u2014";
+    return format === "US"
+      ? n.toLocaleString("en-US", { maximumFractionDigits: 2 })
+      : n.toLocaleString("en-IN", { maximumFractionDigits: 2 });
+  };
+
+  const modes = [
+    { id: "profit-loss", label: "Profit/Loss" },
+    { id: "breakeven", label: "Break-even" },
+    { id: "avg-cost", label: "Avg Cost" },
+  ];
+
+  const renderResult = () => {
+    switch (mode) {
+      case "profit-loss": {
+        const bp = parseFloat(buyPrice) || 0;
+        const sp = parseFloat(sellPrice) || 0;
+        const qty = parseFloat(shares) || 0;
+        const bComm = parseFloat(buyCommission) || 0;
+        const sComm = parseFloat(sellCommission) || 0;
+        const stt = parseFloat(sttRate) || 0;
+
+        const totalBuy = bp * qty;
+        const totalSell = sp * qty;
+        const buyFees = bComm;
+        const sellFees = sComm;
+        const sttAmount = (totalSell * stt) / 100;
+        const totalCost = totalBuy + buyFees + sellFees + sttAmount;
+        const grossPL = totalSell - totalBuy;
+        const netPL = totalSell - totalCost;
+        const returnPct = totalBuy > 0 ? (netPL / totalBuy) * 100 : 0;
+        const isProfit = netPL >= 0;
+
+        return (
+          <div className="mt-4 space-y-3">
+            <div className="bg-muted/20 p-3 rounded-xl border border-border/50 space-y-1.5">
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Step-by-step</p>
+              <p className="text-xs text-foreground"><span className="font-bold text-emerald-500 mr-1">Step 1:</span> Buy: {fmt(qty)} shares \u00D7 {symbol}{fmt(bp)} = {symbol}{fmt(totalBuy)}</p>
+              <p className="text-xs text-foreground"><span className="font-bold text-emerald-500 mr-1">Step 2:</span> Sell: {fmt(qty)} shares \u00D7 {symbol}{fmt(sp)} = {symbol}{fmt(totalSell)}</p>
+              <p className="text-xs text-foreground"><span className="font-bold text-emerald-500 mr-1">Step 3:</span> Fees: Buy {symbol}{fmt(buyFees)} + Sell {symbol}{fmt(sellFees)} + STT {symbol}{fmt(sttAmount)} = {symbol}{fmt(buyFees + sellFees + sttAmount)}</p>
+              <p className="text-xs text-foreground"><span className="font-bold text-emerald-500 mr-1">Step 4:</span> Net P/L = {symbol}{fmt(totalSell)} - {symbol}{fmt(totalCost)} = {symbol}{fmt(netPL)}</p>
+              <p className="text-xs text-foreground"><span className="font-bold text-emerald-500 mr-1">Step 5:</span> Return = {fmt(netPL)} / {fmt(totalBuy)} \u00D7 100 = {fmt(returnPct)}%</p>
+            </div>
+            <div className="space-y-2">
+              {[
+                { label: "Total Investment", value: `${symbol}${fmt(totalBuy)}` },
+                { label: "Total Sale Value", value: `${symbol}${fmt(totalSell)}` },
+                { label: "Gross P/L", value: `${symbol}${fmt(grossPL)}` },
+                { label: "Total Charges", value: `${symbol}${fmt(buyFees + sellFees + sttAmount)}` },
+                { label: "Net Profit/Loss", value: `${isProfit ? "+" : ""}${symbol}${fmt(netPL)}` },
+                { label: "Return %", value: `${isProfit ? "+" : ""}${fmt(returnPct)}%` },
+                { label: "P/L per Share", value: `${symbol}${fmt(netPL / qty)}` },
+              ].map((r, i) => (
+                <div key={i} className="flex justify-between items-center p-2.5 bg-muted/30 rounded-xl">
+                  <span className="text-xs font-semibold text-muted-foreground">{r.label}</span>
+                  <span className={`text-sm font-bold ${i >= 4 ? (isProfit ? "text-emerald-500" : "text-red-500") : "text-foreground"}`} data-testid={`result-${i}`}>{r.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
+      case "breakeven": {
+        const bp = parseFloat(buyPrice) || 0;
+        const qty = parseFloat(shares) || 0;
+        const bComm = parseFloat(buyCommission) || 0;
+        const sComm = parseFloat(sellCommission) || 0;
+        const stt = parseFloat(sttRate) || 0;
+        const tp = parseFloat(targetProfit) || 0;
+
+        const totalBuy = bp * qty;
+        const totalFees = bComm + sComm;
+        const bePrice = qty > 0 ? (totalBuy + totalFees) / (qty * (1 - stt / 100)) : 0;
+        const targetSellPrice = qty > 0 ? (totalBuy + totalFees + tp) / (qty * (1 - stt / 100)) : 0;
+        const targetPct = bp > 0 ? ((targetSellPrice - bp) / bp) * 100 : 0;
+
+        return (
+          <div className="mt-4 space-y-3">
+            <div className="bg-muted/20 p-3 rounded-xl border border-border/50 space-y-1.5">
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Step-by-step</p>
+              <p className="text-xs text-foreground"><span className="font-bold text-emerald-500 mr-1">Step 1:</span> Total buy cost = {symbol}{fmt(totalBuy)} + {symbol}{fmt(totalFees)} fees = {symbol}{fmt(totalBuy + totalFees)}</p>
+              <p className="text-xs text-foreground"><span className="font-bold text-emerald-500 mr-1">Step 2:</span> Break-even price = {symbol}{fmt(totalBuy + totalFees)} / ({fmt(qty)} \u00D7 (1 - {stt}%)) = {symbol}{fmt(bePrice)}</p>
+              <p className="text-xs text-foreground"><span className="font-bold text-emerald-500 mr-1">Step 3:</span> For {symbol}{fmt(tp)} profit, sell at {symbol}{fmt(targetSellPrice)} ({fmt(targetPct)}% gain)</p>
+            </div>
+            <div className="space-y-2">
+              {[
+                { label: "Buy Price", value: `${symbol}${fmt(bp)}` },
+                { label: "Break-even Price", value: `${symbol}${fmt(bePrice)}` },
+                { label: "Price Difference", value: `${symbol}${fmt(bePrice - bp)}` },
+                { label: `Target (${symbol}${fmt(tp)} profit)`, value: `${symbol}${fmt(targetSellPrice)}` },
+                { label: "Gain Needed", value: `${fmt(targetPct)}%` },
+              ].map((r, i) => (
+                <div key={i} className="flex justify-between items-center p-2.5 bg-muted/30 rounded-xl">
+                  <span className="text-xs font-semibold text-muted-foreground">{r.label}</span>
+                  <span className="text-sm font-bold text-emerald-500" data-testid={`result-${i}`}>{r.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
+      case "avg-cost": {
+        const lots = [
+          { price: parseFloat(buy1Price) || 0, qty: parseFloat(buy1Qty) || 0 },
+          { price: parseFloat(buy2Price) || 0, qty: parseFloat(buy2Qty) || 0 },
+          { price: parseFloat(buy3Price) || 0, qty: parseFloat(buy3Qty) || 0 },
+        ].filter(l => l.price > 0 && l.qty > 0);
+
+        const totalQty = lots.reduce((s, l) => s + l.qty, 0);
+        const totalCost = lots.reduce((s, l) => s + l.price * l.qty, 0);
+        const avgCost = totalQty > 0 ? totalCost / totalQty : 0;
+        const sp = parseFloat(sellPrice) || 0;
+        const currentValue = sp * totalQty;
+        const unrealizedPL = currentValue - totalCost;
+        const returnPct = totalCost > 0 ? (unrealizedPL / totalCost) * 100 : 0;
+
+        return (
+          <div className="mt-4 space-y-3">
+            <div className="bg-muted/20 p-3 rounded-xl border border-border/50 space-y-1.5">
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Step-by-step</p>
+              {lots.map((l, i) => (
+                <p key={i} className="text-xs text-foreground"><span className="font-bold text-emerald-500 mr-1">Lot {i + 1}:</span> {fmt(l.qty)} shares \u00D7 {symbol}{fmt(l.price)} = {symbol}{fmt(l.price * l.qty)}</p>
+              ))}
+              <p className="text-xs text-foreground"><span className="font-bold text-emerald-500 mr-1">Total:</span> {fmt(totalQty)} shares, {symbol}{fmt(totalCost)} invested</p>
+              <p className="text-xs text-foreground"><span className="font-bold text-emerald-500 mr-1">Avg:</span> {symbol}{fmt(totalCost)} / {fmt(totalQty)} = {symbol}{fmt(avgCost)} per share</p>
+            </div>
+            <div className="space-y-2">
+              {[
+                { label: "Average Cost/Share", value: `${symbol}${fmt(avgCost)}` },
+                { label: "Total Shares", value: fmt(totalQty) },
+                { label: "Total Invested", value: `${symbol}${fmt(totalCost)}` },
+                { label: `Current Value (at ${symbol}${fmt(sp)})`, value: `${symbol}${fmt(currentValue)}` },
+                { label: "Unrealized P/L", value: `${unrealizedPL >= 0 ? "+" : ""}${symbol}${fmt(unrealizedPL)}` },
+                { label: "Return", value: `${unrealizedPL >= 0 ? "+" : ""}${fmt(returnPct)}%` },
+              ].map((r, i) => (
+                <div key={i} className="flex justify-between items-center p-2.5 bg-muted/30 rounded-xl">
+                  <span className="text-xs font-semibold text-muted-foreground">{r.label}</span>
+                  <span className={`text-sm font-bold ${i >= 4 ? (unrealizedPL >= 0 ? "text-emerald-500" : "text-red-500") : "text-foreground"}`} data-testid={`result-${i}`}>{r.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
+    }
+  };
+
+  return (
+    <div className="space-y-4 max-w-lg mx-auto">
+      <ToolCard title="Stock Profit/Loss & Break-even" icon={LineChart} iconColor="bg-emerald-500">
+        <CurrencySelector value={format} onChange={setFormat} />
+        <div className="flex gap-2 p-1 bg-muted rounded-xl mb-4 flex-wrap">
+          {modes.map((m) => (
+            <button key={m.id} onClick={() => setMode(m.id as typeof mode)} data-testid={`mode-${m.id}`}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${mode === m.id ? "bg-emerald-500 text-white shadow-sm" : "text-muted-foreground"}`}>
+              {m.label}
+            </button>
+          ))}
+        </div>
+        <div className="space-y-3">
+          {mode === "profit-loss" && (
+            <>
+              <InputField label="Buy Price" value={buyPrice} onChange={setBuyPrice} type="number" suffix={symbol} />
+              <InputField label="Sell Price" value={sellPrice} onChange={setSellPrice} type="number" suffix={symbol} />
+              <InputField label="Number of Shares" value={shares} onChange={setShares} type="number" />
+              <InputField label="Buy Commission" value={buyCommission} onChange={setBuyCommission} type="number" suffix={symbol} />
+              <InputField label="Sell Commission" value={sellCommission} onChange={setSellCommission} type="number" suffix={symbol} />
+              <InputField label="STT / Tax Rate (%)" value={sttRate} onChange={setSttRate} type="number" suffix="%" />
+            </>
+          )}
+          {mode === "breakeven" && (
+            <>
+              <InputField label="Buy Price" value={buyPrice} onChange={setBuyPrice} type="number" suffix={symbol} />
+              <InputField label="Number of Shares" value={shares} onChange={setShares} type="number" />
+              <InputField label="Buy Commission" value={buyCommission} onChange={setBuyCommission} type="number" suffix={symbol} />
+              <InputField label="Sell Commission" value={sellCommission} onChange={setSellCommission} type="number" suffix={symbol} />
+              <InputField label="STT / Tax Rate (%)" value={sttRate} onChange={setSttRate} type="number" suffix="%" />
+              <InputField label="Target Profit" value={targetProfit} onChange={setTargetProfit} type="number" suffix={symbol} />
+            </>
+          )}
+          {mode === "avg-cost" && (
+            <>
+              <p className="text-xs font-bold text-muted-foreground uppercase">Buy Lot 1</p>
+              <InputField label="Price" value={buy1Price} onChange={setBuy1Price} type="number" suffix={symbol} />
+              <InputField label="Quantity" value={buy1Qty} onChange={setBuy1Qty} type="number" />
+              <p className="text-xs font-bold text-muted-foreground uppercase mt-2">Buy Lot 2</p>
+              <InputField label="Price" value={buy2Price} onChange={setBuy2Price} type="number" suffix={symbol} />
+              <InputField label="Quantity" value={buy2Qty} onChange={setBuy2Qty} type="number" />
+              <p className="text-xs font-bold text-muted-foreground uppercase mt-2">Buy Lot 3</p>
+              <InputField label="Price" value={buy3Price} onChange={setBuy3Price} type="number" suffix={symbol} />
+              <InputField label="Quantity" value={buy3Qty} onChange={setBuy3Qty} type="number" />
+              <InputField label="Current/Sell Price" value={sellPrice} onChange={setSellPrice} type="number" suffix={symbol} />
+            </>
+          )}
+        </div>
+        {renderResult()}
       </ToolCard>
     </div>
   );
