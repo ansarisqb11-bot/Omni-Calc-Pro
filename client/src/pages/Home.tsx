@@ -106,33 +106,29 @@ export default function Home() {
       return;
     }
 
-    if (key === "=") {
+    if (key === "%") {
       try {
-        const evalResult = evaluate(expression).toString();
-        setResult(evalResult);
-        setHasCalculated(true);
+        const evalResult = evaluate(expression);
+        const percentResult = (evalResult / 100).toString();
+        setResult(percentResult);
         historyMutation.mutate({
-          expression,
-          result: evalResult,
+          expression: expression + "%",
+          result: percentResult,
           category: "Calculator"
         });
-        setExpression(evalResult);
+        setExpression(percentResult);
+        setHasCalculated(true);
       } catch {
         setResult("Error");
       }
       return;
     }
 
-    if (key === "%") {
-      try {
-        const evalResult = evaluate(expression);
-        const percentResult = (evalResult / 100).toString();
-        setResult(percentResult);
-        setExpression(percentResult);
-        setHasCalculated(true);
-      } catch {
-        setResult("Error");
-      }
+    if (key === "00") {
+      if (!expression) return;
+      const newExpr = expression + "00";
+      setExpression(newExpr);
+      liveEvaluate(newExpr);
       return;
     }
 
@@ -183,10 +179,10 @@ export default function Home() {
     { label: "2", value: "2", variant: "number" },
     { label: "3", value: "3", variant: "number" },
     { label: "+", value: "+", variant: "operator" },
-    { label: "%", value: "%", variant: "function" },
+    { label: "\u00B1", value: "\u00B1", variant: "function" },
     { label: "0", value: "0", variant: "number" },
     { label: ".", value: ".", variant: "number" },
-    { label: "=", value: "=", variant: "equals" },
+    { label: "00", value: "00", variant: "number" },
   ];
 
   const getButtonClass = (variant: string) => {
@@ -199,8 +195,6 @@ export default function Home() {
         return "bg-[#f0f3f8] dark:bg-slate-700 text-orange-500 dark:text-orange-400 font-bold";
       case "delete":
         return "bg-[#f0f3f8] dark:bg-slate-700 text-slate-400 dark:text-slate-400";
-      case "equals": 
-        return "bg-blue-500 dark:bg-blue-600 text-white font-bold";
       default: 
         return "bg-[#f0f3f8] dark:bg-slate-700 text-slate-800 dark:text-white font-semibold";
     }
@@ -260,30 +254,36 @@ export default function Home() {
 
       <div className="flex-1 px-4 py-3 flex flex-col min-h-0">
         <div className="bg-white dark:bg-card rounded-3xl p-4 flex-1 flex flex-col shadow-sm">
-          <div className="text-right pr-2 mb-4 min-h-[100px] flex flex-col justify-end">
-            <p className="text-muted-foreground text-sm h-6 overflow-x-auto scrollbar-hide whitespace-nowrap font-mono">
-              {expression ? formatExpression(expression) : " "}
-            </p>
-            <p className={`mt-1 overflow-x-auto scrollbar-hide whitespace-nowrap tracking-tight transition-all ${
-              hasCalculated 
-                ? "text-4xl font-black text-blue-500 dark:text-blue-400" 
-                : result !== "0" 
-                  ? "text-3xl font-bold text-slate-500 dark:text-slate-400" 
-                  : "text-4xl font-black text-slate-800 dark:text-white"
-            }`} data-testid="display-result">
-              {formatDisplay(result)}
-            </p>
-          </div>
-
-          <div className="flex justify-end mb-2">
+          <div className="flex items-center justify-between mb-2">
+            <motion.button
+              whileTap={{ scale: 0.92 }}
+              onClick={() => handlePress("%")}
+              data-testid="button-calc-%"
+              className="p-2 rounded-xl text-slate-600 dark:text-slate-300"
+            >
+              <Percent className="w-5 h-5" />
+            </motion.button>
             <motion.button
               whileTap={{ scale: 0.92 }}
               onClick={() => handlePress("C")}
               data-testid="button-calc-C"
-              className="p-2 rounded-xl bg-[#f0f3f8] dark:bg-slate-700 text-slate-400"
+              className="p-2 rounded-xl text-slate-600 dark:text-slate-300"
             >
               <Delete className="w-5 h-5" />
             </motion.button>
+          </div>
+
+          <div className="text-right pr-2 mb-3 min-h-[70px] flex flex-col justify-end">
+            <p className="text-muted-foreground text-sm h-5 overflow-x-auto scrollbar-hide whitespace-nowrap font-mono">
+              {expression ? formatExpression(expression) : " "}
+            </p>
+            <p className={`mt-1 overflow-x-auto scrollbar-hide whitespace-nowrap tracking-tight transition-all text-3xl font-black ${
+              hasCalculated 
+                ? "text-slate-900 dark:text-white" 
+                : "text-slate-800 dark:text-slate-200"
+            }`} data-testid="display-result">
+              {formatDisplay(result)}
+            </p>
           </div>
 
           <div className="grid grid-cols-4 gap-2.5 flex-1">
@@ -293,13 +293,9 @@ export default function Home() {
                 whileTap={{ scale: 0.92 }}
                 onClick={() => handlePress(btn.value)}
                 data-testid={`button-calc-${btn.value}`}
-                className={`rounded-2xl text-xl flex items-center justify-center transition-all min-h-[56px] ${getButtonClass(btn.variant)}`}
+                className={`rounded-2xl text-xl flex items-center justify-center transition-all min-h-[52px] ${getButtonClass(btn.variant)}`}
               >
-                {btn.variant === "delete" ? (
-                  <Delete className="w-5 h-5" />
-                ) : (
-                  <span className={btn.variant === "equals" ? "text-2xl" : ""}>{btn.label}</span>
-                )}
+                <span>{btn.label}</span>
               </motion.button>
             ))}
           </div>
