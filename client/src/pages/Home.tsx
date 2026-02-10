@@ -271,9 +271,9 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="flex-1 px-4 py-3 flex flex-col min-h-0">
-        <div className="bg-white dark:bg-card rounded-3xl p-4 flex-1 flex flex-col shadow-sm">
-          <div className="text-right pr-2 mb-4 flex flex-col justify-end">
+      <div className="flex-1 px-4 py-3 flex flex-col">
+        <div className="bg-white dark:bg-card rounded-3xl p-5 flex-1 flex flex-col shadow-sm">
+          <div className="text-right pr-2 flex-1 flex flex-col justify-end min-h-[60px] mb-4">
             <p className="text-4xl font-black text-slate-800 dark:text-white overflow-x-auto scrollbar-hide whitespace-nowrap tracking-tight" data-testid="display-result">
               {expression ? formatExpression(expression) : "0"}
             </p>
@@ -284,14 +284,14 @@ export default function Home() {
             )}
           </div>
 
-          <div className="grid grid-cols-4 gap-2.5 flex-1">
+          <div className="grid grid-cols-4 gap-3">
             {buttons.map((btn, index) => (
               <motion.button
                 key={index}
                 whileTap={{ scale: 0.92 }}
                 onClick={() => handlePress(btn.value)}
                 data-testid={`button-calc-${btn.value}`}
-                className={`rounded-2xl text-xl flex items-center justify-center transition-all min-h-[52px] ${getButtonClass(btn.variant)}`}
+                className={`rounded-2xl text-xl flex items-center justify-center transition-all aspect-[1.35/1] ${getButtonClass(btn.variant)}`}
               >
                 {btn.variant === "delete" ? (
                   <Delete className="w-5 h-5" />
