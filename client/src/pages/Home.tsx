@@ -240,7 +240,7 @@ export default function Home() {
 
       <div className="flex-1 px-4 py-3 flex flex-col">
         <div className="bg-white dark:bg-card rounded-3xl p-5 flex-1 flex flex-col shadow-sm">
-          <div className="text-right pr-2 flex flex-col justify-end mb-3" style={{ minHeight: "74px" }}>
+          <div className="text-right pr-2 flex flex-col justify-end mb-3" style={{ minHeight: "78px" }}>
             <p className="text-3xl font-black text-slate-800 dark:text-white overflow-x-auto scrollbar-hide whitespace-nowrap tracking-tight" data-testid="display-result">
               {expression ? formatExpression(expression) : "0"}
             </p>
