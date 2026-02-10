@@ -3,11 +3,11 @@ import { Link } from "wouter";
 import { evaluate } from "mathjs";
 import { motion } from "framer-motion";
 import { 
-  Search, Grid3X3, Delete, ChevronRight,
+  Search, Grid3X3, ChevronRight,
   Wallet, Heart, Ruler, Clock, Binary, Compass, FlaskConical, HardHat, 
   Plane, MessageSquare, Hash, GraduationCap, Stethoscope, Home as HomeIcon,
   Car, Leaf, Code, ShoppingCart, Globe, ShoppingBag, Palette, StickyNote, Calculator, Shirt,
-  Users, BarChart3, Proportions, Percent
+  Users, BarChart3, Proportions
 } from "lucide-react";
 import { useAddToHistory } from "@/hooks/use-history";
 
@@ -164,8 +164,8 @@ export default function Home() {
 
   const buttons = [
     { label: "AC", value: "AC", variant: "function" },
-    { label: "(", value: "(", variant: "paren" },
-    { label: ")", value: ")", variant: "paren" },
+    { label: "%", value: "%", variant: "function" },
+    { label: "C", value: "C", variant: "function" },
     { label: "\u00F7", value: "/", variant: "operator" },
     { label: "7", value: "7", variant: "number" },
     { label: "8", value: "8", variant: "number" },
@@ -254,25 +254,6 @@ export default function Home() {
 
       <div className="flex-1 px-4 py-3 flex flex-col min-h-0">
         <div className="bg-white dark:bg-card rounded-3xl p-4 flex-1 flex flex-col shadow-sm">
-          <div className="flex items-center justify-between mb-2">
-            <motion.button
-              whileTap={{ scale: 0.92 }}
-              onClick={() => handlePress("%")}
-              data-testid="button-calc-%"
-              className="p-2 rounded-xl text-slate-600 dark:text-slate-300"
-            >
-              <Percent className="w-5 h-5" />
-            </motion.button>
-            <motion.button
-              whileTap={{ scale: 0.92 }}
-              onClick={() => handlePress("C")}
-              data-testid="button-calc-C"
-              className="p-2 rounded-xl text-slate-600 dark:text-slate-300"
-            >
-              <Delete className="w-5 h-5" />
-            </motion.button>
-          </div>
-
           <div className="text-right pr-2 mb-3 min-h-[70px] flex flex-col justify-end">
             <p className="text-muted-foreground text-sm h-5 overflow-x-auto scrollbar-hide whitespace-nowrap font-mono">
               {expression ? formatExpression(expression) : " "}
