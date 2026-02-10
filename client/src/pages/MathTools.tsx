@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Hash, Percent, Shuffle, Calculator, Divide, Search } from "lucide-react";
 import { ToolCard, InputField, ResultDisplay, ToolButton } from "@/components/ToolCard";
+import { PageWrapper } from "@/components/PageWrapper";
 
 const tools = [
   { id: "prime", label: "Prime Check", icon: Hash },
@@ -15,40 +16,20 @@ export default function MathTools() {
   const [activeTool, setActiveTool] = useState("prime");
 
   return (
-    <div className="flex flex-col h-full bg-background overflow-hidden">
-      <div className="px-4 py-4 border-b border-border">
-        <h1 className="text-2xl font-bold">Math Tools</h1>
-        <p className="text-muted-foreground text-sm mt-1">Prime numbers, LCM, HCF, and more</p>
-      </div>
-
-      <div className="px-4 py-3 border-b border-border/50">
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-          {tools.map((tool) => (
-            <button
-              key={tool.id}
-              onClick={() => setActiveTool(tool.id)}
-              data-testid={`tab-${tool.id}`}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
-                activeTool === tool.id
-                  ? "bg-orange-500 text-foreground shadow-lg shadow-orange-500/30"
-                  : "bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted"
-              }`}
-            >
-              <tool.icon className="w-4 h-4" />
-              {tool.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-4 pb-8">
-        {activeTool === "prime" && <PrimeChecker />}
-        {activeTool === "lcmhcf" && <LcmHcfCalculator />}
-        {activeTool === "random" && <RandomGenerator />}
-        {activeTool === "factorial" && <FactorialCalculator />}
-        {activeTool === "percent" && <PercentChangeCalculator />}
-      </div>
-    </div>
+    <PageWrapper
+      title="Math Tools"
+      subtitle="Prime numbers, LCM, HCF, and more"
+      accentColor="bg-indigo-500"
+      tools={tools}
+      activeTool={activeTool}
+      onToolChange={(id) => setActiveTool(id)}
+    >
+      {activeTool === "prime" && <PrimeChecker />}
+      {activeTool === "lcmhcf" && <LcmHcfCalculator />}
+      {activeTool === "random" && <RandomGenerator />}
+      {activeTool === "factorial" && <FactorialCalculator />}
+      {activeTool === "percent" && <PercentChangeCalculator />}
+    </PageWrapper>
   );
 }
 

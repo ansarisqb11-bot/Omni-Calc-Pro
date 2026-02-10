@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Link } from "wouter";
 import { evaluate } from "mathjs";
 import { motion } from "framer-motion";
@@ -7,15 +7,20 @@ import {
   Wallet, Heart, Ruler, Clock, Binary, Compass, FlaskConical, HardHat, 
   Plane, MessageSquare, Hash, GraduationCap, Stethoscope, Home as HomeIcon,
   Car, Leaf, Code, ShoppingCart, Globe, ShoppingBag, Palette, StickyNote, Calculator, Shirt,
-  Users, BarChart3, Proportions
+  Users, BarChart3, Proportions, Percent
 } from "lucide-react";
 import { useAddToHistory } from "@/hooks/use-history";
 
 export default function Home() {
   const [expression, setExpression] = useState("");
   const [result, setResult] = useState("0");
+  const [hasCalculated, setHasCalculated] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const historyMutation = useAddToHistory();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const categories = [
     { title: "Finance", icon: Wallet, color: "bg-emerald-500", href: "/finance" },
@@ -66,18 +71,38 @@ export default function Home() {
       .replace(/(?<=\d)-/g, " - ");
   };
 
+  const liveEvaluate = useCallback((expr: string) => {
+    if (!expr) {
+      setResult("0");
+      return;
+    }
+    try {
+      const evalResult = evaluate(expr).toString();
+      setResult(evalResult);
+    } catch {
+      // don't update result for incomplete expressions
+    }
+  }, []);
+
   const handlePress = useCallback((key: string) => {
     if (key === "AC") {
       setExpression("");
       setResult("0");
+      setHasCalculated(false);
       return;
     }
 
     if (key === "C") {
-      setExpression((prev) => prev.slice(0, -1));
-      if (expression.length <= 1) {
-        setResult("0");
-      }
+      setExpression((prev) => {
+        const next = prev.slice(0, -1);
+        if (next.length === 0) {
+          setResult("0");
+        } else {
+          liveEvaluate(next);
+        }
+        return next;
+      });
+      setHasCalculated(false);
       return;
     }
 
@@ -85,6 +110,7 @@ export default function Home() {
       try {
         const evalResult = evaluate(expression).toString();
         setResult(evalResult);
+        setHasCalculated(true);
         historyMutation.mutate({
           expression,
           result: evalResult,
@@ -99,28 +125,46 @@ export default function Home() {
 
     if (key === "%") {
       try {
-        const evalResult = (evaluate(expression) / 100).toString();
-        setResult(evalResult);
-        setExpression(evalResult);
+        const evalResult = evaluate(expression);
+        const percentResult = (evalResult / 100).toString();
+        setResult(percentResult);
+        setExpression(percentResult);
+        setHasCalculated(true);
       } catch {
         setResult("Error");
       }
       return;
     }
 
-    if (key === "±") {
+    if (key === "\u00B1") {
       if (expression) {
         if (expression.startsWith("-")) {
-          setExpression(expression.slice(1));
+          const next = expression.slice(1);
+          setExpression(next);
+          liveEvaluate(next);
         } else {
-          setExpression("-" + expression);
+          const next = "-" + expression;
+          setExpression(next);
+          liveEvaluate(next);
         }
       }
       return;
     }
 
-    setExpression((prev) => prev + key);
-  }, [expression, historyMutation]);
+    const operators = ["+", "-", "*", "/"];
+    if (hasCalculated && !operators.includes(key)) {
+      setExpression(key);
+      setResult("0");
+      setHasCalculated(false);
+      liveEvaluate(key);
+      return;
+    }
+
+    setHasCalculated(false);
+    const newExpr = expression + key;
+    setExpression(newExpr);
+    liveEvaluate(newExpr);
+  }, [expression, historyMutation, hasCalculated, liveEvaluate]);
 
   const buttons = [
     { label: "AC", value: "AC", variant: "function" },
@@ -139,9 +183,9 @@ export default function Home() {
     { label: "2", value: "2", variant: "number" },
     { label: "3", value: "3", variant: "number" },
     { label: "+", value: "+", variant: "operator" },
+    { label: "%", value: "%", variant: "function" },
     { label: "0", value: "0", variant: "number" },
     { label: ".", value: ".", variant: "number" },
-    { label: "del", value: "C", variant: "delete" },
     { label: "=", value: "=", variant: "equals" },
   ];
 
@@ -216,13 +260,30 @@ export default function Home() {
 
       <div className="flex-1 px-4 py-3 flex flex-col min-h-0">
         <div className="bg-white dark:bg-card rounded-3xl p-4 flex-1 flex flex-col shadow-sm">
-          <div className="text-right pr-2 mb-4 min-h-[80px] flex flex-col justify-end">
-            <p className="text-muted-foreground text-sm h-5 overflow-x-auto scrollbar-hide whitespace-nowrap">
+          <div className="text-right pr-2 mb-4 min-h-[100px] flex flex-col justify-end">
+            <p className="text-muted-foreground text-sm h-6 overflow-x-auto scrollbar-hide whitespace-nowrap font-mono">
               {expression ? formatExpression(expression) : " "}
             </p>
-            <p className="text-4xl font-black text-slate-800 dark:text-white mt-1 overflow-x-auto scrollbar-hide whitespace-nowrap tracking-tight">
+            <p className={`mt-1 overflow-x-auto scrollbar-hide whitespace-nowrap tracking-tight transition-all ${
+              hasCalculated 
+                ? "text-4xl font-black text-blue-500 dark:text-blue-400" 
+                : result !== "0" 
+                  ? "text-3xl font-bold text-slate-500 dark:text-slate-400" 
+                  : "text-4xl font-black text-slate-800 dark:text-white"
+            }`} data-testid="display-result">
               {formatDisplay(result)}
             </p>
+          </div>
+
+          <div className="flex justify-end mb-2">
+            <motion.button
+              whileTap={{ scale: 0.92 }}
+              onClick={() => handlePress("C")}
+              data-testid="button-calc-C"
+              className="p-2 rounded-xl bg-[#f0f3f8] dark:bg-slate-700 text-slate-400"
+            >
+              <Delete className="w-5 h-5" />
+            </motion.button>
           </div>
 
           <div className="grid grid-cols-4 gap-2.5 flex-1">

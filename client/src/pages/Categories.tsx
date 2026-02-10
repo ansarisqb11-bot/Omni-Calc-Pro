@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import {
@@ -13,6 +13,10 @@ export default function Categories() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [, navigate] = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const allTools = [
     { title: "EMI Calculator", category: "Finance", icon: Wallet, color: "bg-emerald-500", href: "/finance" },
@@ -309,11 +313,9 @@ export default function Categories() {
     <div className="flex flex-col h-full bg-[#f5f7fb] dark:bg-background overflow-hidden">
       <div className="flex items-center justify-between px-4 pt-4 pb-2">
         <div className="flex items-center gap-3">
-          <Link href="/">
-            <button className="p-1" data-testid="button-back">
-              <ArrowLeft className="w-5 h-5 text-foreground" />
-            </button>
-          </Link>
+          <button onClick={() => window.history.back()} className="p-2 hover:bg-muted rounded-lg transition-colors" data-testid="button-back">
+            <ArrowLeft className="w-5 h-5 text-foreground" />
+          </button>
           <h1 className="text-xl font-bold text-foreground">CalcHub</h1>
         </div>
       </div>

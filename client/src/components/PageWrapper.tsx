@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { ArrowLeft, LucideIcon } from "lucide-react";
 
@@ -23,22 +23,37 @@ export function PageWrapper({
   activeTool,
   onToolChange,
 }: PageWrapperProps) {
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    if (contentRef.current) {
+      contentRef.current.scrollTop = 0;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.scrollTop = 0;
+    }
+  }, [activeTool]);
+
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
-      {/* Header */}
       <div className="flex items-center gap-3 px-4 py-4 border-b border-border">
-        <Link href={backHref}>
-          <button className="p-2 hover:bg-muted rounded-lg transition-colors" data-testid="button-back">
-            <ArrowLeft className="w-5 h-5 text-muted-foreground" />
-          </button>
-        </Link>
+        <button
+          onClick={() => window.history.back()}
+          className="p-2 hover:bg-muted rounded-lg transition-colors"
+          data-testid="button-back"
+        >
+          <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+        </button>
         <div>
           <h1 className="text-xl font-bold text-foreground">{title}</h1>
           <p className="text-sm text-muted-foreground">{subtitle}</p>
         </div>
       </div>
 
-      {/* Tool Tabs */}
       {tools && tools.length > 0 && onToolChange && (
         <div className="px-4 py-3 border-b border-border/50">
           <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
@@ -61,8 +76,7 @@ export function PageWrapper({
         </div>
       )}
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4 pb-8">
+      <div ref={contentRef} className="flex-1 overflow-y-auto p-4 pb-8">
         {children}
       </div>
     </div>

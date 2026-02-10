@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Bot, User, Sparkles, Calculator, Banknote, Activity, Lightbulb } from "lucide-react";
+import { Send, Bot, User, Sparkles, Calculator, Banknote, Activity, Lightbulb, ArrowLeft } from "lucide-react";
 import { useAiChat } from "@/hooks/use-ai";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -36,8 +36,10 @@ export default function AiTools() {
 
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
-      {/* Header */}
       <div className="px-4 py-4 border-b border-border flex items-center gap-3">
+        <button onClick={() => window.history.back()} className="p-2 hover:bg-muted rounded-lg transition-colors" data-testid="button-back">
+          <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+        </button>
         <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center">
           <Sparkles className="w-5 h-5 text-violet-500" />
         </div>
