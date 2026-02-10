@@ -106,65 +106,34 @@ export default function Home() {
       return;
     }
 
-    if (key === "=") {
-      try {
-        const evalResult = evaluate(expression).toString();
-        setResult(evalResult);
-        setHasCalculated(true);
-        historyMutation.mutate({
-          expression,
-          result: evalResult,
-          category: "Calculator"
-        });
-        setExpression(evalResult);
-      } catch {
-        setResult("Error");
-      }
-      return;
-    }
-
-    if (key === "%") {
-      try {
-        const evalResult = evaluate(expression);
-        const percentResult = (evalResult / 100).toString();
-        setResult(percentResult);
-        historyMutation.mutate({
-          expression: expression + "%",
-          result: percentResult,
-          category: "Calculator"
-        });
-        setExpression(percentResult);
-        setHasCalculated(true);
-      } catch {
-        setResult("Error");
-      }
-      return;
-    }
-
     if (key === "00") {
       if (!expression) return;
       const newExpr = expression + "00";
       setExpression(newExpr);
       liveEvaluate(newExpr);
-      return;
-    }
-
-    if (key === "\u00B1") {
-      if (expression) {
-        if (expression.startsWith("-")) {
-          const next = expression.slice(1);
-          setExpression(next);
-          liveEvaluate(next);
-        } else {
-          const next = "-" + expression;
-          setExpression(next);
-          liveEvaluate(next);
-        }
-      }
+      setHasCalculated(false);
       return;
     }
 
     const operators = ["+", "-", "*", "/"];
+
+    if (operators.includes(key) && expression) {
+      try {
+        const evalResult = evaluate(expression).toString();
+        setResult(evalResult);
+        setHasCalculated(false);
+        historyMutation.mutate({
+          expression,
+          result: evalResult,
+          category: "Calculator"
+        });
+      } catch {
+      }
+      const newExpr = expression + key;
+      setExpression(newExpr);
+      return;
+    }
+
     if (hasCalculated && !operators.includes(key)) {
       setExpression(key);
       setResult("0");
@@ -199,7 +168,7 @@ export default function Home() {
     { label: "0", value: "0", variant: "number" },
     { label: ".", value: ".", variant: "number" },
     { label: "DEL", value: "C", variant: "delete" },
-    { label: "=", value: "=", variant: "equals" },
+    { label: "00", value: "00", variant: "number" },
   ];
 
   const getButtonClass = (variant: string) => {
@@ -212,8 +181,6 @@ export default function Home() {
         return "bg-[#f0f3f8] dark:bg-slate-700 text-orange-500 dark:text-orange-400 font-bold";
       case "delete":
         return "bg-[#f0f3f8] dark:bg-slate-700 text-slate-500 dark:text-slate-400";
-      case "equals":
-        return "bg-blue-500 dark:bg-blue-600 text-white font-bold";
       default: 
         return "bg-[#f0f3f8] dark:bg-slate-700 text-slate-800 dark:text-white font-semibold";
     }
@@ -273,15 +240,20 @@ export default function Home() {
 
       <div className="flex-1 px-4 py-3 flex flex-col">
         <div className="bg-white dark:bg-card rounded-3xl p-5 flex-1 flex flex-col shadow-sm">
-          <div className="text-right pr-2 flex-1 flex flex-col justify-end min-h-[60px] mb-4">
+          <div className="text-right pr-2 flex flex-col justify-end mb-4 transition-all duration-300 ease-in-out" style={{ minHeight: (result !== "0" && expression) ? "95px" : "55px" }}>
             <p className="text-4xl font-black text-slate-800 dark:text-white overflow-x-auto scrollbar-hide whitespace-nowrap tracking-tight" data-testid="display-result">
               {expression ? formatExpression(expression) : "0"}
             </p>
-            {hasCalculated && (
-              <p className="text-lg text-muted-foreground mt-1 font-medium">
+            <motion.div
+              initial={false}
+              animate={{ height: (result !== "0" && expression) ? "auto" : 0, opacity: (result !== "0" && expression) ? 1 : 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="overflow-hidden"
+            >
+              <p className="text-lg text-blue-500 dark:text-blue-400 mt-2 font-semibold">
                 = {formatDisplay(result)}
               </p>
-            )}
+            </motion.div>
           </div>
 
           <div className="grid grid-cols-4 gap-3">
