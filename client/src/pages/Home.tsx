@@ -240,20 +240,13 @@ export default function Home() {
 
       <div className="flex-1 px-4 py-3 flex flex-col">
         <div className="bg-white dark:bg-card rounded-3xl p-5 flex-1 flex flex-col shadow-sm">
-          <div className="text-right pr-2 flex flex-col justify-end mb-4 transition-all duration-300 ease-in-out" style={{ minHeight: (result !== "0" && expression) ? "95px" : "55px" }}>
+          <div className="text-right pr-2 flex flex-col justify-end mb-4" style={{ minHeight: "95px" }}>
             <p className="text-4xl font-black text-slate-800 dark:text-white overflow-x-auto scrollbar-hide whitespace-nowrap tracking-tight" data-testid="display-result">
               {expression ? formatExpression(expression) : "0"}
             </p>
-            <motion.div
-              initial={false}
-              animate={{ height: (result !== "0" && expression) ? "auto" : 0, opacity: (result !== "0" && expression) ? 1 : 0 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="overflow-hidden"
-            >
-              <p className="text-lg text-blue-500 dark:text-blue-400 mt-2 font-semibold">
-                = {formatDisplay(result)}
-              </p>
-            </motion.div>
+            <p className="text-lg text-blue-500 dark:text-blue-400 mt-2 font-semibold h-7">
+              {(result !== "0" && expression) ? `= ${formatDisplay(result)}` : ""}
+            </p>
           </div>
 
           <div className="grid grid-cols-4 gap-3">
