@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { evaluate } from "mathjs";
 import { motion } from "framer-motion";
 import { 
-  Search, Grid3X3, ChevronRight,
+  Search, Grid3X3, Delete, ChevronRight,
   Wallet, Heart, Ruler, Clock, Binary, Compass, FlaskConical, HardHat, 
   Plane, MessageSquare, Hash, GraduationCap, Stethoscope, Home as HomeIcon,
   Car, Leaf, Code, ShoppingCart, Globe, ShoppingBag, Palette, StickyNote, Calculator, Shirt,
@@ -106,6 +106,23 @@ export default function Home() {
       return;
     }
 
+    if (key === "=") {
+      try {
+        const evalResult = evaluate(expression).toString();
+        setResult(evalResult);
+        setHasCalculated(true);
+        historyMutation.mutate({
+          expression,
+          result: evalResult,
+          category: "Calculator"
+        });
+        setExpression(evalResult);
+      } catch {
+        setResult("Error");
+      }
+      return;
+    }
+
     if (key === "%") {
       try {
         const evalResult = evaluate(expression);
@@ -164,8 +181,8 @@ export default function Home() {
 
   const buttons = [
     { label: "AC", value: "AC", variant: "function" },
-    { label: "%", value: "%", variant: "function" },
-    { label: "C", value: "C", variant: "function" },
+    { label: "(", value: "(", variant: "paren" },
+    { label: ")", value: ")", variant: "paren" },
     { label: "\u00F7", value: "/", variant: "operator" },
     { label: "7", value: "7", variant: "number" },
     { label: "8", value: "8", variant: "number" },
@@ -179,10 +196,10 @@ export default function Home() {
     { label: "2", value: "2", variant: "number" },
     { label: "3", value: "3", variant: "number" },
     { label: "+", value: "+", variant: "operator" },
-    { label: "\u00B1", value: "\u00B1", variant: "function" },
     { label: "0", value: "0", variant: "number" },
     { label: ".", value: ".", variant: "number" },
-    { label: "00", value: "00", variant: "number" },
+    { label: "DEL", value: "C", variant: "delete" },
+    { label: "=", value: "=", variant: "equals" },
   ];
 
   const getButtonClass = (variant: string) => {
@@ -194,7 +211,9 @@ export default function Home() {
       case "operator": 
         return "bg-[#f0f3f8] dark:bg-slate-700 text-orange-500 dark:text-orange-400 font-bold";
       case "delete":
-        return "bg-[#f0f3f8] dark:bg-slate-700 text-slate-400 dark:text-slate-400";
+        return "bg-[#f0f3f8] dark:bg-slate-700 text-slate-500 dark:text-slate-400";
+      case "equals":
+        return "bg-blue-500 dark:bg-blue-600 text-white font-bold";
       default: 
         return "bg-[#f0f3f8] dark:bg-slate-700 text-slate-800 dark:text-white font-semibold";
     }
@@ -254,17 +273,15 @@ export default function Home() {
 
       <div className="flex-1 px-4 py-3 flex flex-col min-h-0">
         <div className="bg-white dark:bg-card rounded-3xl p-4 flex-1 flex flex-col shadow-sm">
-          <div className="text-right pr-2 mb-3 min-h-[70px] flex flex-col justify-end">
-            <p className="text-muted-foreground text-sm h-5 overflow-x-auto scrollbar-hide whitespace-nowrap font-mono">
-              {expression ? formatExpression(expression) : " "}
+          <div className="text-right pr-2 mb-4 flex flex-col justify-end">
+            <p className="text-4xl font-black text-slate-800 dark:text-white overflow-x-auto scrollbar-hide whitespace-nowrap tracking-tight" data-testid="display-result">
+              {expression ? formatExpression(expression) : "0"}
             </p>
-            <p className={`mt-1 overflow-x-auto scrollbar-hide whitespace-nowrap tracking-tight transition-all text-3xl font-black ${
-              hasCalculated 
-                ? "text-slate-900 dark:text-white" 
-                : "text-slate-800 dark:text-slate-200"
-            }`} data-testid="display-result">
-              {formatDisplay(result)}
-            </p>
+            {hasCalculated && (
+              <p className="text-lg text-muted-foreground mt-1 font-medium">
+                = {formatDisplay(result)}
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-4 gap-2.5 flex-1">
@@ -276,7 +293,11 @@ export default function Home() {
                 data-testid={`button-calc-${btn.value}`}
                 className={`rounded-2xl text-xl flex items-center justify-center transition-all min-h-[52px] ${getButtonClass(btn.variant)}`}
               >
-                <span>{btn.label}</span>
+                {btn.variant === "delete" ? (
+                  <Delete className="w-5 h-5" />
+                ) : (
+                  <span>{btn.label}</span>
+                )}
               </motion.button>
             ))}
           </div>
