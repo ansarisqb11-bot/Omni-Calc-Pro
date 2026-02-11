@@ -12,17 +12,32 @@ type ToolType = "emi" | "compound" | "tip" | "roi" | "gst" | "sip" | "salary" | 
 type NumberFormat = "US" | "IN";
 
 function CurrencySelector({ value, onChange }: { value: NumberFormat; onChange: (v: NumberFormat) => void }) {
+  return null;
+}
+
+function InputFieldWithCurrency({ label, value, onChange, currency, onCurrencyChange, step }: { label: string; value: string; onChange: (v: string) => void; currency: NumberFormat; onCurrencyChange: (v: NumberFormat) => void; step?: number }) {
   return (
-    <div className="flex justify-end mb-4">
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value as NumberFormat)}
-        className="bg-muted/50 border border-border rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none cursor-pointer"
-        data-testid="select-currency"
-      >
-        <option value="US">USA ($)</option>
-        <option value="IN">INDIAN (₹)</option>
-      </select>
+    <div className="space-y-1.5">
+      <label className="text-sm font-medium text-muted-foreground block">{label}</label>
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <input
+            type="number"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            step={step}
+            className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+          />
+        </div>
+        <select
+          value={currency}
+          onChange={(e) => onCurrencyChange(e.target.value as NumberFormat)}
+          className="bg-muted/50 border border-border rounded-xl px-3 py-3 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/50 cursor-pointer w-24"
+        >
+          <option value="US">$ USD</option>
+          <option value="IN">₹ INR</option>
+        </select>
+      </div>
     </div>
   );
 }
@@ -100,10 +115,15 @@ function LoanEMICalculator() {
 
   return (
     <div className="space-y-4 max-w-lg mx-auto">
-      <CurrencySelector value={format} onChange={setFormat} />
       <ToolCard title="Loan EMI Calculator" icon={CreditCard} iconColor="bg-emerald-500">
         <div className="space-y-4">
-          <InputField label="Loan Amount" value={principal} onChange={setPrincipal} type="number" suffix={symbol} />
+          <InputFieldWithCurrency 
+            label="Loan Amount" 
+            value={principal} 
+            onChange={setPrincipal} 
+            currency={format} 
+            onCurrencyChange={setFormat} 
+          />
           <InputField label="Interest Rate (Annual)" value={rate} onChange={setRate} type="number" suffix="%" step={0.1} />
           <InputField label="Loan Tenure (Months)" value={tenure} onChange={setTenure} type="number" />
           <ToolButton onClick={calculate} variant="success">Calculate EMI</ToolButton>
@@ -151,10 +171,15 @@ function CompoundInterestCalculator() {
 
   return (
     <div className="space-y-4 max-w-lg mx-auto">
-      <CurrencySelector value={format} onChange={setFormat} />
       <ToolCard title="Compound Interest" icon={TrendingUp} iconColor="bg-blue-500">
         <div className="space-y-4">
-          <InputField label="Principal Amount" value={principal} onChange={setPrincipal} type="number" suffix={symbol} />
+          <InputFieldWithCurrency 
+            label="Principal Amount" 
+            value={principal} 
+            onChange={setPrincipal} 
+            currency={format} 
+            onCurrencyChange={setFormat} 
+          />
           <InputField label="Interest Rate (Annual)" value={rate} onChange={setRate} type="number" suffix="%" />
           <InputField label="Time Period (Years)" value={years} onChange={setYears} type="number" />
           <div>
@@ -261,10 +286,15 @@ function ROICalculator() {
 
   return (
     <div className="space-y-4 max-w-lg mx-auto">
-      <CurrencySelector value={format} onChange={setFormat} />
       <ToolCard title="ROI Calculator" icon={PiggyBank} iconColor="bg-purple-500">
         <div className="space-y-4">
-          <InputField label="Initial Investment" value={investment} onChange={setInvestment} type="number" suffix={symbol} />
+          <InputFieldWithCurrency 
+            label="Initial Investment" 
+            value={investment} 
+            onChange={setInvestment} 
+            currency={format} 
+            onCurrencyChange={setFormat} 
+          />
           <InputField label="Final Value" value={returns} onChange={setReturns} type="number" suffix={symbol} />
         </div>
       </ToolCard>
@@ -284,22 +314,46 @@ function SIPCalculator() {
   const [monthly, setMonthly] = useState("5000");
   const [rate, setRate] = useState("12");
   const [years, setYears] = useState("10");
+  const [mode, setMode] = useState<"sip" | "lumpsum">("sip");
 
   const symbol = format === "IN" ? "₹" : "$";
   const m = parseFloat(monthly) || 0;
   const r = (parseFloat(rate) || 0) / 100 / 12;
   const n = (parseInt(years) || 0) * 12;
-  const invested = m * n;
-  const futureValue = r > 0 ? m * ((Math.pow(1 + r, n) - 1) / r) * (1 + r) : invested;
+  const invested = mode === "sip" ? m * n : m;
+  
+  const futureValue = mode === "sip" 
+    ? (r > 0 ? m * ((Math.pow(1 + r, n) - 1) / r) * (1 + r) : invested)
+    : m * Math.pow(1 + (r * 12), parseInt(years) || 0);
+    
   const returns = futureValue - invested;
 
   return (
     <div className="space-y-4 max-w-lg mx-auto">
-      <CurrencySelector value={format} onChange={setFormat} />
-      <ToolCard title="SIP Calculator" icon={LineChart} iconColor="bg-indigo-500">
+      <ToolCard title="SIP / Lumpsum Calculator" icon={LineChart} iconColor="bg-indigo-500">
         <div className="space-y-4">
-          <InputField label="Monthly Investment" value={monthly} onChange={setMonthly} type="number" suffix={symbol} />
-          <InputField label="Expected Return" value={rate} onChange={setRate} type="number" suffix="%" />
+          <div className="flex gap-2 mb-2">
+            <button
+              onClick={() => setMode("sip")}
+              className={`flex-1 py-2 rounded-lg text-sm font-medium ${mode === "sip" ? "bg-indigo-500 text-white" : "bg-muted text-muted-foreground"}`}
+            >
+              SIP
+            </button>
+            <button
+              onClick={() => setMode("lumpsum")}
+              className={`flex-1 py-2 rounded-lg text-sm font-medium ${mode === "lumpsum" ? "bg-indigo-500 text-white" : "bg-muted text-muted-foreground"}`}
+            >
+              Lumpsum
+            </button>
+          </div>
+          <InputFieldWithCurrency 
+            label={mode === "sip" ? "Monthly Investment" : "One-time Investment"} 
+            value={monthly} 
+            onChange={setMonthly} 
+            currency={format} 
+            onCurrencyChange={setFormat} 
+          />
+          <InputField label="Expected Return (Annual)" value={rate} onChange={setRate} type="number" suffix="%" />
           <InputField label="Time Period" value={years} onChange={setYears} type="number" suffix="years" />
         </div>
       </ToolCard>
@@ -331,7 +385,6 @@ function GSTCalculator() {
 
   return (
     <div className="space-y-4 max-w-lg mx-auto">
-      <CurrencySelector value={format} onChange={setFormat} />
       <ToolCard title="GST / VAT Calculator" icon={Building2} iconColor="bg-teal-500">
         <div className="space-y-4">
           <div className="flex gap-2">
@@ -350,7 +403,13 @@ function GSTCalculator() {
               Remove GST
             </button>
           </div>
-          <InputField label={mode === "add" ? "Amount (excl. GST)" : "Amount (incl. GST)"} value={amount} onChange={setAmount} type="number" suffix={symbol} />
+          <InputFieldWithCurrency 
+            label={mode === "add" ? "Amount (excl. GST)" : "Amount (incl. GST)"} 
+            value={amount} 
+            onChange={setAmount} 
+            currency={format} 
+            onCurrencyChange={setFormat} 
+          />
           <div>
             <label className="text-sm font-medium text-muted-foreground mb-2 block">GST Rate</label>
             <div className="flex gap-2 flex-wrap">
@@ -371,7 +430,7 @@ function GSTCalculator() {
 
       <ToolCard title="Breakdown" icon={Percent} iconColor="bg-emerald-500">
         <div className="space-y-3">
-          <ResultDisplay label={mode === "add" ? "Base Amount" : "Net Amount"} value={`${symbol}${ (mode === "add" ? base : total).toLocaleString(undefined, { maximumFractionDigits: 0 })}`} />
+          <ResultDisplay label="Base Amount" value={`${symbol}${ (mode === "add" ? base : total).toLocaleString(undefined, { maximumFractionDigits: 0 })}`} />
           <ResultDisplay label="GST Amount" value={`${symbol}${taxPart.toLocaleString(undefined, { maximumFractionDigits: 0 })}`} color="text-teal-400" />
           <ResultDisplay label={mode === "add" ? "Total (incl. GST)" : "Original Amount"} value={`${symbol}${ (mode === "add" ? total : base).toLocaleString(undefined, { maximumFractionDigits: 0 })}`} highlight color="text-emerald-400" />
         </div>
@@ -396,10 +455,15 @@ function SalaryConverter() {
 
   return (
     <div className="space-y-4 max-w-lg mx-auto">
-      <CurrencySelector value={format} onChange={setFormat} />
       <ToolCard title="Salary Converter" icon={Coins} iconColor="bg-amber-500">
         <div className="space-y-4">
-          <InputField label="Hourly Rate" value={hourly} onChange={setHourly} type="number" suffix={`${symbol}/hr`} />
+          <InputFieldWithCurrency 
+            label="Hourly Rate" 
+            value={hourly} 
+            onChange={setHourly} 
+            currency={format} 
+            onCurrencyChange={setFormat} 
+          />
           <InputField label="Hours per Week" value={hoursPerWeek} onChange={setHoursPerWeek} type="number" />
         </div>
       </ToolCard>
@@ -434,10 +498,15 @@ function DiscountCalculator() {
 
   return (
     <div className="space-y-4 max-w-lg mx-auto">
-      <CurrencySelector value={format} onChange={setFormat} />
       <ToolCard title="Stacked Discount Calculator" icon={BadgePercent} iconColor="bg-rose-500">
         <div className="space-y-4">
-          <InputField label="Original Price" value={originalPrice} onChange={setOriginalPrice} type="number" suffix={symbol} />
+          <InputFieldWithCurrency 
+            label="Original Price" 
+            value={originalPrice} 
+            onChange={setOriginalPrice} 
+            currency={format} 
+            onCurrencyChange={setFormat} 
+          />
           <InputField label="First Discount" value={discount1} onChange={setDiscount1} type="number" suffix="%" />
           <InputField label="Second Discount" value={discount2} onChange={setDiscount2} type="number" suffix="%" />
         </div>
@@ -475,7 +544,6 @@ function InflationCalculator() {
 
   return (
     <div className="space-y-4 max-w-lg mx-auto">
-      <CurrencySelector value={format} onChange={setFormat} />
       <ToolCard title="Inflation Calculator" icon={TrendingDown} iconColor="bg-red-500">
         <div className="space-y-4">
           <div className="flex gap-2 mb-2">
@@ -499,12 +567,12 @@ function InflationCalculator() {
             </button>
           </div>
 
-          <InputField 
+          <InputFieldWithCurrency 
             label={mode === "historical" ? `Amount in ${year}` : "Current Amount"} 
             value={amount} 
             onChange={setAmount} 
-            type="number" 
-            suffix={symbol}
+            currency={format} 
+            onCurrencyChange={setFormat} 
           />
           <InputField 
             label={mode === "historical" ? "Starting Year" : "Target Future Year"} 
@@ -643,10 +711,15 @@ function MortgageCalculator() {
 
   return (
     <div className="space-y-4 max-w-lg mx-auto">
-      <CurrencySelector value={format} onChange={setFormat} />
       <ToolCard title="Mortgage Calculator" icon={Building2} iconColor="bg-blue-600">
         <div className="space-y-4">
-          <InputField label="Home Price" value={price} onChange={setPrice} type="number" suffix={symbol} />
+          <InputFieldWithCurrency 
+            label="Home Price" 
+            value={price} 
+            onChange={setPrice} 
+            currency={format} 
+            onCurrencyChange={setFormat} 
+          />
           <InputField label="Down Payment (%)" value={down} onChange={setDown} type="number" suffix="%" />
           <InputField label="Interest Rate" value={rate} onChange={setRate} type="number" suffix="%" step={0.1} />
           <InputField label="Loan Term" value={years} onChange={setYears} type="number" suffix="years" />
@@ -676,10 +749,15 @@ function ProfitLossCalculator() {
 
   return (
     <div className="space-y-4 max-w-lg mx-auto">
-      <CurrencySelector value={format} onChange={setFormat} />
       <ToolCard title="Profit & Loss" icon={TrendingUp} iconColor="bg-emerald-500">
         <div className="space-y-4">
-          <InputField label="Cost Price" value={cp} onChange={setCp} type="number" suffix={symbol} />
+          <InputFieldWithCurrency 
+            label="Cost Price" 
+            value={cp} 
+            onChange={setCp} 
+            currency={format} 
+            onCurrencyChange={setFormat} 
+          />
           <InputField label="Selling Price" value={sp} onChange={setSp} type="number" suffix={symbol} />
         </div>
       </ToolCard>
@@ -707,10 +785,15 @@ function MarkupCalculator() {
 
   return (
     <div className="space-y-4 max-w-lg mx-auto">
-      <CurrencySelector value={format} onChange={setFormat} />
       <ToolCard title="Markup Calculator" icon={Tag} iconColor="bg-orange-500">
         <div className="space-y-4">
-          <InputField label="Cost" value={cost} onChange={setCost} type="number" suffix={symbol} />
+          <InputFieldWithCurrency 
+            label="Cost" 
+            value={cost} 
+            onChange={setCost} 
+            currency={format} 
+            onCurrencyChange={setFormat} 
+          />
           <InputField label="Markup (%)" value={markup} onChange={setMarkup} type="number" suffix="%" />
         </div>
       </ToolCard>
@@ -729,20 +812,52 @@ function MarginCalculator() {
   const [format, setFormat] = useState<NumberFormat>("US");
   const [cost, setCost] = useState("100");
   const [margin, setMargin] = useState("20");
+  const [mode, setMode] = useState<"margin" | "markup">("margin");
 
   const symbol = format === "IN" ? "₹" : "$";
   const c = parseFloat(cost) || 0;
   const m = parseFloat(margin) || 0;
-  const sell = m < 100 ? c / (1 - m / 100) : 0;
-  const profit = sell - c;
+  
+  let sell = 0;
+  let profit = 0;
+  let other = 0;
+
+  if (mode === "margin") {
+    sell = m < 100 ? c / (1 - m / 100) : 0;
+    profit = sell - c;
+    other = c > 0 ? (profit / c) * 100 : 0;
+  } else {
+    sell = c * (1 + m / 100);
+    profit = sell - c;
+    other = sell > 0 ? (profit / sell) * 100 : 0;
+  }
 
   return (
     <div className="space-y-4 max-w-lg mx-auto">
-      <CurrencySelector value={format} onChange={setFormat} />
-      <ToolCard title="Margin Calculator" icon={Percent} iconColor="bg-indigo-500">
+      <ToolCard title="Margin / Markup Calculator" icon={Percent} iconColor="bg-indigo-500">
         <div className="space-y-4">
-          <InputField label="Cost" value={cost} onChange={setCost} type="number" suffix={symbol} />
-          <InputField label="Gross Margin (%)" value={margin} onChange={setMargin} type="number" suffix="%" />
+          <div className="flex gap-2 mb-2">
+            <button
+              onClick={() => setMode("margin")}
+              className={`flex-1 py-2 rounded-lg text-sm font-medium ${mode === "margin" ? "bg-indigo-500 text-white" : "bg-muted text-muted-foreground"}`}
+            >
+              Margin
+            </button>
+            <button
+              onClick={() => setMode("markup")}
+              className={`flex-1 py-2 rounded-lg text-sm font-medium ${mode === "markup" ? "bg-indigo-500 text-white" : "bg-muted text-muted-foreground"}`}
+            >
+              Markup
+            </button>
+          </div>
+          <InputFieldWithCurrency 
+            label="Cost" 
+            value={cost} 
+            onChange={setCost} 
+            currency={format} 
+            onCurrencyChange={setFormat} 
+          />
+          <InputField label={mode === "margin" ? "Gross Margin (%)" : "Markup (%)"} value={margin} onChange={setMargin} type="number" suffix="%" />
         </div>
       </ToolCard>
 
@@ -750,6 +865,7 @@ function MarginCalculator() {
         <div className="space-y-3">
           <ResultDisplay label="Selling Price" value={`${symbol}${sell.toLocaleString(undefined, { maximumFractionDigits: 2 })}`} highlight color="text-emerald-400" />
           <ResultDisplay label="Gross Profit" value={`${symbol}${profit.toLocaleString(undefined, { maximumFractionDigits: 2 })}`} />
+          <ResultDisplay label={mode === "margin" ? "Markup" : "Margin"} value={`${other.toFixed(2)}%`} />
         </div>
       </ToolCard>
     </div>
@@ -925,7 +1041,6 @@ function StockCalculator() {
   return (
     <div className="space-y-4 max-w-lg mx-auto">
       <ToolCard title="Stock Profit/Loss & Break-even" icon={LineChart} iconColor="bg-emerald-500">
-        <CurrencySelector value={format} onChange={setFormat} />
         <div className="flex gap-2 p-1 bg-muted rounded-xl mb-4 flex-wrap">
           {modes.map((m) => (
             <button key={m.id} onClick={() => setMode(m.id as typeof mode)} data-testid={`mode-${m.id}`}
@@ -937,7 +1052,13 @@ function StockCalculator() {
         <div className="space-y-3">
           {mode === "profit-loss" && (
             <>
-              <InputField label="Buy Price" value={buyPrice} onChange={setBuyPrice} type="number" suffix={symbol} />
+              <InputFieldWithCurrency 
+                label="Buy Price" 
+                value={buyPrice} 
+                onChange={setBuyPrice} 
+                currency={format} 
+                onCurrencyChange={setFormat} 
+              />
               <InputField label="Sell Price" value={sellPrice} onChange={setSellPrice} type="number" suffix={symbol} />
               <InputField label="Number of Shares" value={shares} onChange={setShares} type="number" />
               <InputField label="Buy Commission" value={buyCommission} onChange={setBuyCommission} type="number" suffix={symbol} />
@@ -947,7 +1068,13 @@ function StockCalculator() {
           )}
           {mode === "breakeven" && (
             <>
-              <InputField label="Buy Price" value={buyPrice} onChange={setBuyPrice} type="number" suffix={symbol} />
+              <InputFieldWithCurrency 
+                label="Buy Price" 
+                value={buyPrice} 
+                onChange={setBuyPrice} 
+                currency={format} 
+                onCurrencyChange={setFormat} 
+              />
               <InputField label="Number of Shares" value={shares} onChange={setShares} type="number" />
               <InputField label="Buy Commission" value={buyCommission} onChange={setBuyCommission} type="number" suffix={symbol} />
               <InputField label="Sell Commission" value={sellCommission} onChange={setSellCommission} type="number" suffix={symbol} />
@@ -958,7 +1085,13 @@ function StockCalculator() {
           {mode === "avg-cost" && (
             <>
               <p className="text-xs font-bold text-muted-foreground uppercase">Buy Lot 1</p>
-              <InputField label="Price" value={buy1Price} onChange={setBuy1Price} type="number" suffix={symbol} />
+              <InputFieldWithCurrency 
+                label="Price" 
+                value={buy1Price} 
+                onChange={setBuy1Price} 
+                currency={format} 
+                onCurrencyChange={setFormat} 
+              />
               <InputField label="Quantity" value={buy1Qty} onChange={setBuy1Qty} type="number" />
               <p className="text-xs font-bold text-muted-foreground uppercase mt-2">Buy Lot 2</p>
               <InputField label="Price" value={buy2Price} onChange={setBuy2Price} type="number" suffix={symbol} />
