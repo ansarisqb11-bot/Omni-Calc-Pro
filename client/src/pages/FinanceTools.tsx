@@ -654,10 +654,15 @@ function CurrencyConverter() {
 
   return (
     <div className="space-y-4 max-w-lg mx-auto">
-      <CurrencySelector value={format} onChange={setFormat} />
       <ToolCard title="Currency Converter" icon={Coins} iconColor="bg-blue-500">
         <div className="space-y-4">
-          <InputField label="Amount" value={amount} onChange={setAmount} type="number" />
+          <InputFieldWithCurrency 
+            label="Amount" 
+            value={amount} 
+            onChange={setAmount} 
+            currency={format} 
+            onCurrencyChange={setFormat} 
+          />
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-muted-foreground mb-1.5 block">From</label>
