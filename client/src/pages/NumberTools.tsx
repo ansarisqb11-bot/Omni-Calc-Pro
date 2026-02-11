@@ -54,6 +54,7 @@ function BillionMillionConverter() {
   const baseValue = (parseFloat(value) || 0) * (units.find(u => u.id === fromUnit)?.factor || 1);
 
   const formatNumber = (num: number) => {
+    if (num === 0) return "0";
     if (num >= 1e12) return (num / 1e12).toLocaleString(undefined, { maximumFractionDigits: 4 });
     if (num >= 1e9) return (num / 1e9).toLocaleString(undefined, { maximumFractionDigits: 4 });
     if (num >= 1e6) return (num / 1e6).toLocaleString(undefined, { maximumFractionDigits: 4 });
@@ -190,11 +191,12 @@ function USIndianConverter() {
   };
 
   const formatIndian = (n: number) => {
-    if (n >= 1e11) return `${(n / 1e9).toFixed(2)} Arab`;
+    if (n >= 1e11) return `${(n / 1e11).toFixed(2)} Kharab`;
+    if (n >= 1e9) return `${(n / 1e9).toFixed(2)} Arab`;
     if (n >= 1e7) return `${(n / 1e7).toFixed(2)} Crore`;
     if (n >= 1e5) return `${(n / 1e5).toFixed(2)} Lakh`;
     if (n >= 1e3) return `${(n / 1e3).toFixed(2)} Thousand`;
-    return n.toString();
+    return n.toLocaleString("en-IN");
   };
 
   return (
