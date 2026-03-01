@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Hammer, PaintBucket, LayoutGrid, Construction, Box, Calculator, Home, Layers } from "lucide-react";
+import { Hammer, PaintBucket, LayoutGrid, Construction, Box, Calculator, Home, Layers, ArrowRightLeft } from "lucide-react";
 import { ToolCard, InputField, ResultDisplay, ToolButton } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
 
@@ -110,47 +110,141 @@ function CementCalculator() {
 }
 
 function PaintCalculator() {
+  const [unit, setUnit] = useState<"m" | "ft">("m");
+  const [mode, setMode] = useState<"standard" | "reverse">("standard");
   const [length, setLength] = useState("12");
   const [width, setWidth] = useState("10");
   const [height, setHeight] = useState("3");
   const [doors, setDoors] = useState("2");
   const [windows, setWindows] = useState("3");
+  const [coats, setCoats] = useState("2");
+  const [coverage, setCoverage] = useState("12"); // sq.m per liter
+  const [totalPaint, setTotalPaint] = useState("20"); // For reverse mode
 
-  const l = parseFloat(length) || 0;
-  const w = parseFloat(width) || 0;
-  const h = parseFloat(height) || 0;
-  const d = parseInt(doors) || 0;
-  const win = parseInt(windows) || 0;
+  const unitLabel = unit === "m" ? "m" : "ft";
+  const areaLabel = unit === "m" ? "sq.m" : "sq.ft";
 
-  const wallArea = 2 * (l + w) * h;
-  const doorArea = d * 2.1 * 0.9;
-  const windowArea = win * 1.2 * 1.0;
-  const paintableArea = wallArea - doorArea - windowArea;
-  const coverage = 12;
-  const coats = 2;
-  const litersNeeded = (paintableArea * coats) / coverage;
+  const calculate = () => {
+    const l = parseFloat(length) || 0;
+    const w = parseFloat(width) || 0;
+    const h = parseFloat(height) || 0;
+    const dCount = parseInt(doors) || 0;
+    const wCount = parseInt(windows) || 0;
+    const cCount = parseInt(coats) || 1;
+    const cov = parseFloat(coverage) || 12;
+
+    // Standard door/window areas in m
+    const doorAreaM = 2.1 * 0.9; 
+    const windowAreaM = 1.2 * 1.0;
+
+    // Convert to target units
+    const dArea = unit === "m" ? doorAreaM : doorAreaM * 10.764;
+    const wArea = unit === "m" ? windowAreaM : windowAreaM * 10.764;
+
+    const wallArea = 2 * (l + w) * h;
+    const openingsArea = (dCount * dArea) + (wCount * wArea);
+    const paintableArea = Math.max(0, wallArea - openingsArea);
+    
+    if (mode === "standard") {
+      const litersNeeded = (paintableArea * cCount) / cov;
+      return {
+        area: paintableArea,
+        needed: litersNeeded,
+        gallons: litersNeeded / 3.785
+      };
+    } else {
+      // Reverse mode: How much area can we cover with X paint?
+      const paintAvailable = parseFloat(totalPaint) || 0;
+      const coverageArea = (paintAvailable * cov) / cCount;
+      return {
+        area: coverageArea,
+        needed: paintAvailable,
+        gallons: paintAvailable / 3.785
+      };
+    }
+  };
+
+  const res = calculate();
 
   return (
     <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Paint Calculator" icon={PaintBucket} iconColor="bg-pink-500">
+      <div className="flex gap-2 p-1 bg-muted rounded-xl mb-4">
+        <button
+          onClick={() => setMode("standard")}
+          className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
+            mode === "standard" ? "bg-pink-500 text-white" : "text-muted-foreground"
+          }`}
+        >
+          Paint Needed
+        </button>
+        <button
+          onClick={() => setMode("reverse")}
+          className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
+            mode === "reverse" ? "bg-pink-500 text-white" : "text-muted-foreground"
+          }`}
+        >
+          Area Covered
+        </button>
+      </div>
+
+      <ToolCard title={`Paint Calculator (${mode === 'standard' ? 'Materials' : 'Coverage'})`} icon={PaintBucket} iconColor="bg-pink-500">
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <InputField label="Length (m)" value={length} onChange={setLength} type="number" />
-            <InputField label="Width (m)" value={width} onChange={setWidth} type="number" />
+          <div className="flex justify-between items-center">
+            <label className="text-sm font-medium text-muted-foreground">Unit System</label>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setUnit("m")}
+                className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${unit === "m" ? "bg-pink-500/20 text-pink-500 border border-pink-500/50" : "bg-muted text-muted-foreground"}`}
+              >
+                METRIC (m)
+              </button>
+              <button
+                onClick={() => setUnit("ft")}
+                className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${unit === "ft" ? "bg-pink-500/20 text-pink-500 border border-pink-500/50" : "bg-muted text-muted-foreground"}`}
+              >
+                IMPERIAL (ft)
+              </button>
+            </div>
           </div>
-          <InputField label="Height (m)" value={height} onChange={setHeight} type="number" />
+
+          {mode === "standard" ? (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <InputField label={`Length (${unitLabel})`} value={length} onChange={setLength} type="number" />
+                <InputField label={`Width (${unitLabel})`} value={width} onChange={setWidth} type="number" />
+              </div>
+              <InputField label={`Height (${unitLabel})`} value={height} onChange={setHeight} type="number" />
+              <div className="grid grid-cols-2 gap-4">
+                <InputField label="Doors" value={doors} onChange={setDoors} type="number" />
+                <InputField label="Windows" value={windows} onChange={setWindows} type="number" />
+              </div>
+            </>
+          ) : (
+            <InputField label="Total Paint (Liters)" value={totalPaint} onChange={setTotalPaint} type="number" />
+          )}
+
           <div className="grid grid-cols-2 gap-4">
-            <InputField label="Doors" value={doors} onChange={setDoors} type="number" />
-            <InputField label="Windows" value={windows} onChange={setWindows} type="number" />
+            <InputField label="No. of Coats" value={coats} onChange={setCoats} type="number" />
+            <InputField label={`Coverage (${areaLabel}/L)`} value={coverage} onChange={setCoverage} type="number" />
           </div>
         </div>
       </ToolCard>
 
-      <ToolCard title="Paint Required" icon={Calculator} iconColor="bg-emerald-500">
+      <ToolCard title="Results" icon={Calculator} iconColor="bg-emerald-500">
         <div className="space-y-3">
-          <ResultDisplay label="Paintable Area" value={`${paintableArea.toFixed(1)} sq.m`} />
-          <ResultDisplay label="Paint Needed (2 coats)" value={`${litersNeeded.toFixed(1)} liters`} highlight color="text-pink-400" />
-          <ResultDisplay label="~Gallons" value={`${(litersNeeded / 3.785).toFixed(1)} gal`} color="text-blue-400" />
+          {mode === "standard" ? (
+            <>
+              <ResultDisplay label="Paintable Area" value={`${res.area.toFixed(1)} ${areaLabel}`} />
+              <ResultDisplay label={`Paint Needed (${coats} coats)`} value={`${res.needed.toFixed(1)} Liters`} highlight color="text-pink-400" />
+              <ResultDisplay label="In Gallons" value={`${res.gallons.toFixed(2)} gal`} color="text-blue-400" />
+            </>
+          ) : (
+            <>
+              <ResultDisplay label="Coverable Area" value={`${res.area.toFixed(1)} ${areaLabel}`} highlight color="text-pink-400" />
+              <ResultDisplay label="Paint Used" value={`${res.needed} Liters`} />
+              <ResultDisplay label="In Gallons" value={`${res.gallons.toFixed(2)} gal`} color="text-blue-400" />
+            </>
+          )}
         </div>
       </ToolCard>
     </div>
