@@ -5,7 +5,8 @@ import {
   LayoutDashboard, Calculator, Wallet,
   Ruler, Calendar, MessageSquare, StickyNote, Grid3X3, Heart,
   Hash, Triangle, FlaskConical, HardHat, Plane, GraduationCap,
-  Stethoscope, Home, Car, Leaf, Code, ShoppingCart, Globe, ShoppingBag
+  Stethoscope, Home, Car, Leaf, Code, ShoppingCart, Globe, ShoppingBag,
+  History, Star
 } from "lucide-react";
 import { clsx } from "clsx";
 import { motion, AnimatePresence } from "framer-motion";
@@ -26,7 +27,7 @@ export function Layout({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  const navItems = [
+  const allNavItems = [
     { label: "Home", icon: LayoutDashboard, href: "/" },
     { label: "Categories", icon: Grid3X3, href: "/categories" },
     { label: "Calculator", icon: Calculator, href: "/calculator" },
@@ -50,8 +51,17 @@ export function Layout({ children }: { children: ReactNode }) {
     { label: "Environment", icon: Globe, href: "/environment" },
     { label: "Smart Daily Life", icon: ShoppingBag, href: "/smart-life" },
     { label: "Word Problems", icon: Calculator, href: "/word-problems" },
+    { label: "History", icon: History, href: "/history" },
+    { label: "Favorites", icon: Star, href: "/favorites" },
     { label: "AI Assistant", icon: MessageSquare, href: "/ai-tools" },
     { label: "Notes", icon: StickyNote, href: "/notes" },
+  ];
+
+  const desktopMainNav = [
+    { label: "Home", icon: LayoutDashboard, href: "/" },
+    { label: "Categories", icon: Grid3X3, href: "/categories" },
+    { label: "History", icon: History, href: "/history" },
+    { label: "Favorites", icon: Star, href: "/favorites" },
   ];
 
   const cycleTheme = () => {
@@ -62,10 +72,11 @@ export function Layout({ children }: { children: ReactNode }) {
   };
 
   const ThemeIcon = theme === "light" ? Sun : theme === "amoled" ? Monitor : Moon;
+  const themeLabel = theme === "light" ? "Light" : theme === "amoled" ? "AMOLED" : "Dark";
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row overflow-hidden">
-      {/* Mobile Header */}
+      {/* Mobile Header — unchanged */}
       <header className="md:hidden flex items-center justify-between px-4 py-3 bg-background border-b border-border sticky top-0 z-50">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
@@ -93,47 +104,55 @@ export function Layout({ children }: { children: ReactNode }) {
 
       {/* Desktop Sidebar */}
       {!isMobile && (
-        <aside className="hidden md:flex w-64 bg-card/50 border-r border-border flex-col p-4">
-          <div className="flex items-center gap-3 mb-6 px-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center shadow-lg">
-              <Calculator className="w-6 h-6 text-white" />
+        <aside className="hidden md:flex w-56 bg-card border-r border-border flex-col shrink-0 h-screen sticky top-0">
+          <div className="flex items-center gap-3 px-5 pt-6 pb-5 shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-sm">
+              <div className="grid grid-cols-2 gap-0.5">
+                <div className="w-1.5 h-1.5 rounded-sm bg-primary-foreground" />
+                <div className="w-1.5 h-1.5 rounded-sm bg-primary-foreground" />
+                <div className="w-1.5 h-1.5 rounded-sm bg-primary-foreground" />
+                <div className="w-1.5 h-1.5 rounded-sm bg-primary-foreground" />
+              </div>
             </div>
-            <span className="text-xl font-bold tracking-tight">CalcHub</span>
+            <div>
+              <p className="font-bold text-sm leading-tight text-foreground">CalcHub</p>
+              <p className="text-[10px] text-muted-foreground leading-tight">Professional Utility</p>
+            </div>
           </div>
 
-          <nav className="flex-1 space-y-0.5 overflow-y-auto">
-            {navItems.map((item) => (
+          <nav className="flex-1 overflow-y-auto px-3 space-y-0.5">
+            {desktopMainNav.map((item) => (
               <Link key={item.href} href={item.href}>
                 <div
                   className={clsx(
-                    "flex items-center gap-3 px-3 py-2 rounded-xl transition-all cursor-pointer",
+                    "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all cursor-pointer",
                     location === item.href
-                      ? "bg-primary text-primary-foreground"
+                      ? "bg-primary/10 text-primary font-semibold"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   )}
                   data-testid={`nav-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
                 >
-                  <item.icon className="w-4 h-4" />
-                  <span className="font-medium text-sm">{item.label}</span>
+                  <item.icon className={clsx("w-4 h-4 shrink-0", location === item.href ? "text-primary" : "")} />
+                  <span className="text-sm font-medium">{item.label}</span>
                 </div>
               </Link>
             ))}
           </nav>
 
-          <div className="mt-auto pt-4 border-t border-border">
+          <div className="shrink-0 px-3 pb-5 pt-3 border-t border-border">
             <button
               onClick={cycleTheme}
-              className="flex items-center gap-3 px-3 py-2.5 text-muted-foreground hover:text-foreground w-full transition-colors rounded-xl hover:bg-muted"
+              className="flex items-center gap-3 px-3 py-2.5 w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-all text-sm font-medium"
               data-testid="button-toggle-theme-desktop"
             >
-              <ThemeIcon className="w-5 h-5" />
-              <span className="font-medium text-sm capitalize">{theme} Mode</span>
+              <ThemeIcon className="w-4 h-4 shrink-0" />
+              <span>{themeLabel} Mode</span>
             </button>
           </div>
         </aside>
       )}
 
-      {/* Mobile Drawer */}
+      {/* Mobile Drawer — unchanged */}
       <AnimatePresence>
         {isSidebarOpen && isMobile && (
           <>
@@ -168,7 +187,7 @@ export function Layout({ children }: { children: ReactNode }) {
               </div>
 
               <nav className="flex-1 space-y-0.5 overflow-y-auto">
-                {navItems.map((item) => (
+                {allNavItems.map((item) => (
                   <Link key={item.href} href={item.href}>
                     <div
                       onClick={() => setSidebarOpen(false)}
