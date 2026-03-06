@@ -300,13 +300,13 @@ function DesktopHome() {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {allCategories.map((cat) => (
-              <motion.button
+              <motion.div
                 key={cat.id}
                 whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => handleCatClick(cat)}
                 data-testid={`card-category-${cat.id}`}
-                className="bg-card border border-border rounded-2xl p-4 text-left hover:shadow-md hover:border-primary/20 transition-all group flex flex-col gap-3"
+                className="bg-card border border-border rounded-2xl p-4 text-left hover:shadow-md hover:border-primary/20 transition-all group flex flex-col gap-3 cursor-pointer"
               >
                 <div className="flex items-center justify-between">
                   <div className={`w-9 h-9 rounded-xl ${cat.color} flex items-center justify-center`}>
@@ -327,7 +327,7 @@ function DesktopHome() {
                   <p className="font-semibold text-sm text-foreground">{cat.title}</p>
                   <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{cat.description}</p>
                 </div>
-              </motion.button>
+              </motion.div>
             ))}
           </div>
         </section>
