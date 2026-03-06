@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Hammer, PaintBucket, LayoutGrid, Construction, Box, Calculator,
-  Home, Layers, ArrowRightLeft, Mountain, Stairs, Truck
+  Home, Layers, ArrowRightLeft, Mountain, TrendingUp, Truck
 } from "lucide-react";
 import { ToolCard, ResultDisplay } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
@@ -132,7 +132,7 @@ export default function ConstructionTools() {
     { id: "flooring", label: "Flooring", icon: LayoutGrid },
     { id: "steel", label: "Steel Bar", icon: Construction },
     { id: "excavation", label: "Excavation", icon: Mountain },
-    { id: "staircase", label: "Staircase", icon: Stairs },
+    { id: "staircase", label: "Staircase", icon: TrendingUp },
     { id: "gravel", label: "Gravel/Fill", icon: Truck },
   ];
 
@@ -1001,7 +1001,7 @@ function StaircaseCalc({ unit }: { unit: UnitSystem }) {
 
   return (
     <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Staircase Designer" icon={Stairs} iconColor="bg-indigo-500">
+      <ToolCard title="Staircase Designer" icon={TrendingUp} iconColor="bg-indigo-500">
         <div className="space-y-4">
           <Field label={`Floor-to-Floor Height (${ll})`} value={floorHeight} onChange={setFloorHeight} hint={unit === "metric" ? "Typical: 2.8–3.2m" : "Typical: 9–11ft"} />
           <div className="grid grid-cols-2 gap-3">
