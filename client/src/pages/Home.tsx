@@ -136,34 +136,36 @@ function SearchOverlay({ onClose }: { onClose: () => void }) {
   );
 }
 
-// ── Category gradient + badge metadata ──────────────────────────────────────
-const CAT_META: Record<string, { grad: string; badge: string }> = {
-  finance:          { grad: "from-emerald-400 via-emerald-600 to-emerald-900",  badge: "FINANCE" },
-  "size-converter": { grad: "from-violet-400 via-violet-600 to-violet-900",     badge: "GENERAL" },
-  health:           { grad: "from-pink-400 via-pink-600 to-rose-900",           badge: "HEALTH" },
-  science:          { grad: "from-rose-400 via-rose-600 to-red-900",            badge: "SCIENCE" },
-  units:            { grad: "from-amber-400 via-amber-600 to-orange-900",       badge: "UNITS" },
-  "date-time":      { grad: "from-purple-400 via-purple-600 to-purple-900",     badge: "UTILITY" },
-  math:             { grad: "from-indigo-400 via-indigo-600 to-indigo-900",     badge: "MATH" },
-  numbers:          { grad: "from-teal-400 via-teal-600 to-teal-900",           badge: "MATH" },
-  geometry:         { grad: "from-cyan-400 via-cyan-600 to-cyan-900",           badge: "MATH" },
-  construction:     { grad: "from-orange-400 via-orange-600 to-orange-900",     badge: "ENGINEERING" },
-  travel:           { grad: "from-sky-400 via-sky-600 to-sky-900",              badge: "TRAVEL" },
-  education:        { grad: "from-blue-400 via-blue-600 to-blue-900",           badge: "EDUCATION" },
-  medical:          { grad: "from-red-400 via-red-600 to-red-900",              badge: "HEALTH" },
-  lifestyle:        { grad: "from-lime-400 via-lime-600 to-green-900",          badge: "LIFESTYLE" },
-  automobile:       { grad: "from-slate-400 via-slate-600 to-slate-900",        badge: "TRAVEL" },
-  agriculture:      { grad: "from-green-400 via-green-600 to-green-900",        badge: "SCIENCE" },
-  developer:        { grad: "from-gray-400 via-gray-600 to-gray-900",           badge: "TECH" },
-  ecommerce:        { grad: "from-fuchsia-400 via-fuchsia-600 to-fuchsia-900",  badge: "COMMERCE" },
-  environment:      { grad: "from-emerald-500 via-green-600 to-green-900",      badge: "SCIENCE" },
-  "smart-life":     { grad: "from-indigo-400 via-indigo-600 to-indigo-900",     badge: "LIFESTYLE" },
-  "color-tools":    { grad: "from-fuchsia-400 via-pink-600 to-rose-900",        badge: "DESIGN" },
-  population:       { grad: "from-rose-400 via-rose-600 to-rose-900",           badge: "SCIENCE" },
-  development:      { grad: "from-amber-400 via-yellow-600 to-yellow-900",      badge: "FINANCE" },
-  designer:         { grad: "from-pink-400 via-fuchsia-600 to-pink-900",        badge: "DESIGN" },
-  "ai-tools":       { grad: "from-violet-400 via-purple-600 to-violet-900",     badge: "AI" },
-  notes:            { grad: "from-yellow-400 via-yellow-600 to-orange-900",     badge: "NOTES" },
+// ── Category card metadata: dark muted banner + vivid icon ──────────────────
+const CAT_META: Record<string, {
+  banner: string; icon: string; badge: string; pill: string;
+}> = {
+  finance:          { banner: "from-emerald-50 to-emerald-100 dark:from-emerald-950 dark:to-emerald-900",       icon: "text-emerald-700 dark:text-emerald-400", badge: "FINANCE",     pill: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300" },
+  "size-converter": { banner: "from-violet-50 to-violet-100 dark:from-violet-950 dark:to-violet-900",           icon: "text-violet-700 dark:text-violet-400",   badge: "GENERAL",     pill: "bg-violet-100 text-violet-700 dark:bg-violet-900/60 dark:text-violet-300" },
+  health:           { banner: "from-pink-50 to-rose-100 dark:from-pink-950 dark:to-pink-900",                   icon: "text-pink-600 dark:text-pink-400",        badge: "HEALTH",      pill: "bg-pink-100 text-pink-700 dark:bg-pink-900/60 dark:text-pink-300" },
+  science:          { banner: "from-rose-50 to-red-100 dark:from-rose-950 dark:to-rose-900",                    icon: "text-rose-600 dark:text-rose-400",        badge: "SCIENCE",     pill: "bg-rose-100 text-rose-700 dark:bg-rose-900/60 dark:text-rose-300" },
+  units:            { banner: "from-amber-50 to-orange-100 dark:from-amber-950 dark:to-amber-900",               icon: "text-amber-600 dark:text-amber-400",      badge: "UNITS",       pill: "bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300" },
+  "date-time":      { banner: "from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900",            icon: "text-purple-700 dark:text-purple-400",    badge: "UTILITY",     pill: "bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300" },
+  math:             { banner: "from-indigo-50 to-indigo-100 dark:from-indigo-950 dark:to-indigo-900",            icon: "text-indigo-700 dark:text-indigo-400",    badge: "MATH",        pill: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300" },
+  numbers:          { banner: "from-teal-50 to-teal-100 dark:from-teal-950 dark:to-teal-900",                   icon: "text-teal-700 dark:text-teal-400",        badge: "MATH",        pill: "bg-teal-100 text-teal-700 dark:bg-teal-900/60 dark:text-teal-300" },
+  geometry:         { banner: "from-cyan-50 to-cyan-100 dark:from-cyan-950 dark:to-cyan-900",                   icon: "text-cyan-600 dark:text-cyan-400",        badge: "MATH",        pill: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/60 dark:text-cyan-300" },
+  construction:     { banner: "from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900",            icon: "text-orange-600 dark:text-orange-400",    badge: "ENGINEERING", pill: "bg-orange-100 text-orange-700 dark:bg-orange-900/60 dark:text-orange-300" },
+  travel:           { banner: "from-sky-50 to-sky-100 dark:from-sky-950 dark:to-sky-900",                       icon: "text-sky-600 dark:text-sky-400",          badge: "TRAVEL",      pill: "bg-sky-100 text-sky-700 dark:bg-sky-900/60 dark:text-sky-300" },
+  education:        { banner: "from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900",                   icon: "text-blue-600 dark:text-blue-400",        badge: "EDUCATION",   pill: "bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300" },
+  medical:          { banner: "from-red-50 to-red-100 dark:from-red-950 dark:to-red-900",                       icon: "text-red-600 dark:text-red-400",          badge: "HEALTH",      pill: "bg-red-100 text-red-700 dark:bg-red-900/60 dark:text-red-300" },
+  lifestyle:        { banner: "from-lime-50 to-green-100 dark:from-lime-950 dark:to-lime-900",                  icon: "text-lime-600 dark:text-lime-400",        badge: "LIFESTYLE",   pill: "bg-lime-100 text-lime-700 dark:bg-lime-900/60 dark:text-lime-300" },
+  automobile:       { banner: "from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950",               icon: "text-slate-600 dark:text-slate-300",      badge: "TRAVEL",      pill: "bg-slate-100 text-slate-700 dark:bg-slate-800/60 dark:text-slate-300" },
+  agriculture:      { banner: "from-green-50 to-green-100 dark:from-green-950 dark:to-green-900",               icon: "text-green-700 dark:text-green-400",      badge: "SCIENCE",     pill: "bg-green-100 text-green-700 dark:bg-green-900/60 dark:text-green-300" },
+  developer:        { banner: "from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950",                   icon: "text-gray-600 dark:text-gray-300",        badge: "TECH",        pill: "bg-gray-100 text-gray-700 dark:bg-gray-800/60 dark:text-gray-300" },
+  ecommerce:        { banner: "from-fuchsia-50 to-fuchsia-100 dark:from-fuchsia-950 dark:to-fuchsia-900",        icon: "text-fuchsia-600 dark:text-fuchsia-400",  badge: "COMMERCE",    pill: "bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900/60 dark:text-fuchsia-300" },
+  environment:      { banner: "from-emerald-50 to-teal-100 dark:from-emerald-950 dark:to-teal-900",              icon: "text-emerald-600 dark:text-emerald-300",  badge: "SCIENCE",     pill: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300" },
+  "smart-life":     { banner: "from-indigo-50 to-blue-100 dark:from-indigo-950 dark:to-indigo-900",              icon: "text-indigo-600 dark:text-indigo-300",    badge: "LIFESTYLE",   pill: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300" },
+  "color-tools":    { banner: "from-fuchsia-50 to-pink-100 dark:from-fuchsia-950 dark:to-pink-900",              icon: "text-fuchsia-600 dark:text-fuchsia-300",  badge: "DESIGN",      pill: "bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900/60 dark:text-fuchsia-300" },
+  population:       { banner: "from-rose-50 to-rose-100 dark:from-rose-950 dark:to-rose-900",                   icon: "text-rose-600 dark:text-rose-300",        badge: "SCIENCE",     pill: "bg-rose-100 text-rose-700 dark:bg-rose-900/60 dark:text-rose-300" },
+  development:      { banner: "from-amber-50 to-yellow-100 dark:from-amber-950 dark:to-yellow-900",              icon: "text-amber-600 dark:text-amber-300",      badge: "FINANCE",     pill: "bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300" },
+  designer:         { banner: "from-pink-50 to-fuchsia-100 dark:from-pink-950 dark:to-fuchsia-900",              icon: "text-pink-600 dark:text-pink-300",        badge: "DESIGN",      pill: "bg-pink-100 text-pink-700 dark:bg-pink-900/60 dark:text-pink-300" },
+  "ai-tools":       { banner: "from-violet-50 to-purple-100 dark:from-violet-950 dark:to-purple-900",            icon: "text-violet-600 dark:text-violet-400",    badge: "AI",          pill: "bg-violet-100 text-violet-700 dark:bg-violet-900/60 dark:text-violet-300" },
+  notes:            { banner: "from-yellow-50 to-amber-100 dark:from-yellow-950 dark:to-yellow-900",             icon: "text-yellow-600 dark:text-yellow-400",    badge: "NOTES",       pill: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/60 dark:text-yellow-300" },
 };
 
 // Filter groups
@@ -282,7 +284,7 @@ function DesktopHome() {
         {/* ── Tool cards grid ──────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {visibleCats.map((cat) => {
-            const meta  = CAT_META[cat.id] ?? { grad: "from-primary via-primary/70 to-primary/30", badge: "TOOL" };
+            const meta  = CAT_META[cat.id] ?? { banner: "from-primary/10 to-primary/20 dark:from-primary/10 dark:to-primary/5", icon: "text-primary", badge: "TOOL", pill: "bg-primary/10 text-primary" };
             const faved = isFavorite(cat.id);
             return (
               <motion.div
@@ -291,11 +293,11 @@ function DesktopHome() {
                 whileTap={{ scale: 0.97 }}
                 onClick={() => handleCatClick(cat)}
                 data-testid={`card-category-${cat.id}`}
-                className="bg-card border border-border rounded-2xl overflow-hidden cursor-pointer hover:shadow-xl hover:border-border/80 transition-all group"
+                className="bg-card border border-border rounded-2xl overflow-hidden cursor-pointer hover:shadow-xl hover:border-primary/20 transition-all group"
               >
-                {/* Icon banner */}
-                <div className={`h-28 bg-gradient-to-br ${meta.grad} flex items-center justify-center relative`}>
-                  <cat.icon className="w-11 h-11 text-white drop-shadow-lg" />
+                {/* Dark muted banner with vivid colored icon */}
+                <div className={`h-36 bg-gradient-to-br ${meta.banner} flex items-center justify-center relative`}>
+                  <cat.icon className={`w-12 h-12 ${meta.icon} drop-shadow-sm`} />
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -303,24 +305,24 @@ function DesktopHome() {
                     }}
                     className={`absolute top-2 right-2 p-1.5 rounded-lg transition-all ${
                       faved
-                        ? "opacity-100 bg-black/30"
-                        : "opacity-0 group-hover:opacity-100 bg-black/20 hover:bg-black/40"
+                        ? "opacity-100 bg-black/10 dark:bg-white/10"
+                        : "opacity-0 group-hover:opacity-100 bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20"
                     }`}
                     data-testid={`button-fav-${cat.id}`}
                   >
-                    <Star className={`w-3.5 h-3.5 ${faved ? "fill-yellow-400 text-yellow-400" : "text-white"}`} />
+                    <Star className={`w-3.5 h-3.5 ${faved ? "fill-yellow-400 text-yellow-400" : "text-foreground/40"}`} />
                   </button>
                 </div>
 
                 {/* Card body */}
                 <div className="p-4">
                   <p className="font-bold text-sm text-foreground leading-snug">{cat.title}</p>
-                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2 mb-3 leading-relaxed">{cat.description}</p>
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2 mb-3 leading-relaxed min-h-[2.5rem]">{cat.description}</p>
                   <div className="flex items-center justify-between">
-                    <span className={`text-[9px] font-bold tracking-[0.12em] uppercase px-2.5 py-1 rounded-full ${cat.color} text-white`}>
+                    <span className={`text-[9px] font-bold tracking-[0.1em] uppercase px-2.5 py-1 rounded-full ${meta.pill}`}>
                       {meta.badge}
                     </span>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-primary transition-colors" />
+                    <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-primary transition-colors" />
                   </div>
                 </div>
               </motion.div>
