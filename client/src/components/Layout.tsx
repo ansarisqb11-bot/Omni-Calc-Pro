@@ -1,7 +1,7 @@
 import { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import {
-  Menu, Moon, Sun, X, Monitor,
+  Menu, Moon, Sun, X, Monitor, Settings,
   Calculator, Wallet,
   Ruler, Calendar, MessageSquare, StickyNote, Grid3X3, Heart,
   Hash, Triangle, FlaskConical, HardHat, Plane, GraduationCap,
@@ -58,10 +58,10 @@ export function Layout({ children }: { children: ReactNode }) {
   ];
 
   const desktopMainNav = [
-    { label: "Home",       icon: LayoutDashboard, href: "/" },
+    { label: "Dashboard",  icon: LayoutDashboard, href: "/" },
     { label: "Categories", icon: Grid3X3,          href: "/categories" },
-    { label: "History",    icon: History,           href: "/history" },
     { label: "Favorites",  icon: Star,              href: "/favorites" },
+    { label: "History",    icon: History,           href: "/history" },
   ];
 
   const cycleTheme = () => {
@@ -71,7 +71,7 @@ export function Layout({ children }: { children: ReactNode }) {
   };
 
   const ThemeIcon = theme === "light" ? Sun : theme === "amoled" ? Monitor : Moon;
-  const themeSubtitle = theme === "light" ? "LIGHT MODE" : theme === "amoled" ? "AMOLED BLACK" : "DARK FOCUS";
+  const themeSubtitle = theme === "light" ? "MINIMALIST SUITE" : theme === "amoled" ? "AMOLED BLACK" : "DARK FOCUS";
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row overflow-hidden">
@@ -166,15 +166,15 @@ export function Layout({ children }: { children: ReactNode }) {
             </div>
           </div>
 
-          {/* Theme toggle */}
+          {/* Settings / Theme toggle */}
           <div className="shrink-0 px-3 pb-4 pt-1 border-t border-border">
             <button
               onClick={cycleTheme}
               className="flex items-center gap-3 px-3 py-2.5 w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-all text-sm font-medium"
               data-testid="button-toggle-theme-desktop"
             >
-              <ThemeIcon className="w-4 h-4 shrink-0" />
-              <span>{theme === "light" ? "Light" : theme === "amoled" ? "AMOLED" : "Dark"} Mode</span>
+              <Settings className="w-4 h-4 shrink-0" />
+              <span>Settings</span>
             </button>
           </div>
         </aside>

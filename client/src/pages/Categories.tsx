@@ -317,138 +317,109 @@ export default function Categories() {
     return () => window.removeEventListener("resize", check);
   }, []);
 
+  const catDescriptions: Record<string, string> = {
+    "Finance": "Mortgage, loans, and investment tools.",
+    "Size Conv.": "Clothing and shoe size converters.",
+    "Word Problems": "Step-by-step word problem solvers.",
+    "Calculator": "Basic, scientific, and programmer calculators.",
+    "Numbers": "Crore, lakh, roman, and number tools.",
+    "Health": "BMI, macro-nutrients, and calorie tracking.",
+    "Units": "Convert weight, length, and volumes.",
+    "Date/Time": "Age, calendar, and countdown tools.",
+    "Math": "Algebra, calculus, and basic arithmetic.",
+    "Geometry": "Area, volume, and shape calculators.",
+    "Science": "Physics, chemistry, and lab tools.",
+    "Construction": "Material estimation and area plotting.",
+    "Travel": "Flights, fuel, and currency tools.",
+    "Education": "GPA, grades, and learning tools.",
+    "Medical": "Dosage, health metrics, and trackers.",
+    "Lifestyle": "Travel, cooking, and daily utility tools.",
+    "Automobile": "Fuel, mileage, and car tools.",
+    "Agriculture": "Crop yield, soil, and farm tools.",
+    "Developer": "Binary, hex, and developer tools.",
+    "E-Commerce": "Pricing, profit, and commission tools.",
+    "Environment": "Carbon footprint and climate tools.",
+    "Smart Life": "Budget, productivity, and daily tools.",
+    "AI Tools": "Smart calculations and AI assistance.",
+    "Color Tools": "HEX, RGB, and design tools.",
+    "Population": "Demographics and world statistics.",
+    "Development": "Economic growth and project tools.",
+    "Designer": "Aspect ratio, DPI, and layout tools.",
+    "Notes": "Quick notes and reminders.",
+  };
+
+  const [showAll, setShowAll] = useState(false);
+  const PAGE_SIZE = 9;
+
   if (isDesktop) {
+    const displayedCats = searchQuery
+      ? filteredCategories
+      : showAll
+        ? filteredCategories
+        : filteredCategories.slice(0, PAGE_SIZE);
+
     return (
       <div className="flex flex-col h-full bg-background overflow-hidden">
-        <div className="px-6 py-4 border-b border-border flex items-center gap-2 text-sm">
-          <Link href="/">
-            <span className="text-muted-foreground hover:text-foreground cursor-pointer transition-colors" data-testid="breadcrumb-home">Home</span>
-          </Link>
-          <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50" />
-          <span className="text-foreground font-medium">Categories</span>
-        </div>
+        <div className="flex-1 overflow-y-auto px-8 py-8">
+          <div className="max-w-[1100px] mx-auto space-y-6">
 
-        <div className="flex-1 overflow-y-auto px-6 py-5">
-          <div className="max-w-[1400px] mx-auto space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-xl font-bold text-foreground">All Categories</h1>
-                <p className="text-sm text-muted-foreground mt-0.5">{allTools.length} tools across {filteredCategories.length} categories</p>
-              </div>
-              <div className="relative w-72">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search tools..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-card border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
-                  data-testid="input-search-categories"
-                />
-              </div>
+            {/* Heading */}
+            <div>
+              <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Explore Categories</h1>
+              <p className="text-muted-foreground mt-1 text-sm">{filteredCategories.length} specialized calculator categories available</p>
             </div>
 
-            <div className="flex flex-wrap gap-2">
-              {filterPills.map((pill) => (
-                <button
-                  key={pill}
-                  onClick={() => setActiveCategory(pill === activeCategory ? null : pill)}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-                    activeCategory === pill || (!activeCategory && pill === "All Tools")
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-transparent text-muted-foreground border-border hover:border-primary/40 hover:text-foreground"
-                  }`}
-                  data-testid={`filter-${pill.toLowerCase().replace(/\s+/g, "-")}`}
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search for categories (e.g. Finance, Math...)"
+                className="w-full pl-11 pr-4 py-3 bg-card border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
+                data-testid="input-search-categories"
+              />
+            </div>
+
+            {/* Category grid */}
+            <div className="grid grid-cols-3 gap-4">
+              {displayedCats.map((cat, i) => (
+                <motion.div
+                  key={cat.title}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.02 }}
                 >
-                  {pill}
-                </button>
+                  <Link href={cat.href || "/categories"}>
+                    <div
+                      className="bg-card border border-border rounded-2xl p-6 cursor-pointer hover:shadow-md hover:border-primary/20 transition-all"
+                      data-testid={`cat-card-${cat.title.toLowerCase().replace(/\s+/g, "-")}`}
+                    >
+                      <div className={`w-11 h-11 rounded-xl ${cat.bg} flex items-center justify-center mb-4`}>
+                        <cat.icon className={`w-5 h-5 ${cat.color}`} />
+                      </div>
+                      <h3 className="font-bold text-foreground text-base mb-1.5">{cat.title}</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {catDescriptions[cat.title] || `${cat.count} tools available.`}
+                      </p>
+                    </div>
+                  </Link>
+                </motion.div>
               ))}
             </div>
 
-            {!showToolsList && (
-              <>
-                <div className="grid grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-                  {filteredCategories.map((cat, i) => (
-                    <motion.div
-                      key={cat.title}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.015 }}
-                    >
-                      <Link href={cat.href || "/categories"}>
-                        <div
-                          className="bg-card border border-border rounded-xl p-4 flex flex-col items-center gap-2.5 cursor-pointer hover:border-primary/20 transition-all"
-                          data-testid={`cat-card-${cat.title.toLowerCase().replace(/\s+/g, "-")}`}
-                        >
-                          <div className={`w-11 h-11 rounded-lg ${cat.bg} flex items-center justify-center`}>
-                            <cat.icon className={`w-5 h-5 ${cat.color}`} />
-                          </div>
-                          <span className="text-xs font-semibold text-foreground text-center leading-tight">{cat.title}</span>
-                          <span className="text-[10px] text-muted-foreground">{cat.count} tools</span>
-                        </div>
-                      </Link>
-                    </motion.div>
-                  ))}
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <h2 className="font-semibold text-sm text-foreground">Popular Tools</h2>
-                    <button onClick={() => setActiveCategory("All Tools")} className="text-xs text-primary font-medium" data-testid="button-see-all">See all</button>
-                  </div>
-                  <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
-                    {allTools.slice(0, 12).map((tool, i) => (
-                      <Link key={`${tool.title}-${i}`} href={tool.href}>
-                        <div className="bg-card border border-border rounded-lg px-4 py-3 cursor-pointer flex items-center gap-3 hover:border-primary/20 transition-all" data-testid={`tool-popular-${tool.title.toLowerCase().replace(/\s+/g, "-")}`}>
-                          <div className={`w-8 h-8 rounded-lg ${tool.color} flex items-center justify-center shrink-0`}>
-                            <tool.icon className="w-4 h-4 text-white" />
-                          </div>
-                          <div className="min-w-0">
-                            <h3 className="font-medium text-sm text-foreground truncate">{tool.title}</h3>
-                            <p className="text-[10px] text-muted-foreground">{tool.category}</p>
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              </>
-            )}
-
-            {showToolsList && (
-              <>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">{activeCategory}</span>
-                  <span className="text-xs text-primary font-medium">{filteredTools.length} tools</span>
-                </div>
-                <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
-                  {filteredTools.map((tool, i) => (
-                    <Link key={`${tool.title}-${i}`} href={tool.href}>
-                      <motion.div
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.015 }}
-                        className="bg-card border border-border rounded-lg px-4 py-3 cursor-pointer flex items-center gap-3 hover:border-primary/20 transition-all"
-                        data-testid={`tool-${tool.title.toLowerCase().replace(/\s+/g, "-")}`}
-                      >
-                        <div className={`w-8 h-8 rounded-lg ${tool.color} flex items-center justify-center shrink-0`}>
-                          <tool.icon className="w-4 h-4 text-white" />
-                        </div>
-                        <div className="min-w-0">
-                          <h3 className="font-medium text-sm text-foreground truncate">{tool.title}</h3>
-                          <p className="text-[10px] text-muted-foreground">{tool.category}</p>
-                        </div>
-                      </motion.div>
-                    </Link>
-                  ))}
-                </div>
-                {filteredTools.length === 0 && (
-                  <div className="text-center py-12">
-                    <Search className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-                    <p className="text-muted-foreground text-sm">No tools found</p>
-                  </div>
-                )}
-              </>
+            {/* Load More */}
+            {!searchQuery && !showAll && filteredCategories.length > PAGE_SIZE && (
+              <div className="flex justify-center pt-2">
+                <button
+                  onClick={() => setShowAll(true)}
+                  className="px-6 py-2.5 rounded-full border border-border text-sm font-medium text-foreground hover:border-primary/40 hover:text-primary transition-all"
+                  data-testid="button-load-more"
+                >
+                  Load More Categories
+                </button>
+              </div>
             )}
           </div>
         </div>

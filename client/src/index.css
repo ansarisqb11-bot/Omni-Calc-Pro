@@ -10,55 +10,55 @@
   --font-mono: 'JetBrains Mono', monospace;
 }
 
-/* Dark Theme (Default) */
+/* Dark Theme (Default) — deep green */
 .dark, :root {
-  --background: 222 47% 11%;
-  --foreground: 210 40% 98%;
-  --card: 217 33% 17%;
-  --card-foreground: 210 40% 98%;
-  --popover: 222 47% 11%;
-  --popover-foreground: 210 40% 98%;
-  --primary: 217 91% 60%;
-  --primary-foreground: 222 47% 11%;
-  --secondary: 215 25% 27%;
-  --secondary-foreground: 210 40% 98%;
-  --muted: 217 33% 17%;
-  --muted-foreground: 215 20.2% 65.1%;
-  --accent: 217 33% 17%;
-  --accent-foreground: 210 40% 98%;
+  --background: 150 25% 7%;
+  --foreground: 0 0% 95%;
+  --card: 155 20% 12%;
+  --card-foreground: 0 0% 95%;
+  --popover: 150 25% 7%;
+  --popover-foreground: 0 0% 95%;
+  --primary: 142 71% 45%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 150 15% 18%;
+  --secondary-foreground: 0 0% 95%;
+  --muted: 155 18% 9%;
+  --muted-foreground: 150 10% 60%;
+  --accent: 150 15% 15%;
+  --accent-foreground: 0 0% 95%;
   --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 217 33% 17%;
-  --input: 217 33% 17%;
-  --ring: 224 76% 48%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 150 12% 18%;
+  --input: 150 15% 15%;
+  --ring: 142 71% 45%;
   --color-finance: 142 71% 45%;
   --color-math: 10 78% 54%;
   --color-health: 326 100% 74%;
   --color-eng: 45 93% 47%;
 }
 
-/* Light Theme */
+/* Light Theme — clean white with green accents */
 .light {
-  --background: 0 0% 100%;
+  --background: 0 0% 97%;
   --foreground: 222 47% 11%;
-  --card: 210 40% 96%;
+  --card: 0 0% 100%;
   --card-foreground: 222 47% 11%;
   --popover: 0 0% 100%;
   --popover-foreground: 222 47% 11%;
-  --primary: 217 91% 60%;
+  --primary: 142 71% 40%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 210 40% 90%;
+  --secondary: 142 15% 95%;
   --secondary-foreground: 222 47% 11%;
-  --muted: 210 40% 96%;
+  --muted: 142 10% 95%;
   --muted-foreground: 215 16% 47%;
-  --accent: 210 40% 96%;
+  --accent: 142 10% 95%;
   --accent-foreground: 222 47% 11%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
-  --border: 214 32% 91%;
-  --input: 214 32% 91%;
-  --ring: 217 91% 60%;
-  --color-finance: 142 71% 45%;
+  --border: 142 15% 88%;
+  --input: 142 15% 88%;
+  --ring: 142 71% 40%;
+  --color-finance: 142 71% 40%;
   --color-math: 10 78% 54%;
   --color-health: 326 100% 74%;
   --color-eng: 45 93% 47%;
@@ -72,7 +72,7 @@
   --card-foreground: 0 0% 100%;
   --popover: 0 0% 0%;
   --popover-foreground: 0 0% 100%;
-  --primary: 217 91% 60%;
+  --primary: 142 71% 45%;
   --primary-foreground: 0 0% 0%;
   --secondary: 0 0% 10%;
   --secondary-foreground: 0 0% 100%;
@@ -84,51 +84,28 @@
   --destructive-foreground: 0 0% 100%;
   --border: 0 0% 15%;
   --input: 0 0% 10%;
-  --ring: 217 91% 60%;
+  --ring: 142 71% 45%;
   --color-finance: 142 71% 45%;
   --color-math: 10 78% 54%;
   --color-health: 326 100% 74%;
   --color-eng: 45 93% 47%;
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary;
-    font-family: var(--font-sans);
-  }
-  h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-display);
-  }
+* {
+  border-color: hsl(var(--border));
 }
 
-/* Custom Scrollbar for dark theme */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground) / 0.3);
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.5);
+body {
+  font-family: var(--font-sans);
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
 }
 
-/* Utility classes for CalcHub look */
-.glass-panel {
-  @apply bg-card/80 backdrop-blur-md border border-white/5;
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 
-.icon-box {
-  @apply flex items-center justify-center rounded-xl shadow-lg;
-}
-
-.tap-highlight {
-  @apply active:scale-95 transition-transform duration-100;
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
