@@ -136,41 +136,42 @@ function SearchOverlay({ onClose }: { onClose: () => void }) {
   );
 }
 
-// ── Category card metadata with explicit hex colors (reliable cross-theme) ───
+// ── Category card metadata ───────────────────────────────────────────────────
+// Banner: very subtle dark tint (matches reference — nearly uniform).
+// Icon: vivid bright color. Pill: colored badge.
 type CatMeta = {
-  bannerDark: string; bannerLight: string;
-  iconDark: string;   iconLight: string;
+  iconDark: string; iconLight: string;
   pillBgDark: string; pillTextDark: string;
   pillBgLight: string; pillTextLight: string;
   badge: string;
 };
 const CAT_META: Record<string, CatMeta> = {
-  finance:          { bannerDark:"#052e16", bannerLight:"#f0fdf4", iconDark:"#4ade80", iconLight:"#166534", pillBgDark:"#14532d", pillTextDark:"#86efac", pillBgLight:"#dcfce7", pillTextLight:"#166534", badge:"FINANCE" },
-  "size-converter": { bannerDark:"#2e1065", bannerLight:"#f5f3ff", iconDark:"#a78bfa", iconLight:"#6d28d9", pillBgDark:"#3b0764", pillTextDark:"#c4b5fd", pillBgLight:"#ede9fe", pillTextLight:"#6d28d9", badge:"GENERAL" },
-  health:           { bannerDark:"#500724", bannerLight:"#fdf2f8", iconDark:"#f472b6", iconLight:"#9d174d", pillBgDark:"#831843", pillTextDark:"#fbcfe8", pillBgLight:"#fce7f3", pillTextLight:"#9d174d", badge:"HEALTH" },
-  science:          { bannerDark:"#4c0519", bannerLight:"#fff1f2", iconDark:"#fb7185", iconLight:"#9f1239", pillBgDark:"#881337", pillTextDark:"#fecdd3", pillBgLight:"#ffe4e6", pillTextLight:"#9f1239", badge:"SCIENCE" },
-  units:            { bannerDark:"#451a03", bannerLight:"#fffbeb", iconDark:"#fbbf24", iconLight:"#b45309", pillBgDark:"#78350f", pillTextDark:"#fde68a", pillBgLight:"#fef3c7", pillTextLight:"#b45309", badge:"UNITS" },
-  "date-time":      { bannerDark:"#3b0764", bannerLight:"#faf5ff", iconDark:"#c084fc", iconLight:"#7e22ce", pillBgDark:"#581c87", pillTextDark:"#e9d5ff", pillBgLight:"#f3e8ff", pillTextLight:"#7e22ce", badge:"UTILITY" },
-  math:             { bannerDark:"#1e1b4b", bannerLight:"#eef2ff", iconDark:"#818cf8", iconLight:"#3730a3", pillBgDark:"#312e81", pillTextDark:"#c7d2fe", pillBgLight:"#e0e7ff", pillTextLight:"#3730a3", badge:"MATH" },
-  numbers:          { bannerDark:"#042f2e", bannerLight:"#f0fdfa", iconDark:"#2dd4bf", iconLight:"#0f766e", pillBgDark:"#134e4a", pillTextDark:"#99f6e4", pillBgLight:"#ccfbf1", pillTextLight:"#0f766e", badge:"MATH" },
-  geometry:         { bannerDark:"#083344", bannerLight:"#ecfeff", iconDark:"#22d3ee", iconLight:"#0e7490", pillBgDark:"#164e63", pillTextDark:"#a5f3fc", pillBgLight:"#cffafe", pillTextLight:"#0e7490", badge:"MATH" },
-  construction:     { bannerDark:"#431407", bannerLight:"#fff7ed", iconDark:"#fb923c", iconLight:"#c2410c", pillBgDark:"#7c2d12", pillTextDark:"#fed7aa", pillBgLight:"#ffedd5", pillTextLight:"#c2410c", badge:"ENGINEERING" },
-  travel:           { bannerDark:"#082f49", bannerLight:"#f0f9ff", iconDark:"#38bdf8", iconLight:"#0369a1", pillBgDark:"#0c4a6e", pillTextDark:"#bae6fd", pillBgLight:"#e0f2fe", pillTextLight:"#0369a1", badge:"TRAVEL" },
-  education:        { bannerDark:"#1e3a5f", bannerLight:"#eff6ff", iconDark:"#60a5fa", iconLight:"#1d4ed8", pillBgDark:"#1e40af", pillTextDark:"#bfdbfe", pillBgLight:"#dbeafe", pillTextLight:"#1d4ed8", badge:"EDUCATION" },
-  medical:          { bannerDark:"#450a0a", bannerLight:"#fef2f2", iconDark:"#f87171", iconLight:"#b91c1c", pillBgDark:"#7f1d1d", pillTextDark:"#fecaca", pillBgLight:"#fee2e2", pillTextLight:"#b91c1c", badge:"HEALTH" },
-  lifestyle:        { bannerDark:"#1a2e05", bannerLight:"#f7fee7", iconDark:"#a3e635", iconLight:"#3f6212", pillBgDark:"#365314", pillTextDark:"#d9f99d", pillBgLight:"#ecfccb", pillTextLight:"#3f6212", badge:"LIFESTYLE" },
-  automobile:       { bannerDark:"#1e293b", bannerLight:"#f8fafc", iconDark:"#94a3b8", iconLight:"#475569", pillBgDark:"#334155", pillTextDark:"#e2e8f0", pillBgLight:"#f1f5f9", pillTextLight:"#475569", badge:"TRAVEL" },
-  agriculture:      { bannerDark:"#052e16", bannerLight:"#f0fdf4", iconDark:"#34d399", iconLight:"#065f46", pillBgDark:"#064e3b", pillTextDark:"#6ee7b7", pillBgLight:"#d1fae5", pillTextLight:"#065f46", badge:"SCIENCE" },
-  developer:        { bannerDark:"#111827", bannerLight:"#f9fafb", iconDark:"#d1d5db", iconLight:"#374151", pillBgDark:"#374151", pillTextDark:"#f3f4f6", pillBgLight:"#f3f4f6", pillTextLight:"#374151", badge:"TECH" },
-  ecommerce:        { bannerDark:"#4a044e", bannerLight:"#fdf4ff", iconDark:"#e879f9", iconLight:"#a21caf", pillBgDark:"#701a75", pillTextDark:"#f5d0fe", pillBgLight:"#fae8ff", pillTextLight:"#a21caf", badge:"COMMERCE" },
-  environment:      { bannerDark:"#042f1a", bannerLight:"#ecfdf5", iconDark:"#6ee7b7", iconLight:"#065f46", pillBgDark:"#064e3b", pillTextDark:"#a7f3d0", pillBgLight:"#d1fae5", pillTextLight:"#065f46", badge:"SCIENCE" },
-  "smart-life":     { bannerDark:"#1e1b4b", bannerLight:"#eef2ff", iconDark:"#a5b4fc", iconLight:"#4338ca", pillBgDark:"#3730a3", pillTextDark:"#e0e7ff", pillBgLight:"#e0e7ff", pillTextLight:"#4338ca", badge:"LIFESTYLE" },
-  "color-tools":    { bannerDark:"#3b0764", bannerLight:"#fdf4ff", iconDark:"#f0abfc", iconLight:"#9333ea", pillBgDark:"#6b21a8", pillTextDark:"#f5d0fe", pillBgLight:"#fae8ff", pillTextLight:"#9333ea", badge:"DESIGN" },
-  population:       { bannerDark:"#4c0519", bannerLight:"#fff1f2", iconDark:"#fda4af", iconLight:"#be123c", pillBgDark:"#881337", pillTextDark:"#ffe4e6", pillBgLight:"#ffe4e6", pillTextLight:"#be123c", badge:"SCIENCE" },
-  development:      { bannerDark:"#451a03", bannerLight:"#fffbeb", iconDark:"#fde68a", iconLight:"#b45309", pillBgDark:"#78350f", pillTextDark:"#fef3c7", pillBgLight:"#fef3c7", pillTextLight:"#92400e", badge:"FINANCE" },
-  designer:         { bannerDark:"#500724", bannerLight:"#fdf2f8", iconDark:"#f9a8d4", iconLight:"#be185d", pillBgDark:"#831843", pillTextDark:"#fce7f3", pillBgLight:"#fce7f3", pillTextLight:"#be185d", badge:"DESIGN" },
-  "ai-tools":       { bannerDark:"#2e1065", bannerLight:"#f5f3ff", iconDark:"#c4b5fd", iconLight:"#7c3aed", pillBgDark:"#4c1d95", pillTextDark:"#ede9fe", pillBgLight:"#ede9fe", pillTextLight:"#7c3aed", badge:"AI" },
-  notes:            { bannerDark:"#422006", bannerLight:"#fefce8", iconDark:"#fde047", iconLight:"#a16207", pillBgDark:"#713f12", pillTextDark:"#fef08a", pillBgLight:"#fef9c3", pillTextLight:"#a16207", badge:"NOTES" },
+  finance:          { iconDark:"#fbbf24", iconLight:"#b45309", pillBgDark:"#14532d", pillTextDark:"#4ade80", pillBgLight:"#dcfce7", pillTextLight:"#166534", badge:"FINANCE" },
+  "size-converter": { iconDark:"#a78bfa", iconLight:"#6d28d9", pillBgDark:"#3b0764", pillTextDark:"#c4b5fd", pillBgLight:"#ede9fe", pillTextLight:"#6d28d9", badge:"GENERAL" },
+  health:           { iconDark:"#60a5fa", iconLight:"#1d4ed8", pillBgDark:"#713f12", pillTextDark:"#fde047", pillBgLight:"#fef3c7", pillTextLight:"#92400e", badge:"HEALTH" },
+  science:          { iconDark:"#fb7185", iconLight:"#9f1239", pillBgDark:"#881337", pillTextDark:"#fecdd3", pillBgLight:"#ffe4e6", pillTextLight:"#9f1239", badge:"SCIENCE" },
+  units:            { iconDark:"#f87171", iconLight:"#b91c1c", pillBgDark:"#14532d", pillTextDark:"#4ade80", pillBgLight:"#dcfce7", pillTextLight:"#166534", badge:"GENERAL" },
+  "date-time":      { iconDark:"#c084fc", iconLight:"#7e22ce", pillBgDark:"#581c87", pillTextDark:"#e9d5ff", pillBgLight:"#f3e8ff", pillTextLight:"#7e22ce", badge:"UTILITY" },
+  math:             { iconDark:"#818cf8", iconLight:"#3730a3", pillBgDark:"#312e81", pillTextDark:"#c7d2fe", pillBgLight:"#e0e7ff", pillTextLight:"#3730a3", badge:"MATH" },
+  numbers:          { iconDark:"#2dd4bf", iconLight:"#0f766e", pillBgDark:"#134e4a", pillTextDark:"#99f6e4", pillBgLight:"#ccfbf1", pillTextLight:"#0f766e", badge:"MATH" },
+  geometry:         { iconDark:"#22d3ee", iconLight:"#0e7490", pillBgDark:"#164e63", pillTextDark:"#a5f3fc", pillBgLight:"#cffafe", pillTextLight:"#0e7490", badge:"MATH" },
+  construction:     { iconDark:"#fb923c", iconLight:"#c2410c", pillBgDark:"#7c2d12", pillTextDark:"#fed7aa", pillBgLight:"#ffedd5", pillTextLight:"#c2410c", badge:"ENGINEERING" },
+  travel:           { iconDark:"#38bdf8", iconLight:"#0369a1", pillBgDark:"#0c4a6e", pillTextDark:"#bae6fd", pillBgLight:"#e0f2fe", pillTextLight:"#0369a1", badge:"TRAVEL" },
+  education:        { iconDark:"#60a5fa", iconLight:"#1d4ed8", pillBgDark:"#1e40af", pillTextDark:"#bfdbfe", pillBgLight:"#dbeafe", pillTextLight:"#1d4ed8", badge:"EDUCATION" },
+  medical:          { iconDark:"#f87171", iconLight:"#b91c1c", pillBgDark:"#7f1d1d", pillTextDark:"#fecaca", pillBgLight:"#fee2e2", pillTextLight:"#b91c1c", badge:"HEALTH" },
+  lifestyle:        { iconDark:"#a3e635", iconLight:"#3f6212", pillBgDark:"#365314", pillTextDark:"#d9f99d", pillBgLight:"#ecfccb", pillTextLight:"#3f6212", badge:"LIFESTYLE" },
+  automobile:       { iconDark:"#94a3b8", iconLight:"#475569", pillBgDark:"#334155", pillTextDark:"#e2e8f0", pillBgLight:"#f1f5f9", pillTextLight:"#475569", badge:"TRAVEL" },
+  agriculture:      { iconDark:"#34d399", iconLight:"#065f46", pillBgDark:"#064e3b", pillTextDark:"#6ee7b7", pillBgLight:"#d1fae5", pillTextLight:"#065f46", badge:"SCIENCE" },
+  developer:        { iconDark:"#d1d5db", iconLight:"#374151", pillBgDark:"#374151", pillTextDark:"#f3f4f6", pillBgLight:"#f3f4f6", pillTextLight:"#374151", badge:"TECH" },
+  ecommerce:        { iconDark:"#e879f9", iconLight:"#a21caf", pillBgDark:"#701a75", pillTextDark:"#f5d0fe", pillBgLight:"#fae8ff", pillTextLight:"#a21caf", badge:"COMMERCE" },
+  environment:      { iconDark:"#6ee7b7", iconLight:"#065f46", pillBgDark:"#064e3b", pillTextDark:"#a7f3d0", pillBgLight:"#d1fae5", pillTextLight:"#065f46", badge:"SCIENCE" },
+  "smart-life":     { iconDark:"#a5b4fc", iconLight:"#4338ca", pillBgDark:"#3730a3", pillTextDark:"#e0e7ff", pillBgLight:"#e0e7ff", pillTextLight:"#4338ca", badge:"LIFESTYLE" },
+  "color-tools":    { iconDark:"#f0abfc", iconLight:"#9333ea", pillBgDark:"#6b21a8", pillTextDark:"#f5d0fe", pillBgLight:"#fae8ff", pillTextLight:"#9333ea", badge:"DESIGN" },
+  population:       { iconDark:"#fda4af", iconLight:"#be123c", pillBgDark:"#881337", pillTextDark:"#ffe4e6", pillBgLight:"#ffe4e6", pillTextLight:"#be123c", badge:"SCIENCE" },
+  development:      { iconDark:"#fde68a", iconLight:"#b45309", pillBgDark:"#78350f", pillTextDark:"#fef3c7", pillBgLight:"#fef3c7", pillTextLight:"#92400e", badge:"FINANCE" },
+  designer:         { iconDark:"#f9a8d4", iconLight:"#be185d", pillBgDark:"#831843", pillTextDark:"#fce7f3", pillBgLight:"#fce7f3", pillTextLight:"#be185d", badge:"DESIGN" },
+  "ai-tools":       { iconDark:"#c4b5fd", iconLight:"#7c3aed", pillBgDark:"#4c1d95", pillTextDark:"#ede9fe", pillBgLight:"#ede9fe", pillTextLight:"#7c3aed", badge:"AI" },
+  notes:            { iconDark:"#fde047", iconLight:"#a16207", pillBgDark:"#713f12", pillTextDark:"#fef08a", pillBgLight:"#fef9c3", pillTextLight:"#a16207", badge:"NOTES" },
 };
 
 // Filter groups
@@ -291,9 +292,8 @@ function DesktopHome() {
         {/* ── Tool cards grid ──────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {visibleCats.map((cat) => {
-            const meta = CAT_META[cat.id] ?? { bannerDark:"#1e293b", bannerLight:"#f8fafc", iconDark:"#94a3b8", iconLight:"#475569", pillBgDark:"#334155", pillTextDark:"#e2e8f0", pillBgLight:"#f1f5f9", pillTextLight:"#475569", badge:"TOOL" };
+            const meta = CAT_META[cat.id] ?? { iconDark:"#94a3b8", iconLight:"#475569", pillBgDark:"#334155", pillTextDark:"#e2e8f0", pillBgLight:"#f1f5f9", pillTextLight:"#475569", badge:"TOOL" };
             const faved = isFavorite(cat.id);
-            const bannerBg  = isDark ? meta.bannerDark  : meta.bannerLight;
             const iconColor = isDark ? meta.iconDark     : meta.iconLight;
             const pillBg    = isDark ? meta.pillBgDark   : meta.pillBgLight;
             const pillText  = isDark ? meta.pillTextDark : meta.pillTextLight;
@@ -306,12 +306,8 @@ function DesktopHome() {
                 data-testid={`card-category-${cat.id}`}
                 className="bg-card border border-border rounded-2xl overflow-hidden cursor-pointer hover:shadow-xl hover:border-primary/20 transition-all group"
               >
-                {/* Muted banner with vivid colored icon — inline styles for reliability */}
-                <div
-                  className="h-36 flex items-center justify-center relative"
-                  style={{ background: bannerBg }}
-                >
-                  <cat.icon className="w-12 h-12 drop-shadow-sm" style={{ color: iconColor }} />
+                <div className="h-32 flex items-center justify-center relative bg-muted/30">
+                  <cat.icon className="w-10 h-10 drop-shadow-sm" style={{ color: iconColor }} />
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -319,16 +315,15 @@ function DesktopHome() {
                     }}
                     className={`absolute top-2 right-2 p-1.5 rounded-lg transition-all ${
                       faved
-                        ? "opacity-100 bg-white/10"
-                        : "opacity-0 group-hover:opacity-100 bg-white/5 hover:bg-white/15"
+                        ? "opacity-100 bg-black/10 dark:bg-white/10"
+                        : "opacity-0 group-hover:opacity-100 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/15"
                     }`}
                     data-testid={`button-fav-${cat.id}`}
                   >
-                    <Star className={`w-3.5 h-3.5 ${faved ? "fill-yellow-400 text-yellow-400" : "text-white/50"}`} />
+                    <Star className={`w-3.5 h-3.5 ${faved ? "fill-yellow-400 text-yellow-400" : "text-foreground/40"}`} />
                   </button>
                 </div>
 
-                {/* Card body */}
                 <div className="p-4">
                   <p className="font-bold text-sm text-foreground leading-snug">{cat.title}</p>
                   <p className="text-xs text-muted-foreground mt-1 line-clamp-2 mb-3 leading-relaxed min-h-[2.5rem]">{cat.description}</p>
@@ -365,17 +360,14 @@ function DesktopHome() {
               {recent.map((item) => {
                 const cat = allCategories.find((c) => c.id === item.id);
                 const Icon = cat?.icon || Calculator;
-                const rMeta = CAT_META[item.id] ?? { bannerDark:"#1e293b", bannerLight:"#f8fafc", iconDark:"#94a3b8", iconLight:"#475569", pillBgDark:"#334155", pillTextDark:"#e2e8f0", pillBgLight:"#f1f5f9", pillTextLight:"#475569", badge:"TOOL" };
+                const rMeta = CAT_META[item.id] ?? { iconDark:"#94a3b8", iconLight:"#475569", pillBgDark:"#334155", pillTextDark:"#e2e8f0", pillBgLight:"#f1f5f9", pillTextLight:"#475569", badge:"TOOL" };
                 return (
                   <Link key={item.id} href={item.href}>
                     <div
                       data-testid={`card-recent-${item.id}`}
                       className="shrink-0 w-48 bg-card border border-border rounded-2xl overflow-hidden hover:shadow-md hover:border-primary/20 transition-all cursor-pointer group"
                     >
-                      <div
-                        className="h-16 flex items-center justify-center"
-                        style={{ background: isDark ? rMeta.bannerDark : rMeta.bannerLight }}
-                      >
+                      <div className="h-16 flex items-center justify-center bg-muted/30">
                         <Icon className="w-7 h-7 drop-shadow" style={{ color: isDark ? rMeta.iconDark : rMeta.iconLight }} />
                       </div>
                       <div className="p-3">
