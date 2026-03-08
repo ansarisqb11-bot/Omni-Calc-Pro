@@ -7,7 +7,7 @@ import {
   Wallet, Heart, Ruler, Clock, Binary, Compass, FlaskConical, HardHat,
   Plane, MessageSquare, Hash, GraduationCap, Stethoscope, Home as HomeIcon,
   Car, Leaf, Code, ShoppingCart, Globe, ShoppingBag, Palette, StickyNote, Calculator, Shirt,
-  Users, BarChart3, Proportions, Star
+  Users, BarChart3, Proportions, Star, Grid3X3
 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { useAddToHistory } from "@/hooks/use-history";
@@ -203,7 +203,7 @@ function DesktopHome() {
   const { recent, addRecent } = useRecent();
   const { toggleFavorite, isFavorite } = useFavorites();
   const { theme, setTheme } = useTheme();
-  const recentRef = useRef<HTMLDivElement>(null);
+  const catScrollRef = useRef<HTMLDivElement>(null);
 
   const isDark = theme === "dark" || theme === "amoled";
 
@@ -225,7 +225,6 @@ function DesktopHome() {
   return (
     <div className="h-full overflow-y-auto bg-background">
 
-      {/* ── Top bar ─────────────────────────────────────────────────────────── */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border px-6 py-3 flex items-center gap-3">
         <button
           onClick={() => setShowSearch(true)}
@@ -235,53 +234,69 @@ function DesktopHome() {
           <Search className="w-4 h-4 shrink-0 text-muted-foreground/60" />
           <span>Search calculators, tools, or formulas...</span>
         </button>
-
-        <button
-          className="p-2.5 hover:bg-card rounded-xl transition-colors border border-transparent hover:border-border"
-          data-testid="button-notifications"
-          title="Notifications"
-        >
+        <button className="p-2.5 hover:bg-card rounded-xl transition-colors border border-transparent hover:border-border" data-testid="button-notifications" title="Notifications">
           <Bell className="w-[18px] h-[18px] text-muted-foreground" />
         </button>
-
-        <button
-          onClick={cycleTheme}
-          className="p-2.5 hover:bg-card rounded-xl transition-colors border border-transparent hover:border-border"
-          data-testid="button-settings"
-          title="Toggle Theme"
-        >
+        <button onClick={cycleTheme} className="p-2.5 hover:bg-card rounded-xl transition-colors border border-transparent hover:border-border" data-testid="button-settings" title="Toggle Theme">
           <Settings className="w-[18px] h-[18px] text-muted-foreground" />
-        </button>
-
-        <button
-          className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-xl text-sm font-semibold text-foreground hover:bg-muted transition-colors"
-          data-testid="button-live-markets"
-        >
-          <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 animate-pulse" />
-          Live Markets
         </button>
       </div>
 
-      {/* ── Content ─────────────────────────────────────────────────────────── */}
-      <div className="px-6 py-7 space-y-7">
+      <div className="px-6 py-6 space-y-6 max-w-[1400px] mx-auto">
 
-        {/* Heading */}
         <div>
-          <h1 className="text-3xl font-black text-foreground tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground mt-1 text-sm">Quick access to your most used computational tools.</p>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground mt-0.5 text-sm">Quick access to your most used computational tools.</p>
         </div>
 
-        {/* Filter tabs */}
+        <Link href="/categories">
+          <div
+            className="flex items-center justify-between px-5 py-4 bg-card border border-border rounded-xl cursor-pointer hover:border-primary/30 transition-all group"
+            data-testid="card-all-categories-desktop"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Grid3X3 className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="font-semibold text-sm text-foreground">All Categories</p>
+                <p className="text-xs text-muted-foreground">Browse all {allCategories.length} categories &amp; 200+ tools</p>
+              </div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+          </div>
+        </Link>
+
+        <div className="relative">
+          <div ref={catScrollRef} className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+            {allCategories.map((cat) => {
+              const meta = CAT_META[cat.id];
+              const ic = meta ? (isDark ? meta.iconDark : meta.iconLight) : "#94a3b8";
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => handleCatClick(cat)}
+                  className="flex items-center gap-2 px-3 py-2 bg-card border border-border rounded-lg whitespace-nowrap hover:border-primary/30 transition-all shrink-0"
+                  data-testid={`chip-${cat.id}`}
+                >
+                  <cat.icon className="w-4 h-4 shrink-0" style={{ color: ic }} />
+                  <span className="text-xs font-medium text-foreground">{cat.title}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         <div className="flex flex-wrap gap-2">
           {FILTERS.map(f => (
             <button
               key={f.key}
               onClick={() => setActiveFilter(f.key)}
               data-testid={`filter-${f.key.toLowerCase().replace(/\s+/g, "-")}`}
-              className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-all ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all ${
                 activeFilter === f.key
                   ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-transparent text-foreground border-border hover:border-primary/40 hover:text-primary"
+                  : "bg-transparent text-muted-foreground border-border hover:border-primary/40 hover:text-foreground"
               }`}
             >
               {f.label}
@@ -289,52 +304,45 @@ function DesktopHome() {
           ))}
         </div>
 
-        {/* ── Tool cards grid ──────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {visibleCats.map((cat) => {
             const meta = CAT_META[cat.id] ?? { iconDark:"#94a3b8", iconLight:"#475569", pillBgDark:"#334155", pillTextDark:"#e2e8f0", pillBgLight:"#f1f5f9", pillTextLight:"#475569", badge:"TOOL" };
             const faved = isFavorite(cat.id);
-            const iconColor = isDark ? meta.iconDark     : meta.iconLight;
-            const pillBg    = isDark ? meta.pillBgDark   : meta.pillBgLight;
-            const pillText  = isDark ? meta.pillTextDark : meta.pillTextLight;
+            const iconColor = isDark ? meta.iconDark : meta.iconLight;
+            const pillBg = isDark ? meta.pillBgDark : meta.pillBgLight;
+            const pillText = isDark ? meta.pillTextDark : meta.pillTextLight;
             return (
               <motion.div
                 key={cat.id}
-                whileHover={{ y: -3, transition: { duration: 0.15 } }}
-                whileTap={{ scale: 0.97 }}
+                whileHover={{ y: -2, transition: { duration: 0.15 } }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => handleCatClick(cat)}
                 data-testid={`card-category-${cat.id}`}
-                className="bg-card border border-border rounded-2xl overflow-hidden cursor-pointer hover:shadow-xl hover:border-primary/20 transition-all group"
+                className="bg-card border border-border rounded-xl overflow-hidden cursor-pointer hover:border-primary/20 transition-all group"
               >
-                <div className="h-32 flex items-center justify-center relative bg-muted/30">
-                  <cat.icon className="w-10 h-10 drop-shadow-sm" style={{ color: iconColor }} />
+                <div className="h-28 flex items-center justify-center relative bg-muted/20">
+                  <cat.icon className="w-9 h-9" style={{ color: iconColor }} />
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       toggleFavorite({ id: cat.id, title: cat.title, description: cat.description, href: cat.href, category: cat.title, color: cat.color });
                     }}
-                    className={`absolute top-2 right-2 p-1.5 rounded-lg transition-all ${
-                      faved
-                        ? "opacity-100 bg-black/10 dark:bg-white/10"
-                        : "opacity-0 group-hover:opacity-100 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/15"
+                    className={`absolute top-2 right-2 p-1.5 rounded-md transition-all ${
+                      faved ? "opacity-100" : "opacity-0 group-hover:opacity-100"
                     }`}
                     data-testid={`button-fav-${cat.id}`}
                   >
-                    <Star className={`w-3.5 h-3.5 ${faved ? "fill-yellow-400 text-yellow-400" : "text-foreground/40"}`} />
+                    <Star className={`w-3.5 h-3.5 ${faved ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/50"}`} />
                   </button>
                 </div>
-
-                <div className="p-4">
-                  <p className="font-bold text-sm text-foreground leading-snug">{cat.title}</p>
-                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2 mb-3 leading-relaxed min-h-[2.5rem]">{cat.description}</p>
-                  <div className="flex items-center justify-between">
-                    <span
-                      className="text-[9px] font-bold tracking-[0.1em] uppercase px-2.5 py-1 rounded-full"
-                      style={{ background: pillBg, color: pillText }}
-                    >
+                <div className="px-4 py-3">
+                  <p className="font-semibold text-sm text-foreground">{cat.title}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{cat.description}</p>
+                  <div className="flex items-center justify-between mt-2.5">
+                    <span className="text-[9px] font-bold tracking-[0.08em] uppercase px-2 py-0.5 rounded-full" style={{ background: pillBg, color: pillText }}>
                       {meta.badge}
                     </span>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-primary transition-colors" />
+                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/30 group-hover:text-primary transition-colors" />
                   </div>
                 </div>
               </motion.div>
@@ -342,37 +350,31 @@ function DesktopHome() {
           })}
         </div>
 
-        {/* ── Recent History ───────────────────────────────────────────────── */}
         {recent.length > 0 && (
           <section>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-bold text-foreground">Recent History</h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-semibold text-sm text-foreground">Recent</h2>
               <Link href="/history">
-                <span className="text-sm text-primary hover:underline cursor-pointer flex items-center gap-1" data-testid="link-view-history">
-                  View All <ChevronRight className="w-3.5 h-3.5" />
+                <span className="text-xs text-primary hover:underline cursor-pointer flex items-center gap-1" data-testid="link-view-history">
+                  View All <ChevronRight className="w-3 h-3" />
                 </span>
               </Link>
             </div>
-            <div
-              ref={recentRef}
-              className="flex gap-3 overflow-x-auto scrollbar-hide pb-1"
-            >
+            <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1">
               {recent.map((item) => {
                 const cat = allCategories.find((c) => c.id === item.id);
                 const Icon = cat?.icon || Calculator;
-                const rMeta = CAT_META[item.id] ?? { iconDark:"#94a3b8", iconLight:"#475569", pillBgDark:"#334155", pillTextDark:"#e2e8f0", pillBgLight:"#f1f5f9", pillTextLight:"#475569", badge:"TOOL" };
+                const rMeta = CAT_META[item.id];
+                const ic = rMeta ? (isDark ? rMeta.iconDark : rMeta.iconLight) : "#94a3b8";
                 return (
                   <Link key={item.id} href={item.href}>
-                    <div
-                      data-testid={`card-recent-${item.id}`}
-                      className="shrink-0 w-48 bg-card border border-border rounded-2xl overflow-hidden hover:shadow-md hover:border-primary/20 transition-all cursor-pointer group"
-                    >
-                      <div className="h-16 flex items-center justify-center bg-muted/30">
-                        <Icon className="w-7 h-7 drop-shadow" style={{ color: isDark ? rMeta.iconDark : rMeta.iconLight }} />
+                    <div data-testid={`card-recent-${item.id}`} className="shrink-0 w-44 bg-card border border-border rounded-xl overflow-hidden hover:border-primary/20 transition-all cursor-pointer">
+                      <div className="h-14 flex items-center justify-center bg-muted/20">
+                        <Icon className="w-6 h-6" style={{ color: ic }} />
                       </div>
-                      <div className="p-3">
-                        <p className="font-bold text-xs text-foreground">{item.title}</p>
-                        <p className="text-[10px] text-muted-foreground/60 mt-0.5 italic">{timeAgo(item.visitedAt)}</p>
+                      <div className="px-3 py-2">
+                        <p className="font-medium text-xs text-foreground truncate">{item.title}</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">{timeAgo(item.visitedAt)}</p>
                       </div>
                     </div>
                   </Link>
