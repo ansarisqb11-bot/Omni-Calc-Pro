@@ -2,11 +2,11 @@ import { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import {
   Menu, Moon, Sun, X, Monitor,
-  LayoutDashboard, Calculator, Wallet,
+  Calculator, Wallet,
   Ruler, Calendar, MessageSquare, StickyNote, Grid3X3, Heart,
   Hash, Triangle, FlaskConical, HardHat, Plane, GraduationCap,
   Stethoscope, Home, Car, Leaf, Code, ShoppingCart, Globe, ShoppingBag,
-  History, Star
+  History, Star, LayoutDashboard, Sparkles
 } from "lucide-react";
 import { clsx } from "clsx";
 import { motion, AnimatePresence } from "framer-motion";
@@ -58,25 +58,25 @@ export function Layout({ children }: { children: ReactNode }) {
   ];
 
   const desktopMainNav = [
-    { label: "Home", icon: LayoutDashboard, href: "/" },
-    { label: "Categories", icon: Grid3X3, href: "/categories" },
-    { label: "History", icon: History, href: "/history" },
-    { label: "Favorites", icon: Star, href: "/favorites" },
+    { label: "Home",       icon: LayoutDashboard, href: "/" },
+    { label: "Categories", icon: Grid3X3,          href: "/categories" },
+    { label: "History",    icon: History,           href: "/history" },
+    { label: "Favorites",  icon: Star,              href: "/favorites" },
   ];
 
   const cycleTheme = () => {
     const themes: Theme[] = ["dark", "light", "amoled"];
     const currentIndex = themes.indexOf(theme);
-    const nextIndex = (currentIndex + 1) % themes.length;
-    setTheme(themes[nextIndex]);
+    setTheme(themes[(currentIndex + 1) % themes.length]);
   };
 
   const ThemeIcon = theme === "light" ? Sun : theme === "amoled" ? Monitor : Moon;
-  const themeLabel = theme === "light" ? "Light" : theme === "amoled" ? "AMOLED" : "Dark";
+  const themeSubtitle = theme === "light" ? "LIGHT MODE" : theme === "amoled" ? "AMOLED BLACK" : "DARK FOCUS";
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row overflow-hidden">
-      {/* Mobile Header — unchanged */}
+
+      {/* ── Mobile Header — UNCHANGED ───────────────────────────────────────── */}
       <header className="md:hidden flex items-center justify-between px-4 py-3 bg-background border-b border-border sticky top-0 z-50">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
@@ -102,57 +102,85 @@ export function Layout({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      {/* Desktop Sidebar */}
+      {/* ── Desktop Sidebar ──────────────────────────────────────────────────── */}
       {!isMobile && (
         <aside className="hidden md:flex w-56 bg-card border-r border-border flex-col shrink-0 h-screen sticky top-0">
+
+          {/* Logo */}
           <div className="flex items-center gap-3 px-5 pt-6 pb-5 shrink-0">
-            <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-sm">
-              <div className="grid grid-cols-2 gap-0.5">
-                <div className="w-1.5 h-1.5 rounded-sm bg-primary-foreground" />
-                <div className="w-1.5 h-1.5 rounded-sm bg-primary-foreground" />
-                <div className="w-1.5 h-1.5 rounded-sm bg-primary-foreground" />
-                <div className="w-1.5 h-1.5 rounded-sm bg-primary-foreground" />
+            <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-sm shrink-0">
+              <div className="grid grid-cols-2 gap-[3px] p-1.5">
+                <div className="w-full aspect-square rounded-[2px] bg-primary-foreground" />
+                <div className="w-full aspect-square rounded-[2px] bg-primary-foreground" />
+                <div className="w-full aspect-square rounded-[2px] bg-primary-foreground" />
+                <div className="w-full aspect-square rounded-[2px] bg-primary-foreground" />
               </div>
             </div>
             <div>
-              <p className="font-bold text-sm leading-tight text-foreground">CalcHub</p>
-              <p className="text-[10px] text-muted-foreground leading-tight">Professional Utility</p>
+              <p className="font-bold text-sm leading-tight text-foreground tracking-tight">CalcHub</p>
+              <p className="text-[10px] font-semibold tracking-widest text-primary leading-tight opacity-70">
+                {themeSubtitle}
+              </p>
             </div>
           </div>
 
-          <nav className="flex-1 overflow-y-auto px-3 space-y-0.5">
-            {desktopMainNav.map((item) => (
-              <Link key={item.href} href={item.href}>
-                <div
-                  className={clsx(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all cursor-pointer",
-                    location === item.href
-                      ? "bg-primary/10 text-primary font-semibold"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  )}
-                  data-testid={`nav-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
-                >
-                  <item.icon className={clsx("w-4 h-4 shrink-0", location === item.href ? "text-primary" : "")} />
-                  <span className="text-sm font-medium">{item.label}</span>
-                </div>
-              </Link>
-            ))}
+          {/* Nav */}
+          <nav className="flex-1 overflow-y-auto px-3 space-y-0.5 pt-1">
+            {desktopMainNav.map((item) => {
+              const active = location === item.href;
+              return (
+                <Link key={item.href} href={item.href}>
+                  <div
+                    className={clsx(
+                      "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all cursor-pointer",
+                      active
+                        ? "bg-primary text-primary-foreground font-semibold"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                    data-testid={`nav-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
+                  >
+                    <item.icon className="w-4 h-4 shrink-0" />
+                    <span className="text-sm font-medium">{item.label}</span>
+                  </div>
+                </Link>
+              );
+            })}
           </nav>
 
-          <div className="shrink-0 px-3 pb-5 pt-3 border-t border-border">
+          {/* Premium promo */}
+          <div className="px-3 pb-3 shrink-0">
+            <div className="rounded-xl bg-primary/10 border border-primary/20 p-3 space-y-2">
+              <div className="flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
+                <span className="text-xs font-bold text-primary uppercase tracking-wide">Premium</span>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Unlock all 50+ advanced financial tools.
+              </p>
+              <button
+                className="w-full py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-colors"
+                data-testid="button-go-pro"
+              >
+                Go Pro
+              </button>
+            </div>
+          </div>
+
+          {/* Theme toggle */}
+          <div className="shrink-0 px-3 pb-4 pt-1 border-t border-border">
             <button
               onClick={cycleTheme}
               className="flex items-center gap-3 px-3 py-2.5 w-full text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-all text-sm font-medium"
               data-testid="button-toggle-theme-desktop"
             >
               <ThemeIcon className="w-4 h-4 shrink-0" />
-              <span>{themeLabel} Mode</span>
+              <span>{theme === "light" ? "Light" : theme === "amoled" ? "AMOLED" : "Dark"} Mode</span>
             </button>
           </div>
         </aside>
       )}
 
-      {/* Mobile Drawer — unchanged */}
+      {/* ── Mobile Drawer — UNCHANGED ────────────────────────────────────────── */}
       <AnimatePresence>
         {isSidebarOpen && isMobile && (
           <>
@@ -219,7 +247,7 @@ export function Layout({ children }: { children: ReactNode }) {
         )}
       </AnimatePresence>
 
-      {/* Main Content */}
+      {/* ── Main Content ─────────────────────────────────────────────────────── */}
       <main className="flex-1 h-[calc(100vh-56px)] md:h-screen overflow-hidden">
         <div className="h-full overflow-y-auto">
           {children}

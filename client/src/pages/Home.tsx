@@ -3,12 +3,13 @@ import { Link, useLocation } from "wouter";
 import { evaluate } from "mathjs";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Search, Delete, ChevronRight, ChevronLeft, Bell, X,
+  Search, Delete, ChevronRight, ChevronLeft, Bell, X, Settings,
   Wallet, Heart, Ruler, Clock, Binary, Compass, FlaskConical, HardHat,
   Plane, MessageSquare, Hash, GraduationCap, Stethoscope, Home as HomeIcon,
   Car, Leaf, Code, ShoppingCart, Globe, ShoppingBag, Palette, StickyNote, Calculator, Shirt,
   Users, BarChart3, Proportions, Star
 } from "lucide-react";
+import { useTheme } from "@/components/ThemeProvider";
 import { useAddToHistory } from "@/hooks/use-history";
 import { useFavorites, useRecent } from "@/hooks/use-favorites";
 
@@ -135,15 +136,71 @@ function SearchOverlay({ onClose }: { onClose: () => void }) {
   );
 }
 
+// ── Category gradient + badge metadata ──────────────────────────────────────
+const CAT_META: Record<string, { grad: string; badge: string }> = {
+  finance:          { grad: "from-emerald-400 via-emerald-600 to-emerald-900",  badge: "FINANCE" },
+  "size-converter": { grad: "from-violet-400 via-violet-600 to-violet-900",     badge: "GENERAL" },
+  health:           { grad: "from-pink-400 via-pink-600 to-rose-900",           badge: "HEALTH" },
+  science:          { grad: "from-rose-400 via-rose-600 to-red-900",            badge: "SCIENCE" },
+  units:            { grad: "from-amber-400 via-amber-600 to-orange-900",       badge: "UNITS" },
+  "date-time":      { grad: "from-purple-400 via-purple-600 to-purple-900",     badge: "UTILITY" },
+  math:             { grad: "from-indigo-400 via-indigo-600 to-indigo-900",     badge: "MATH" },
+  numbers:          { grad: "from-teal-400 via-teal-600 to-teal-900",           badge: "MATH" },
+  geometry:         { grad: "from-cyan-400 via-cyan-600 to-cyan-900",           badge: "MATH" },
+  construction:     { grad: "from-orange-400 via-orange-600 to-orange-900",     badge: "ENGINEERING" },
+  travel:           { grad: "from-sky-400 via-sky-600 to-sky-900",              badge: "TRAVEL" },
+  education:        { grad: "from-blue-400 via-blue-600 to-blue-900",           badge: "EDUCATION" },
+  medical:          { grad: "from-red-400 via-red-600 to-red-900",              badge: "HEALTH" },
+  lifestyle:        { grad: "from-lime-400 via-lime-600 to-green-900",          badge: "LIFESTYLE" },
+  automobile:       { grad: "from-slate-400 via-slate-600 to-slate-900",        badge: "TRAVEL" },
+  agriculture:      { grad: "from-green-400 via-green-600 to-green-900",        badge: "SCIENCE" },
+  developer:        { grad: "from-gray-400 via-gray-600 to-gray-900",           badge: "TECH" },
+  ecommerce:        { grad: "from-fuchsia-400 via-fuchsia-600 to-fuchsia-900",  badge: "COMMERCE" },
+  environment:      { grad: "from-emerald-500 via-green-600 to-green-900",      badge: "SCIENCE" },
+  "smart-life":     { grad: "from-indigo-400 via-indigo-600 to-indigo-900",     badge: "LIFESTYLE" },
+  "color-tools":    { grad: "from-fuchsia-400 via-pink-600 to-rose-900",        badge: "DESIGN" },
+  population:       { grad: "from-rose-400 via-rose-600 to-rose-900",           badge: "SCIENCE" },
+  development:      { grad: "from-amber-400 via-yellow-600 to-yellow-900",      badge: "FINANCE" },
+  designer:         { grad: "from-pink-400 via-fuchsia-600 to-pink-900",        badge: "DESIGN" },
+  "ai-tools":       { grad: "from-violet-400 via-purple-600 to-violet-900",     badge: "AI" },
+  notes:            { grad: "from-yellow-400 via-yellow-600 to-orange-900",     badge: "NOTES" },
+};
+
+// Filter groups
+const FILTERS = [
+  { key: "All",            label: "All" },
+  { key: "Finance",        label: "Finance" },
+  { key: "Mathematics",    label: "Mathematics" },
+  { key: "Engineering",    label: "Engineering" },
+  { key: "Health & Fitness", label: "Health & Fitness" },
+  { key: "Unit Converter", label: "Unit Converter" },
+  { key: "Travel",         label: "Travel" },
+  { key: "Education",      label: "Education" },
+];
+
+const FILTER_IDS: Record<string, string[]> = {
+  "Finance":          ["finance", "ecommerce", "development"],
+  "Mathematics":      ["math", "numbers", "geometry"],
+  "Engineering":      ["construction", "science", "developer", "color-tools", "designer"],
+  "Health & Fitness": ["health", "medical"],
+  "Unit Converter":   ["units", "size-converter"],
+  "Travel":           ["travel", "automobile"],
+  "Education":        ["education", "lifestyle", "smart-life", "agriculture", "environment", "population", "date-time", "ai-tools", "notes"],
+};
+
 function DesktopHome() {
   const [showSearch, setShowSearch] = useState(false);
+  const [activeFilter, setActiveFilter] = useState("All");
   const [, navigate] = useLocation();
   const { recent, addRecent } = useRecent();
-  const { favorites, toggleFavorite, isFavorite } = useFavorites();
+  const { toggleFavorite, isFavorite } = useFavorites();
+  const { theme, setTheme } = useTheme();
   const recentRef = useRef<HTMLDivElement>(null);
 
-  const scrollRecent = (dir: "left" | "right") => {
-    recentRef.current?.scrollBy({ left: dir === "left" ? -280 : 280, behavior: "smooth" });
+  const cycleTheme = () => {
+    const themes = ["dark", "light", "amoled"] as const;
+    const i = themes.indexOf(theme as "dark" | "light" | "amoled");
+    setTheme(themes[(i + 1) % 3]);
   };
 
   const handleCatClick = (cat: typeof allCategories[0]) => {
@@ -151,72 +208,158 @@ function DesktopHome() {
     navigate(cat.href);
   };
 
+  const visibleCats = activeFilter === "All"
+    ? allCategories
+    : allCategories.filter(c => (FILTER_IDS[activeFilter] ?? []).includes(c.id));
+
   return (
     <div className="h-full overflow-y-auto bg-background">
-      {/* Top bar */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border/50 px-8 py-3">
-        <div className="max-w-4xl mx-auto flex items-center gap-3">
-          <button
-            onClick={() => setShowSearch(true)}
-            data-testid="button-search-desktop"
-            className="flex-1 flex items-center gap-3 px-4 py-2.5 bg-card hover:bg-muted rounded-xl text-sm text-muted-foreground transition-colors cursor-text border border-border"
-          >
-            <Search className="w-4 h-4 shrink-0" />
-            <span>Search for a tool (e.g., Mortgage, BMI, Tip...)</span>
-          </button>
-          <button className="p-2.5 hover:bg-muted rounded-xl transition-colors" data-testid="button-notifications">
-            <Bell className="w-4 h-4 text-muted-foreground" />
-          </button>
-        </div>
+
+      {/* ── Top bar ─────────────────────────────────────────────────────────── */}
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border px-6 py-3 flex items-center gap-3">
+        <button
+          onClick={() => setShowSearch(true)}
+          data-testid="button-search-desktop"
+          className="flex-1 flex items-center gap-3 px-4 py-2.5 bg-card border border-border rounded-xl text-sm text-muted-foreground hover:bg-muted transition-colors cursor-text"
+        >
+          <Search className="w-4 h-4 shrink-0 text-muted-foreground/60" />
+          <span>Search calculators, tools, or formulas...</span>
+        </button>
+
+        <button
+          className="p-2.5 hover:bg-card rounded-xl transition-colors border border-transparent hover:border-border"
+          data-testid="button-notifications"
+          title="Notifications"
+        >
+          <Bell className="w-[18px] h-[18px] text-muted-foreground" />
+        </button>
+
+        <button
+          onClick={cycleTheme}
+          className="p-2.5 hover:bg-card rounded-xl transition-colors border border-transparent hover:border-border"
+          data-testid="button-settings"
+          title="Toggle Theme"
+        >
+          <Settings className="w-[18px] h-[18px] text-muted-foreground" />
+        </button>
+
+        <button
+          className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-xl text-sm font-semibold text-foreground hover:bg-muted transition-colors"
+          data-testid="button-live-markets"
+        >
+          <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 animate-pulse" />
+          Live Markets
+        </button>
       </div>
 
-      <div className="max-w-4xl mx-auto px-8 py-8 space-y-10">
-        {/* Welcome */}
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-3xl font-black text-foreground">Welcome to CalcHub.</h1>
-            <p className="text-muted-foreground mt-1">What are we calculating today?</p>
-          </div>
-          <div className="w-28 h-20 rounded-2xl overflow-hidden opacity-80 shrink-0 hidden lg:block">
-            <div className="w-full h-full bg-gradient-to-br from-primary/20 via-emerald-400/20 to-blue-400/20 flex items-center justify-center">
-              <Calculator className="w-10 h-10 text-primary/40" />
-            </div>
-          </div>
+      {/* ── Content ─────────────────────────────────────────────────────────── */}
+      <div className="px-6 py-7 space-y-7">
+
+        {/* Heading */}
+        <div>
+          <h1 className="text-3xl font-black text-foreground tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground mt-1 text-sm">Quick access to your most used computational tools.</p>
         </div>
 
-        {/* Recently Used */}
+        {/* Filter tabs */}
+        <div className="flex flex-wrap gap-2">
+          {FILTERS.map(f => (
+            <button
+              key={f.key}
+              onClick={() => setActiveFilter(f.key)}
+              data-testid={`filter-${f.key.toLowerCase().replace(/\s+/g, "-")}`}
+              className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-all ${
+                activeFilter === f.key
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-transparent text-foreground border-border hover:border-primary/40 hover:text-primary"
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+
+        {/* ── Tool cards grid ──────────────────────────────────────────────── */}
+        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {visibleCats.map((cat) => {
+            const meta  = CAT_META[cat.id] ?? { grad: "from-primary via-primary/70 to-primary/30", badge: "TOOL" };
+            const faved = isFavorite(cat.id);
+            return (
+              <motion.div
+                key={cat.id}
+                whileHover={{ y: -3, transition: { duration: 0.15 } }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => handleCatClick(cat)}
+                data-testid={`card-category-${cat.id}`}
+                className="bg-card border border-border rounded-2xl overflow-hidden cursor-pointer hover:shadow-xl hover:border-border/80 transition-all group"
+              >
+                {/* Icon banner */}
+                <div className={`h-28 bg-gradient-to-br ${meta.grad} flex items-center justify-center relative`}>
+                  <cat.icon className="w-11 h-11 text-white drop-shadow-lg" />
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleFavorite({ id: cat.id, title: cat.title, description: cat.description, href: cat.href, category: cat.title, color: cat.color });
+                    }}
+                    className={`absolute top-2 right-2 p-1.5 rounded-lg transition-all ${
+                      faved
+                        ? "opacity-100 bg-black/30"
+                        : "opacity-0 group-hover:opacity-100 bg-black/20 hover:bg-black/40"
+                    }`}
+                    data-testid={`button-fav-${cat.id}`}
+                  >
+                    <Star className={`w-3.5 h-3.5 ${faved ? "fill-yellow-400 text-yellow-400" : "text-white"}`} />
+                  </button>
+                </div>
+
+                {/* Card body */}
+                <div className="p-4">
+                  <p className="font-bold text-sm text-foreground leading-snug">{cat.title}</p>
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2 mb-3 leading-relaxed">{cat.description}</p>
+                  <div className="flex items-center justify-between">
+                    <span className={`text-[9px] font-bold tracking-[0.12em] uppercase px-2.5 py-1 rounded-full ${cat.color} text-white`}>
+                      {meta.badge}
+                    </span>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-primary transition-colors" />
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* ── Recent History ───────────────────────────────────────────────── */}
         {recent.length > 0 && (
           <section>
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-primary" />
-                <h2 className="font-bold text-foreground">Recently Used</h2>
-              </div>
-              <div className="flex gap-1">
-                <button onClick={() => scrollRecent("left")} className="p-1.5 hover:bg-muted rounded-lg transition-colors border border-border" data-testid="button-recent-left">
-                  <ChevronLeft className="w-4 h-4 text-muted-foreground" />
-                </button>
-                <button onClick={() => scrollRecent("right")} className="p-1.5 hover:bg-muted rounded-lg transition-colors border border-border" data-testid="button-recent-right">
-                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                </button>
-              </div>
+              <h2 className="font-bold text-foreground">Recent History</h2>
+              <Link href="/history">
+                <span className="text-sm text-primary hover:underline cursor-pointer flex items-center gap-1" data-testid="link-view-history">
+                  View All <ChevronRight className="w-3.5 h-3.5" />
+                </span>
+              </Link>
             </div>
-            <div ref={recentRef} className="flex gap-4 overflow-x-auto scrollbar-hide pb-1">
+            <div
+              ref={recentRef}
+              className="flex gap-3 overflow-x-auto scrollbar-hide pb-1"
+            >
               {recent.map((item) => {
                 const cat = allCategories.find((c) => c.id === item.id);
                 const Icon = cat?.icon || Calculator;
+                const meta = CAT_META[item.id] ?? { grad: "from-primary to-primary/50", badge: "TOOL" };
                 return (
                   <Link key={item.id} href={item.href}>
                     <div
                       data-testid={`card-recent-${item.id}`}
-                      className="shrink-0 w-56 bg-card border border-border rounded-2xl p-5 hover:shadow-md hover:border-primary/20 transition-all cursor-pointer"
+                      className="shrink-0 w-48 bg-card border border-border rounded-2xl overflow-hidden hover:shadow-md hover:border-primary/20 transition-all cursor-pointer group"
                     >
-                      <div className={`w-10 h-10 rounded-xl ${cat?.color || "bg-primary"} flex items-center justify-center mb-4`}>
-                        <Icon className="w-5 h-5 text-white" />
+                      <div className={`h-16 bg-gradient-to-br ${meta.grad} flex items-center justify-center`}>
+                        <Icon className="w-7 h-7 text-white drop-shadow" />
                       </div>
-                      <p className="font-bold text-sm text-foreground mb-1">{item.title}</p>
-                      <p className="text-xs text-muted-foreground mb-4 line-clamp-2">{item.description}</p>
-                      <p className="text-xs text-muted-foreground/60 italic">{timeAgo(item.visitedAt)}</p>
+                      <div className="p-3">
+                        <p className="font-bold text-xs text-foreground">{item.title}</p>
+                        <p className="text-[10px] text-muted-foreground/60 mt-0.5 italic">{timeAgo(item.visitedAt)}</p>
+                      </div>
                     </div>
                   </Link>
                 );
@@ -224,113 +367,6 @@ function DesktopHome() {
             </div>
           </section>
         )}
-
-        {/* Pinned Favorites */}
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Star className="w-4 h-4 text-primary fill-primary" />
-              <h2 className="font-bold text-foreground">Pinned Favorites</h2>
-            </div>
-            <Link href="/favorites">
-              <span className="text-sm text-primary hover:underline cursor-pointer" data-testid="link-manage-favorites">
-                Manage Favorites
-              </span>
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {favorites.map((item) => {
-              const cat = allCategories.find((c) => c.id === item.id);
-              const Icon = cat?.icon || Calculator;
-              return (
-                <div key={item.id} className="bg-card border border-border rounded-2xl p-5 hover:shadow-md transition-all">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-9 h-9 rounded-xl ${cat?.color || "bg-primary"} flex items-center justify-center shrink-0`}>
-                        <Icon className="w-4 h-4 text-white" />
-                      </div>
-                      <div>
-                        <p className="font-bold text-sm text-foreground leading-tight">{item.title}</p>
-                        <p className="text-xs text-muted-foreground">{item.category} Tool</p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => toggleFavorite(item)}
-                      className="p-1 hover:bg-muted rounded-lg transition-colors shrink-0"
-                      data-testid={`button-unfav-${item.id}`}
-                    >
-                      <Star className="w-4 h-4 fill-primary text-primary" />
-                    </button>
-                  </div>
-                  <p className="text-xs text-muted-foreground mb-4 line-clamp-2">{item.description}</p>
-                  <Link href={item.href}>
-                    <button
-                      className="w-full py-2 text-sm font-semibold text-foreground border border-border rounded-xl hover:bg-muted transition-colors"
-                      data-testid={`button-open-fav-${item.id}`}
-                    >
-                      Open Tool
-                    </button>
-                  </Link>
-                </div>
-              );
-            })}
-            <button
-              onClick={() => setShowSearch(true)}
-              className="bg-muted/30 border border-dashed border-border rounded-2xl p-5 flex flex-col items-center justify-center gap-2 hover:bg-muted/50 transition-colors min-h-[160px]"
-              data-testid="button-add-favorite"
-            >
-              <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center">
-                <span className="text-muted-foreground text-2xl font-light leading-none">+</span>
-              </div>
-              <p className="text-sm text-muted-foreground font-medium text-center">Pin more tools to your favorites</p>
-              <p className="text-xs text-muted-foreground/60 text-center">Quickly access the calculators you use the most</p>
-            </button>
-          </div>
-        </section>
-
-        {/* All Categories */}
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-bold text-foreground">All Categories</h2>
-            <Link href="/categories">
-              <span className="text-sm text-primary hover:underline cursor-pointer flex items-center gap-1" data-testid="link-all-categories">
-                View All <ChevronRight className="w-3.5 h-3.5" />
-              </span>
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {allCategories.map((cat) => (
-              <motion.div
-                key={cat.id}
-                whileHover={{ y: -2 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => handleCatClick(cat)}
-                data-testid={`card-category-${cat.id}`}
-                className="bg-card border border-border rounded-2xl p-4 text-left hover:shadow-md hover:border-primary/20 transition-all group flex flex-col gap-3 cursor-pointer"
-              >
-                <div className="flex items-center justify-between">
-                  <div className={`w-9 h-9 rounded-xl ${cat.color} flex items-center justify-center`}>
-                    <cat.icon className="w-4 h-4 text-white" />
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleFavorite({ id: cat.id, title: cat.title, description: cat.description, href: cat.href, category: cat.title, color: cat.color });
-                    }}
-                    className="p-1.5 hover:bg-muted rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                    data-testid={`button-fav-${cat.id}`}
-                  >
-                    <Star className={`w-3.5 h-3.5 ${isFavorite(cat.id) ? "fill-primary text-primary" : "text-muted-foreground"}`} />
-                  </button>
-                </div>
-                <div>
-                  <p className="font-semibold text-sm text-foreground">{cat.title}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{cat.description}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </section>
       </div>
 
       <AnimatePresence>
