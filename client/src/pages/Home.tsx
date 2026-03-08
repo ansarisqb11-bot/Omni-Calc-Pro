@@ -136,36 +136,41 @@ function SearchOverlay({ onClose }: { onClose: () => void }) {
   );
 }
 
-// ── Category card metadata: dark muted banner + vivid icon ──────────────────
-const CAT_META: Record<string, {
-  banner: string; icon: string; badge: string; pill: string;
-}> = {
-  finance:          { banner: "from-emerald-50 to-emerald-100 dark:from-emerald-950 dark:to-emerald-900",       icon: "text-emerald-700 dark:text-emerald-400", badge: "FINANCE",     pill: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300" },
-  "size-converter": { banner: "from-violet-50 to-violet-100 dark:from-violet-950 dark:to-violet-900",           icon: "text-violet-700 dark:text-violet-400",   badge: "GENERAL",     pill: "bg-violet-100 text-violet-700 dark:bg-violet-900/60 dark:text-violet-300" },
-  health:           { banner: "from-pink-50 to-rose-100 dark:from-pink-950 dark:to-pink-900",                   icon: "text-pink-600 dark:text-pink-400",        badge: "HEALTH",      pill: "bg-pink-100 text-pink-700 dark:bg-pink-900/60 dark:text-pink-300" },
-  science:          { banner: "from-rose-50 to-red-100 dark:from-rose-950 dark:to-rose-900",                    icon: "text-rose-600 dark:text-rose-400",        badge: "SCIENCE",     pill: "bg-rose-100 text-rose-700 dark:bg-rose-900/60 dark:text-rose-300" },
-  units:            { banner: "from-amber-50 to-orange-100 dark:from-amber-950 dark:to-amber-900",               icon: "text-amber-600 dark:text-amber-400",      badge: "UNITS",       pill: "bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300" },
-  "date-time":      { banner: "from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900",            icon: "text-purple-700 dark:text-purple-400",    badge: "UTILITY",     pill: "bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300" },
-  math:             { banner: "from-indigo-50 to-indigo-100 dark:from-indigo-950 dark:to-indigo-900",            icon: "text-indigo-700 dark:text-indigo-400",    badge: "MATH",        pill: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300" },
-  numbers:          { banner: "from-teal-50 to-teal-100 dark:from-teal-950 dark:to-teal-900",                   icon: "text-teal-700 dark:text-teal-400",        badge: "MATH",        pill: "bg-teal-100 text-teal-700 dark:bg-teal-900/60 dark:text-teal-300" },
-  geometry:         { banner: "from-cyan-50 to-cyan-100 dark:from-cyan-950 dark:to-cyan-900",                   icon: "text-cyan-600 dark:text-cyan-400",        badge: "MATH",        pill: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/60 dark:text-cyan-300" },
-  construction:     { banner: "from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900",            icon: "text-orange-600 dark:text-orange-400",    badge: "ENGINEERING", pill: "bg-orange-100 text-orange-700 dark:bg-orange-900/60 dark:text-orange-300" },
-  travel:           { banner: "from-sky-50 to-sky-100 dark:from-sky-950 dark:to-sky-900",                       icon: "text-sky-600 dark:text-sky-400",          badge: "TRAVEL",      pill: "bg-sky-100 text-sky-700 dark:bg-sky-900/60 dark:text-sky-300" },
-  education:        { banner: "from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900",                   icon: "text-blue-600 dark:text-blue-400",        badge: "EDUCATION",   pill: "bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300" },
-  medical:          { banner: "from-red-50 to-red-100 dark:from-red-950 dark:to-red-900",                       icon: "text-red-600 dark:text-red-400",          badge: "HEALTH",      pill: "bg-red-100 text-red-700 dark:bg-red-900/60 dark:text-red-300" },
-  lifestyle:        { banner: "from-lime-50 to-green-100 dark:from-lime-950 dark:to-lime-900",                  icon: "text-lime-600 dark:text-lime-400",        badge: "LIFESTYLE",   pill: "bg-lime-100 text-lime-700 dark:bg-lime-900/60 dark:text-lime-300" },
-  automobile:       { banner: "from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950",               icon: "text-slate-600 dark:text-slate-300",      badge: "TRAVEL",      pill: "bg-slate-100 text-slate-700 dark:bg-slate-800/60 dark:text-slate-300" },
-  agriculture:      { banner: "from-green-50 to-green-100 dark:from-green-950 dark:to-green-900",               icon: "text-green-700 dark:text-green-400",      badge: "SCIENCE",     pill: "bg-green-100 text-green-700 dark:bg-green-900/60 dark:text-green-300" },
-  developer:        { banner: "from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950",                   icon: "text-gray-600 dark:text-gray-300",        badge: "TECH",        pill: "bg-gray-100 text-gray-700 dark:bg-gray-800/60 dark:text-gray-300" },
-  ecommerce:        { banner: "from-fuchsia-50 to-fuchsia-100 dark:from-fuchsia-950 dark:to-fuchsia-900",        icon: "text-fuchsia-600 dark:text-fuchsia-400",  badge: "COMMERCE",    pill: "bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900/60 dark:text-fuchsia-300" },
-  environment:      { banner: "from-emerald-50 to-teal-100 dark:from-emerald-950 dark:to-teal-900",              icon: "text-emerald-600 dark:text-emerald-300",  badge: "SCIENCE",     pill: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300" },
-  "smart-life":     { banner: "from-indigo-50 to-blue-100 dark:from-indigo-950 dark:to-indigo-900",              icon: "text-indigo-600 dark:text-indigo-300",    badge: "LIFESTYLE",   pill: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300" },
-  "color-tools":    { banner: "from-fuchsia-50 to-pink-100 dark:from-fuchsia-950 dark:to-pink-900",              icon: "text-fuchsia-600 dark:text-fuchsia-300",  badge: "DESIGN",      pill: "bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900/60 dark:text-fuchsia-300" },
-  population:       { banner: "from-rose-50 to-rose-100 dark:from-rose-950 dark:to-rose-900",                   icon: "text-rose-600 dark:text-rose-300",        badge: "SCIENCE",     pill: "bg-rose-100 text-rose-700 dark:bg-rose-900/60 dark:text-rose-300" },
-  development:      { banner: "from-amber-50 to-yellow-100 dark:from-amber-950 dark:to-yellow-900",              icon: "text-amber-600 dark:text-amber-300",      badge: "FINANCE",     pill: "bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300" },
-  designer:         { banner: "from-pink-50 to-fuchsia-100 dark:from-pink-950 dark:to-fuchsia-900",              icon: "text-pink-600 dark:text-pink-300",        badge: "DESIGN",      pill: "bg-pink-100 text-pink-700 dark:bg-pink-900/60 dark:text-pink-300" },
-  "ai-tools":       { banner: "from-violet-50 to-purple-100 dark:from-violet-950 dark:to-purple-900",            icon: "text-violet-600 dark:text-violet-400",    badge: "AI",          pill: "bg-violet-100 text-violet-700 dark:bg-violet-900/60 dark:text-violet-300" },
-  notes:            { banner: "from-yellow-50 to-amber-100 dark:from-yellow-950 dark:to-yellow-900",             icon: "text-yellow-600 dark:text-yellow-400",    badge: "NOTES",       pill: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/60 dark:text-yellow-300" },
+// ── Category card metadata with explicit hex colors (reliable cross-theme) ───
+type CatMeta = {
+  bannerDark: string; bannerLight: string;
+  iconDark: string;   iconLight: string;
+  pillBgDark: string; pillTextDark: string;
+  pillBgLight: string; pillTextLight: string;
+  badge: string;
+};
+const CAT_META: Record<string, CatMeta> = {
+  finance:          { bannerDark:"#052e16", bannerLight:"#f0fdf4", iconDark:"#4ade80", iconLight:"#166534", pillBgDark:"#14532d", pillTextDark:"#86efac", pillBgLight:"#dcfce7", pillTextLight:"#166534", badge:"FINANCE" },
+  "size-converter": { bannerDark:"#2e1065", bannerLight:"#f5f3ff", iconDark:"#a78bfa", iconLight:"#6d28d9", pillBgDark:"#3b0764", pillTextDark:"#c4b5fd", pillBgLight:"#ede9fe", pillTextLight:"#6d28d9", badge:"GENERAL" },
+  health:           { bannerDark:"#500724", bannerLight:"#fdf2f8", iconDark:"#f472b6", iconLight:"#9d174d", pillBgDark:"#831843", pillTextDark:"#fbcfe8", pillBgLight:"#fce7f3", pillTextLight:"#9d174d", badge:"HEALTH" },
+  science:          { bannerDark:"#4c0519", bannerLight:"#fff1f2", iconDark:"#fb7185", iconLight:"#9f1239", pillBgDark:"#881337", pillTextDark:"#fecdd3", pillBgLight:"#ffe4e6", pillTextLight:"#9f1239", badge:"SCIENCE" },
+  units:            { bannerDark:"#451a03", bannerLight:"#fffbeb", iconDark:"#fbbf24", iconLight:"#b45309", pillBgDark:"#78350f", pillTextDark:"#fde68a", pillBgLight:"#fef3c7", pillTextLight:"#b45309", badge:"UNITS" },
+  "date-time":      { bannerDark:"#3b0764", bannerLight:"#faf5ff", iconDark:"#c084fc", iconLight:"#7e22ce", pillBgDark:"#581c87", pillTextDark:"#e9d5ff", pillBgLight:"#f3e8ff", pillTextLight:"#7e22ce", badge:"UTILITY" },
+  math:             { bannerDark:"#1e1b4b", bannerLight:"#eef2ff", iconDark:"#818cf8", iconLight:"#3730a3", pillBgDark:"#312e81", pillTextDark:"#c7d2fe", pillBgLight:"#e0e7ff", pillTextLight:"#3730a3", badge:"MATH" },
+  numbers:          { bannerDark:"#042f2e", bannerLight:"#f0fdfa", iconDark:"#2dd4bf", iconLight:"#0f766e", pillBgDark:"#134e4a", pillTextDark:"#99f6e4", pillBgLight:"#ccfbf1", pillTextLight:"#0f766e", badge:"MATH" },
+  geometry:         { bannerDark:"#083344", bannerLight:"#ecfeff", iconDark:"#22d3ee", iconLight:"#0e7490", pillBgDark:"#164e63", pillTextDark:"#a5f3fc", pillBgLight:"#cffafe", pillTextLight:"#0e7490", badge:"MATH" },
+  construction:     { bannerDark:"#431407", bannerLight:"#fff7ed", iconDark:"#fb923c", iconLight:"#c2410c", pillBgDark:"#7c2d12", pillTextDark:"#fed7aa", pillBgLight:"#ffedd5", pillTextLight:"#c2410c", badge:"ENGINEERING" },
+  travel:           { bannerDark:"#082f49", bannerLight:"#f0f9ff", iconDark:"#38bdf8", iconLight:"#0369a1", pillBgDark:"#0c4a6e", pillTextDark:"#bae6fd", pillBgLight:"#e0f2fe", pillTextLight:"#0369a1", badge:"TRAVEL" },
+  education:        { bannerDark:"#1e3a5f", bannerLight:"#eff6ff", iconDark:"#60a5fa", iconLight:"#1d4ed8", pillBgDark:"#1e40af", pillTextDark:"#bfdbfe", pillBgLight:"#dbeafe", pillTextLight:"#1d4ed8", badge:"EDUCATION" },
+  medical:          { bannerDark:"#450a0a", bannerLight:"#fef2f2", iconDark:"#f87171", iconLight:"#b91c1c", pillBgDark:"#7f1d1d", pillTextDark:"#fecaca", pillBgLight:"#fee2e2", pillTextLight:"#b91c1c", badge:"HEALTH" },
+  lifestyle:        { bannerDark:"#1a2e05", bannerLight:"#f7fee7", iconDark:"#a3e635", iconLight:"#3f6212", pillBgDark:"#365314", pillTextDark:"#d9f99d", pillBgLight:"#ecfccb", pillTextLight:"#3f6212", badge:"LIFESTYLE" },
+  automobile:       { bannerDark:"#1e293b", bannerLight:"#f8fafc", iconDark:"#94a3b8", iconLight:"#475569", pillBgDark:"#334155", pillTextDark:"#e2e8f0", pillBgLight:"#f1f5f9", pillTextLight:"#475569", badge:"TRAVEL" },
+  agriculture:      { bannerDark:"#052e16", bannerLight:"#f0fdf4", iconDark:"#34d399", iconLight:"#065f46", pillBgDark:"#064e3b", pillTextDark:"#6ee7b7", pillBgLight:"#d1fae5", pillTextLight:"#065f46", badge:"SCIENCE" },
+  developer:        { bannerDark:"#111827", bannerLight:"#f9fafb", iconDark:"#d1d5db", iconLight:"#374151", pillBgDark:"#374151", pillTextDark:"#f3f4f6", pillBgLight:"#f3f4f6", pillTextLight:"#374151", badge:"TECH" },
+  ecommerce:        { bannerDark:"#4a044e", bannerLight:"#fdf4ff", iconDark:"#e879f9", iconLight:"#a21caf", pillBgDark:"#701a75", pillTextDark:"#f5d0fe", pillBgLight:"#fae8ff", pillTextLight:"#a21caf", badge:"COMMERCE" },
+  environment:      { bannerDark:"#042f1a", bannerLight:"#ecfdf5", iconDark:"#6ee7b7", iconLight:"#065f46", pillBgDark:"#064e3b", pillTextDark:"#a7f3d0", pillBgLight:"#d1fae5", pillTextLight:"#065f46", badge:"SCIENCE" },
+  "smart-life":     { bannerDark:"#1e1b4b", bannerLight:"#eef2ff", iconDark:"#a5b4fc", iconLight:"#4338ca", pillBgDark:"#3730a3", pillTextDark:"#e0e7ff", pillBgLight:"#e0e7ff", pillTextLight:"#4338ca", badge:"LIFESTYLE" },
+  "color-tools":    { bannerDark:"#3b0764", bannerLight:"#fdf4ff", iconDark:"#f0abfc", iconLight:"#9333ea", pillBgDark:"#6b21a8", pillTextDark:"#f5d0fe", pillBgLight:"#fae8ff", pillTextLight:"#9333ea", badge:"DESIGN" },
+  population:       { bannerDark:"#4c0519", bannerLight:"#fff1f2", iconDark:"#fda4af", iconLight:"#be123c", pillBgDark:"#881337", pillTextDark:"#ffe4e6", pillBgLight:"#ffe4e6", pillTextLight:"#be123c", badge:"SCIENCE" },
+  development:      { bannerDark:"#451a03", bannerLight:"#fffbeb", iconDark:"#fde68a", iconLight:"#b45309", pillBgDark:"#78350f", pillTextDark:"#fef3c7", pillBgLight:"#fef3c7", pillTextLight:"#92400e", badge:"FINANCE" },
+  designer:         { bannerDark:"#500724", bannerLight:"#fdf2f8", iconDark:"#f9a8d4", iconLight:"#be185d", pillBgDark:"#831843", pillTextDark:"#fce7f3", pillBgLight:"#fce7f3", pillTextLight:"#be185d", badge:"DESIGN" },
+  "ai-tools":       { bannerDark:"#2e1065", bannerLight:"#f5f3ff", iconDark:"#c4b5fd", iconLight:"#7c3aed", pillBgDark:"#4c1d95", pillTextDark:"#ede9fe", pillBgLight:"#ede9fe", pillTextLight:"#7c3aed", badge:"AI" },
+  notes:            { bannerDark:"#422006", bannerLight:"#fefce8", iconDark:"#fde047", iconLight:"#a16207", pillBgDark:"#713f12", pillTextDark:"#fef08a", pillBgLight:"#fef9c3", pillTextLight:"#a16207", badge:"NOTES" },
 };
 
 // Filter groups
@@ -198,6 +203,8 @@ function DesktopHome() {
   const { toggleFavorite, isFavorite } = useFavorites();
   const { theme, setTheme } = useTheme();
   const recentRef = useRef<HTMLDivElement>(null);
+
+  const isDark = theme === "dark" || theme === "amoled";
 
   const cycleTheme = () => {
     const themes = ["dark", "light", "amoled"] as const;
@@ -284,8 +291,12 @@ function DesktopHome() {
         {/* ── Tool cards grid ──────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {visibleCats.map((cat) => {
-            const meta  = CAT_META[cat.id] ?? { banner: "from-primary/10 to-primary/20 dark:from-primary/10 dark:to-primary/5", icon: "text-primary", badge: "TOOL", pill: "bg-primary/10 text-primary" };
+            const meta = CAT_META[cat.id] ?? { bannerDark:"#1e293b", bannerLight:"#f8fafc", iconDark:"#94a3b8", iconLight:"#475569", pillBgDark:"#334155", pillTextDark:"#e2e8f0", pillBgLight:"#f1f5f9", pillTextLight:"#475569", badge:"TOOL" };
             const faved = isFavorite(cat.id);
+            const bannerBg  = isDark ? meta.bannerDark  : meta.bannerLight;
+            const iconColor = isDark ? meta.iconDark     : meta.iconLight;
+            const pillBg    = isDark ? meta.pillBgDark   : meta.pillBgLight;
+            const pillText  = isDark ? meta.pillTextDark : meta.pillTextLight;
             return (
               <motion.div
                 key={cat.id}
@@ -295,9 +306,12 @@ function DesktopHome() {
                 data-testid={`card-category-${cat.id}`}
                 className="bg-card border border-border rounded-2xl overflow-hidden cursor-pointer hover:shadow-xl hover:border-primary/20 transition-all group"
               >
-                {/* Dark muted banner with vivid colored icon */}
-                <div className={`h-36 bg-gradient-to-br ${meta.banner} flex items-center justify-center relative`}>
-                  <cat.icon className={`w-12 h-12 ${meta.icon} drop-shadow-sm`} />
+                {/* Muted banner with vivid colored icon — inline styles for reliability */}
+                <div
+                  className="h-36 flex items-center justify-center relative"
+                  style={{ background: bannerBg }}
+                >
+                  <cat.icon className="w-12 h-12 drop-shadow-sm" style={{ color: iconColor }} />
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -305,12 +319,12 @@ function DesktopHome() {
                     }}
                     className={`absolute top-2 right-2 p-1.5 rounded-lg transition-all ${
                       faved
-                        ? "opacity-100 bg-black/10 dark:bg-white/10"
-                        : "opacity-0 group-hover:opacity-100 bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20"
+                        ? "opacity-100 bg-white/10"
+                        : "opacity-0 group-hover:opacity-100 bg-white/5 hover:bg-white/15"
                     }`}
                     data-testid={`button-fav-${cat.id}`}
                   >
-                    <Star className={`w-3.5 h-3.5 ${faved ? "fill-yellow-400 text-yellow-400" : "text-foreground/40"}`} />
+                    <Star className={`w-3.5 h-3.5 ${faved ? "fill-yellow-400 text-yellow-400" : "text-white/50"}`} />
                   </button>
                 </div>
 
@@ -319,7 +333,10 @@ function DesktopHome() {
                   <p className="font-bold text-sm text-foreground leading-snug">{cat.title}</p>
                   <p className="text-xs text-muted-foreground mt-1 line-clamp-2 mb-3 leading-relaxed min-h-[2.5rem]">{cat.description}</p>
                   <div className="flex items-center justify-between">
-                    <span className={`text-[9px] font-bold tracking-[0.1em] uppercase px-2.5 py-1 rounded-full ${meta.pill}`}>
+                    <span
+                      className="text-[9px] font-bold tracking-[0.1em] uppercase px-2.5 py-1 rounded-full"
+                      style={{ background: pillBg, color: pillText }}
+                    >
                       {meta.badge}
                     </span>
                     <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-primary transition-colors" />
@@ -348,15 +365,18 @@ function DesktopHome() {
               {recent.map((item) => {
                 const cat = allCategories.find((c) => c.id === item.id);
                 const Icon = cat?.icon || Calculator;
-                const meta = CAT_META[item.id] ?? { grad: "from-primary to-primary/50", badge: "TOOL" };
+                const rMeta = CAT_META[item.id] ?? { bannerDark:"#1e293b", bannerLight:"#f8fafc", iconDark:"#94a3b8", iconLight:"#475569", pillBgDark:"#334155", pillTextDark:"#e2e8f0", pillBgLight:"#f1f5f9", pillTextLight:"#475569", badge:"TOOL" };
                 return (
                   <Link key={item.id} href={item.href}>
                     <div
                       data-testid={`card-recent-${item.id}`}
                       className="shrink-0 w-48 bg-card border border-border rounded-2xl overflow-hidden hover:shadow-md hover:border-primary/20 transition-all cursor-pointer group"
                     >
-                      <div className={`h-16 bg-gradient-to-br ${meta.grad} flex items-center justify-center`}>
-                        <Icon className="w-7 h-7 text-white drop-shadow" />
+                      <div
+                        className="h-16 flex items-center justify-center"
+                        style={{ background: isDark ? rMeta.bannerDark : rMeta.bannerLight }}
+                      >
+                        <Icon className="w-7 h-7 drop-shadow" style={{ color: isDark ? rMeta.iconDark : rMeta.iconLight }} />
                       </div>
                       <div className="p-3">
                         <p className="font-bold text-xs text-foreground">{item.title}</p>
