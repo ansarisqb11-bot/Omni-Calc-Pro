@@ -2,7 +2,7 @@
 
 ## Overview
 
-CalcHub is a comprehensive calculator and utility web application built with a modern full-stack architecture. It provides multiple calculator modes (basic, scientific, percentage), financial tools (EMI, compound interest, tip calculator, ROI), health calculators (BMI, BMR, calorie tracking), unit converters, date/time utilities, and an AI-powered assistant. The application features a dark-themed UI with smooth animations, persistent history tracking, and notes functionality.
+CalcHub is a comprehensive calculator and utility web application built with a modern full-stack architecture. It provides multiple calculator modes (basic, scientific, percentage), financial tools (EMI, compound interest, tip calculator, ROI), health calculators (BMI, BMR, calorie tracking), unit converters, date/time utilities, business & economics tools (GDP, market size, net worth, unemployment, tariff, inflation, per capita income), and an AI-powered assistant. The application features a dark-themed UI with smooth animations, persistent history tracking, and notes functionality.
 
 ## User Preferences
 

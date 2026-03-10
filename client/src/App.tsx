@@ -39,6 +39,7 @@ import ClothingSizeTools from "@/pages/ClothingSizeTools";
 import PopulationTools from "@/pages/PopulationTools";
 import DevelopmentToolsPage from "@/pages/DevelopmentTools";
 import DesignerTools from "@/pages/DesignerTools";
+import BusinessEconomicsTools from "@/pages/BusinessEconomicsTools";
 import Favorites from "@/pages/Favorites";
 import HistoryPage from "@/pages/HistoryPage";
 
@@ -77,6 +78,7 @@ function Router() {
       <Route path="/population" component={PopulationTools} />
       <Route path="/development" component={DevelopmentToolsPage} />
       <Route path="/designer" component={DesignerTools} />
+      <Route path="/business" component={BusinessEconomicsTools} />
       <Route path="/favorites" component={Favorites} />
       <Route path="/history" component={HistoryPage} />
       <Route component={NotFound} />

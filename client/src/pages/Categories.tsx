@@ -6,7 +6,7 @@ import {
   Clock, Ruler, MessageSquare, StickyNote, Binary, FlaskConical,
   HardHat, Plane, Grid3X3, ChevronRight, Hash, GraduationCap,
   Stethoscope, Home, Car, Leaf, Code, ShoppingCart, Globe, ShoppingBag, Users, Calendar, TrendingDown, Palette, Shirt,
-  Baby, BarChart3, Zap, Proportions, Monitor, ImageIcon, RulerIcon, FileText, Droplets, Columns3, LineChart
+  Baby, BarChart3, Zap, Proportions, Monitor, ImageIcon, RulerIcon, FileText, Droplets, Columns3, LineChart, TrendingUp, Building
 } from "lucide-react";
 
 export default function Categories() {
@@ -258,6 +258,16 @@ export default function Categories() {
     { title: "pH Calculator", category: "Science", icon: Droplets, color: "bg-rose-500", href: "/science" },
     { title: "Roman Numerals", category: "Numbers", icon: Columns3, color: "bg-teal-500", href: "/numbers" },
     { title: "Stock Profit/Loss", category: "Finance", icon: LineChart, color: "bg-emerald-500", href: "/finance" },
+    { title: "GDP Calculator", category: "Business & Economics", icon: Globe, color: "bg-cyan-600", href: "/business" },
+    { title: "Market Size Calculator", category: "Business & Economics", icon: BarChart3, color: "bg-cyan-600", href: "/business" },
+    { title: "Net Worth Calculator", category: "Business & Economics", icon: TrendingUp, color: "bg-cyan-600", href: "/business" },
+    { title: "Unemployment Rate", category: "Business & Economics", icon: Users, color: "bg-cyan-600", href: "/business" },
+    { title: "Employment Growth", category: "Business & Economics", icon: Building, color: "bg-cyan-600", href: "/business" },
+    { title: "Productivity Calculator", category: "Business & Economics", icon: Zap, color: "bg-cyan-600", href: "/business" },
+    { title: "Tariff Impact Calculator", category: "Business & Economics", icon: Globe, color: "bg-cyan-600", href: "/business" },
+    { title: "Per Person Income", category: "Business & Economics", icon: Wallet, color: "bg-cyan-600", href: "/business" },
+    { title: "Per Capita Income", category: "Business & Economics", icon: BarChart3, color: "bg-cyan-600", href: "/business" },
+    { title: "Inflation Impact", category: "Business & Economics", icon: TrendingUp, color: "bg-cyan-600", href: "/business" },
   ];
 
   const categories = [
@@ -289,10 +299,11 @@ export default function Categories() {
     { title: "Population", icon: Users, color: "text-rose-500", bg: "bg-rose-50 dark:bg-rose-500/10", count: allTools.filter(t => t.category === "Population").length, href: "/population" },
     { title: "Development", icon: BarChart3, color: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-500/10", count: allTools.filter(t => t.category === "Development").length, href: "/development" },
     { title: "Designer", icon: Proportions, color: "text-pink-500", bg: "bg-pink-50 dark:bg-pink-500/10", count: allTools.filter(t => t.category === "Designer").length, href: "/designer" },
+    { title: "Business", icon: Building, color: "text-cyan-600", bg: "bg-cyan-50 dark:bg-cyan-600/10", count: allTools.filter(t => t.category === "Business & Economics").length, href: "/business" },
     { title: "Notes", icon: StickyNote, color: "text-yellow-500", bg: "bg-yellow-50 dark:bg-yellow-500/10", count: 0, href: "/notes" },
   ];
 
-  const filterPills = ["All Tools", "Finance", "Size Converter", "Health", "Math", "Science", "Units", "Date/Time", "Geometry", "Construction", "Travel", "Education", "Medical", "Lifestyle", "Developer", "E-Commerce", "Color Tools", "Population", "Development", "Designer", "AI Tools"];
+  const filterPills = ["All Tools", "Finance", "Business & Economics", "Health", "Math", "Science", "Units", "Date/Time", "Geometry", "Construction", "Travel", "Education", "Medical", "Lifestyle", "Developer", "E-Commerce", "Color Tools", "Population", "Development", "Designer", "AI Tools"];
 
   const categoriesWithHref = categories.filter(c => c.href);
 
@@ -345,6 +356,7 @@ export default function Categories() {
     "Population": "Demographics and world statistics.",
     "Development": "Economic growth and project tools.",
     "Designer": "Aspect ratio, DPI, and layout tools.",
+    "Business": "GDP, market size, tariff, and economic tools.",
     "Notes": "Quick notes and reminders.",
   };
 
