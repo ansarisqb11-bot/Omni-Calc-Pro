@@ -257,17 +257,80 @@ function AspectRatioCalc() {
 }
 
 function DpiPpiCalc() {
-  const [mode, setMode] = useState("screen");
-  const [widthPx, setWidthPx] = useState("1920");
-  const [heightPx, setHeightPx] = useState("1080");
-  const [diagonal, setDiagonal] = useState("15.6");
+  const [mode, setMode] = useState("mobile-ppi");
+  const [widthPx, setWidthPx] = useState("1080");
+  const [heightPx, setHeightPx] = useState("2400");
+  const [diagonal, setDiagonal] = useState("6.5");
   const [unit, setUnit] = useState("inch");
   const [dpi, setDpi] = useState("300");
   const [widthIn, setWidthIn] = useState("8.5");
   const [heightIn, setHeightIn] = useState("11");
+  const [ppiInput, setPpiInput] = useState("405");
 
   const result = useMemo(() => {
     switch (mode) {
+      case "mobile-ppi": {
+        const wp = parseFloat(widthPx) || 0;
+        const hp = parseFloat(heightPx) || 0;
+        const diag = parseFloat(diagonal) || 0;
+        const diagFactor = unit === "cm" ? 2.54 : 1;
+        const diagInch = diag / diagFactor;
+        if (wp <= 0 || hp <= 0 || diagInch <= 0) return { results: [], steps: [] };
+        const diagPx = Math.sqrt(wp * wp + hp * hp);
+        const ppi = diagPx / diagInch;
+        const dotPitch = 25.4 / ppi;
+        const quality =
+          ppi >= 500 ? "Retina+ (Exceptional)" :
+          ppi >= 400 ? "Retina (Excellent)" :
+          ppi >= 300 ? "HD (Very Good)" :
+          ppi >= 200 ? "Standard (Good)" : "Low (Average)";
+        return {
+          results: [
+            { label: "Pixel Density (PPI)", value: `${fmt(ppi, 0)} PPI` },
+            { label: "DPI (same as PPI for screens)", value: `${fmt(ppi, 0)} DPI` },
+            { label: "Diagonal Pixels", value: `${fmt(diagPx, 0)} px` },
+            { label: "Dot Pitch", value: `${fmt(dotPitch, 4)} mm` },
+            { label: "Display Quality", value: quality },
+          ],
+          steps: [
+            `Resolution: ${fmt(wp, 0)} × ${fmt(hp, 0)} px`,
+            `Screen size: ${fmt(diag, 1)} ${unit}${unit === "cm" ? ` = ${fmt(diagInch, 2)} inches` : ""}`,
+            `Diagonal pixels = √(${fmt(wp, 0)}² + ${fmt(hp, 0)}²)`,
+            `= √(${fmt(wp * wp, 0)} + ${fmt(hp * hp, 0)})`,
+            `= √${fmt(wp * wp + hp * hp, 0)}`,
+            `≈ ${fmt(diagPx, 0)} px`,
+            `PPI = ${fmt(diagPx, 0)} ÷ ${fmt(diagInch, 2)} ≈ ${fmt(ppi, 0)}`,
+          ],
+        };
+      }
+      case "mobile-size": {
+        const wp = parseFloat(widthPx) || 0;
+        const hp = parseFloat(heightPx) || 0;
+        const ppi = parseFloat(ppiInput) || 0;
+        if (wp <= 0 || hp <= 0 || ppi <= 0) return { results: [], steps: [] };
+        const diagPx = Math.sqrt(wp * wp + hp * hp);
+        const screenSize = diagPx / ppi;
+        const physW = wp / ppi;
+        const physH = hp / ppi;
+        const screenSizeCm = screenSize * 2.54;
+        return {
+          results: [
+            { label: "Screen Size (inches)", value: `${fmt(screenSize, 2)}"` },
+            { label: "Screen Size (cm)", value: `${fmt(screenSizeCm, 2)} cm` },
+            { label: "Diagonal Pixels", value: `${fmt(diagPx, 0)} px` },
+            { label: "Physical Width", value: `${fmt(physW, 2)}" (${fmt(physW * 2.54, 2)} cm)` },
+            { label: "Physical Height", value: `${fmt(physH, 2)}" (${fmt(physH * 2.54, 2)} cm)` },
+          ],
+          steps: [
+            `Resolution: ${fmt(wp, 0)} × ${fmt(hp, 0)} px`,
+            `Given PPI: ${fmt(ppi, 0)}`,
+            `Diagonal pixels = √(${fmt(wp, 0)}² + ${fmt(hp, 0)}²) = ${fmt(diagPx, 0)} px`,
+            `Screen size = diagonal px ÷ PPI`,
+            `= ${fmt(diagPx, 0)} ÷ ${fmt(ppi, 0)}`,
+            `≈ ${fmt(screenSize, 2)} inches`,
+          ],
+        };
+      }
       case "screen": {
         const wp = parseFloat(widthPx) || 0;
         const hp = parseFloat(heightPx) || 0;
@@ -285,13 +348,13 @@ function DpiPpiCalc() {
             { label: "PPI (Pixels Per Inch)", value: fmt(ppi, 1) },
             { label: "Dot Pitch", value: `${fmt(dotPitch, 4)} mm` },
             { label: "Diagonal (px)", value: fmt(diagPx, 0) },
-            { label: "Physical Size", value: `${fmt(physW, 1)}" \u00D7 ${fmt(physH, 1)}"` },
+            { label: "Physical Size", value: `${fmt(physW, 1)}" × ${fmt(physH, 1)}"` },
             { label: "Total Pixels", value: `${fmt(wp * hp, 0)}` },
           ],
           steps: [
-            `Resolution: ${fmt(wp, 0)} \u00D7 ${fmt(hp, 0)} px`,
+            `Resolution: ${fmt(wp, 0)} × ${fmt(hp, 0)} px`,
             `Diagonal = ${fmt(diag, 1)} ${unit} = ${fmt(diagInch, 2)} inches`,
-            `Diagonal pixels = \u221A(${fmt(wp, 0)}\u00B2 + ${fmt(hp, 0)}\u00B2) = ${fmt(diagPx, 1)} px`,
+            `Diagonal pixels = √(${fmt(wp, 0)}² + ${fmt(hp, 0)}²) = ${fmt(diagPx, 1)} px`,
             `PPI = ${fmt(diagPx, 1)} / ${fmt(diagInch, 2)} = ${fmt(ppi, 1)}`,
             `Dot pitch = 25.4 / ${fmt(ppi, 1)} = ${fmt(dotPitch, 4)} mm`,
           ],
@@ -308,66 +371,79 @@ function DpiPpiCalc() {
         const fileSize300 = (pxW * pxH * 3) / 1e6;
         return {
           results: [
-            { label: "Image Size (px)", value: `${fmt(pxW, 0)} \u00D7 ${fmt(pxH, 0)}` },
+            { label: "Image Size (px)", value: `${fmt(pxW, 0)} × ${fmt(pxH, 0)}` },
             { label: "Megapixels", value: `${fmt(mp, 2)} MP` },
-            { label: "Print Size", value: `${fmt(wi, 1)}" \u00D7 ${fmt(hi, 1)}"` },
+            { label: "Print Size", value: `${fmt(wi, 1)}" × ${fmt(hi, 1)}"` },
             { label: "Est. File Size (RGB)", value: `${fmt(fileSize300, 1)} MB` },
           ],
           steps: [
-            `Print size: ${fmt(wi, 1)}" \u00D7 ${fmt(hi, 1)}" at ${fmt(d, 0)} DPI`,
-            `Width in px = ${fmt(wi, 1)} \u00D7 ${fmt(d, 0)} = ${fmt(pxW, 0)} px`,
-            `Height in px = ${fmt(hi, 1)} \u00D7 ${fmt(d, 0)} = ${fmt(pxH, 0)} px`,
-            `Megapixels = ${fmt(pxW, 0)} \u00D7 ${fmt(pxH, 0)} / 1M = ${fmt(mp, 2)} MP`,
-            `Uncompressed RGB = ${fmt(pxW, 0)} \u00D7 ${fmt(pxH, 0)} \u00D7 3 bytes = ${fmt(fileSize300, 1)} MB`,
+            `Print size: ${fmt(wi, 1)}" × ${fmt(hi, 1)}" at ${fmt(d, 0)} DPI`,
+            `Width in px = ${fmt(wi, 1)} × ${fmt(d, 0)} = ${fmt(pxW, 0)} px`,
+            `Height in px = ${fmt(hi, 1)} × ${fmt(d, 0)} = ${fmt(pxH, 0)} px`,
+            `Megapixels = ${fmt(pxW, 0)} × ${fmt(pxH, 0)} / 1M = ${fmt(mp, 2)} MP`,
           ],
         };
       }
       case "compare": {
         const devices = [
-          { name: "iPhone 15 Pro", w: 2556, h: 1179, diag: 6.1 },
-          { name: "iPad Air", w: 2360, h: 1640, diag: 10.9 },
-          { name: "MacBook Pro 14\"", w: 3024, h: 1964, diag: 14.2 },
-          { name: "iMac 24\"", w: 4480, h: 2520, diag: 23.5 },
+          { name: "Samsung S24 Ultra", w: 3088, h: 1440, diag: 6.8 },
+          { name: "iPhone 15 Pro Max", w: 2796, h: 1290, diag: 6.7 },
+          { name: "OnePlus 12", w: 3168, h: 1440, diag: 6.82 },
+          { name: "Pixel 8 Pro", w: 2992, h: 1344, diag: 6.7 },
+          { name: "iPhone 15", w: 2556, h: 1179, diag: 6.1 },
+          { name: "Samsung A55", w: 2340, h: 1080, diag: 6.6 },
+          { name: "Redmi Note 13 Pro", w: 2712, h: 1220, diag: 6.67 },
+          { name: "iPad Air 11\"", w: 2360, h: 1640, diag: 10.9 },
           { name: "Full HD Monitor 24\"", w: 1920, h: 1080, diag: 24 },
           { name: "4K Monitor 27\"", w: 3840, h: 2160, diag: 27 },
-          { name: "Samsung S24 Ultra", w: 3120, h: 1440, diag: 6.8 },
         ];
         return {
           results: devices.map(d => {
             const diagPx = Math.sqrt(d.w * d.w + d.h * d.h);
             const ppi = diagPx / d.diag;
-            return { label: d.name, value: `${fmt(ppi, 0)} PPI (${d.w}\u00D7${d.h})` };
+            return { label: d.name, value: `${fmt(ppi, 0)} PPI (${d.w}×${d.h})` };
           }),
           steps: [
-            `PPI = \u221A(width\u00B2 + height\u00B2) / diagonal`,
+            `PPI = √(width² + height²) / diagonal`,
             ...devices.slice(0, 3).map(d => {
               const diagPx = Math.sqrt(d.w * d.w + d.h * d.h);
-              return `${d.name}: \u221A(${d.w}\u00B2+${d.h}\u00B2) / ${d.diag}" = ${fmt(diagPx / d.diag, 0)} PPI`;
+              return `${d.name}: √(${d.w}²+${d.h}²) / ${d.diag}" = ${fmt(diagPx / d.diag, 0)} PPI`;
             }),
           ],
         };
       }
       default: return { results: [], steps: [] };
     }
-  }, [mode, widthPx, heightPx, diagonal, unit, dpi, widthIn, heightIn]);
+  }, [mode, widthPx, heightPx, diagonal, unit, dpi, widthIn, heightIn, ppiInput]);
 
   return (
     <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Screen DPI / PPI Calculator" icon={Monitor} iconColor="bg-pink-500">
+      <ToolCard title="Mobile DPI / PPI Calculator" icon={Monitor} iconColor="bg-pink-500">
         <ModeToggle modes={[
-          { id: "screen", label: "Screen PPI" },
+          { id: "mobile-ppi", label: "Resolution → PPI" },
+          { id: "mobile-size", label: "PPI → Screen Size" },
+          { id: "screen", label: "Any Screen" },
           { id: "print", label: "Print DPI" },
-          { id: "compare", label: "Compare Devices" },
+          { id: "compare", label: "Compare Phones" },
         ]} mode={mode} setMode={setMode} />
+
         <div className="space-y-3">
-          {mode === "screen" && (
+          {(mode === "mobile-ppi" || mode === "screen") && (
             <>
-              <SolverInput label="Width (px)" value={widthPx} onChange={setWidthPx} placeholder="1920" />
-              <SolverInput label="Height (px)" value={heightPx} onChange={setHeightPx} placeholder="1080" />
-              <SolverInput label={`Diagonal Size (${unit})`} value={diagonal} onChange={setDiagonal} placeholder="15.6" />
-              <SolverSelect label="Diagonal Unit" value={unit} onChange={setUnit} options={[
-                { value: "inch", label: "Inches" }, { value: "cm", label: "Centimeters" },
+              <SolverInput label="Screen Width (px)" value={widthPx} onChange={setWidthPx} placeholder="1080" suffix="px" />
+              <SolverInput label="Screen Height (px)" value={heightPx} onChange={setHeightPx} placeholder="2400" suffix="px" />
+              <SolverInput label={`Screen Size (${unit})`} value={diagonal} onChange={setDiagonal} placeholder="6.5" />
+              <SolverSelect label="Unit" value={unit} onChange={setUnit} options={[
+                { value: "inch", label: "Inches" },
+                { value: "cm", label: "Centimeters" },
               ]} />
+            </>
+          )}
+          {mode === "mobile-size" && (
+            <>
+              <SolverInput label="Screen Width (px)" value={widthPx} onChange={setWidthPx} placeholder="1080" suffix="px" />
+              <SolverInput label="Screen Height (px)" value={heightPx} onChange={setHeightPx} placeholder="2400" suffix="px" />
+              <SolverInput label="PPI (pixels per inch)" value={ppiInput} onChange={setPpiInput} placeholder="405" suffix="PPI" />
             </>
           )}
           {mode === "print" && (
@@ -378,6 +454,20 @@ function DpiPpiCalc() {
             </>
           )}
         </div>
+
+        {mode === "mobile-ppi" && (
+          <div className="mt-3 p-3 bg-pink-500/10 border border-pink-500/20 rounded-xl">
+            <p className="text-xs font-semibold text-pink-500 mb-1">Formula</p>
+            <p className="text-xs text-muted-foreground font-mono">PPI = √(width² + height²) ÷ screen size</p>
+          </div>
+        )}
+        {mode === "mobile-size" && (
+          <div className="mt-3 p-3 bg-pink-500/10 border border-pink-500/20 rounded-xl">
+            <p className="text-xs font-semibold text-pink-500 mb-1">Formula</p>
+            <p className="text-xs text-muted-foreground font-mono">Screen size = √(width² + height²) ÷ PPI</p>
+          </div>
+        )}
+
         <div className="mt-4 space-y-3">
           <StepsDisplay steps={result.steps} />
           <MultiResult results={result.results} />
