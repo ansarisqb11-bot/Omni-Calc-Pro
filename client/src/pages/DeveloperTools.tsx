@@ -1,750 +1,590 @@
-import { useState, useMemo } from "react";
-import { motion } from "framer-motion";
-import { Code, Binary, Hash, Lock, FileText, Server, DollarSign, Youtube, Search, Globe, Wifi } from "lucide-react";
-import { ToolCard, InputField } from "@/components/ToolCard";
+import { useState } from "react";
+import { Code, Binary, Hash, Lock, FileText, Server, DollarSign, Globe, Wifi } from "lucide-react";
+import { DesktopToolGrid, InputPanel, ResultPanel, SummaryCard, BreakdownRow, InputField, ModeSelector } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
 
-type ToolType = "binary" | "ascii" | "base64" | "hash" | "filesize" | "api" | "appcpm" | "youtube" | "seo";
+type ToolType = "base64" | "json" | "regex" | "hash" | "units" | "color" | "timestamp" | "ip" | "bandwidth";
 
 const CURRENCIES = [
-  { code: "INR", symbol: "₹" }, { code: "USD", symbol: "$" },
-  { code: "EUR", symbol: "€" }, { code: "GBP", symbol: "£" },
+  { code: "USD", symbol: "$" }, { code: "EUR", symbol: "€" },
+  { code: "GBP", symbol: "£" }, { code: "INR", symbol: "₹" },
   { code: "JPY", symbol: "¥" }, { code: "CNY", symbol: "¥" },
   { code: "AUD", symbol: "A$" }, { code: "CAD", symbol: "C$" },
   { code: "AED", symbol: "د.إ" }, { code: "SGD", symbol: "S$" },
 ];
-function cs(code: string) { return CURRENCIES.find(c => c.code === code)?.symbol || "$"; }
-function CurrencySelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  return (
-    <select value={value} onChange={e => onChange(e.target.value)}
-      className="bg-muted/50 border border-border rounded-lg px-2 py-1.5 text-sm text-foreground focus:outline-none" data-testid="select-currency">
-      {CURRENCIES.map(c => <option key={c.code} value={c.code}>{c.code} ({c.symbol})</option>)}
-    </select>
-  );
-}
-function ModeBar({ modes, active, onChange, color = "bg-gray-600" }: { modes: { id: string; label: string }[]; active: string; onChange: (id: string) => void; color?: string }) {
-  return (
-    <div className="flex gap-1 p-1 bg-muted rounded-xl mb-4 flex-wrap">
-      {modes.map(m => (
-        <button key={m.id} onClick={() => onChange(m.id)} data-testid={`mode-${m.id}`}
-          className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex-1 ${active === m.id ? `${color} text-white shadow-sm` : "text-muted-foreground hover:text-foreground"}`}>
-          {m.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-function Row({ label, value, hi, accent }: { label: string; value: string; hi?: boolean; accent?: string }) {
-  return (
-    <div className={`flex justify-between items-center p-2.5 rounded-xl ${hi ? "bg-gray-500/15 border border-gray-500/20" : "bg-muted/30"}`}>
-      <span className="text-xs font-semibold text-muted-foreground">{label}</span>
-      <span className={`text-sm font-bold font-mono ${hi ? (accent || "text-gray-300") : "text-foreground"}`}>{value}</span>
-    </div>
-  );
-}
-function fmt(n: number, d = 2) { if (!isFinite(n) || isNaN(n)) return "—"; return parseFloat(n.toFixed(d)).toLocaleString(); }
+const cs = (code: string) => CURRENCIES.find(c => c.code === code)?.symbol || "$";
+const fmt = (n: number, d = 2) => isFinite(n) && !isNaN(n) ? parseFloat(n.toFixed(d)).toLocaleString() : "—";
 
 export default function DeveloperTools() {
-  const [activeTool, setActiveTool] = useState<ToolType>("binary");
+  const [activeTool, setActiveTool] = useState<ToolType>("base64");
   const tools = [
-    { id: "binary", label: "Binary/Hex", icon: Binary },
-    { id: "ascii", label: "ASCII/URL", icon: Code },
-    { id: "base64", label: "Base64", icon: Lock },
+    { id: "base64", label: "Base64", icon: Binary },
+    { id: "json", label: "JSON", icon: FileText },
+    { id: "regex", label: "Regex", icon: Code },
     { id: "hash", label: "Hash", icon: Hash },
-    { id: "filesize", label: "File Size", icon: FileText },
-    { id: "api", label: "API Cost", icon: Server },
-    { id: "appcpm", label: "CPM/RPM", icon: DollarSign },
-    { id: "youtube", label: "YouTube", icon: Youtube },
-    { id: "seo", label: "SEO", icon: Search },
+    { id: "units", label: "Data Units", icon: Server },
+    { id: "color", label: "Color", icon: Globe },
+    { id: "timestamp", label: "Timestamp", icon: Code },
+    { id: "ip", label: "IP / CIDR", icon: Wifi },
+    { id: "bandwidth", label: "Bandwidth", icon: DollarSign },
   ];
   return (
-    <PageWrapper title="Developer Tools" subtitle="IT and creator calculators" accentColor="bg-gray-600" tools={tools} activeTool={activeTool} onToolChange={(id) => setActiveTool(id as ToolType)}>
-      {activeTool === "binary" && <BinaryConverter />}
-      {activeTool === "ascii" && <ASCIIConverter />}
+    <PageWrapper title="Developer Tools" subtitle="Encoding, hashing, conversion and network utilities" accentColor="bg-violet-600" tools={tools} activeTool={activeTool} onToolChange={id => setActiveTool(id as ToolType)}>
       {activeTool === "base64" && <Base64Tool />}
-      {activeTool === "hash" && <HashGenerator />}
-      {activeTool === "filesize" && <FileSizeEstimator />}
-      {activeTool === "api" && <APIRateCost />}
-      {activeTool === "appcpm" && <CPMCalculator />}
-      {activeTool === "youtube" && <YouTubeEarnings />}
-      {activeTool === "seo" && <SEOChecker />}
+      {activeTool === "json" && <JsonTool />}
+      {activeTool === "regex" && <RegexTool />}
+      {activeTool === "hash" && <HashInfo />}
+      {activeTool === "units" && <DataUnits />}
+      {activeTool === "color" && <ColorConverter />}
+      {activeTool === "timestamp" && <TimestampTool />}
+      {activeTool === "ip" && <IpCIDR />}
+      {activeTool === "bandwidth" && <BandwidthCost />}
     </PageWrapper>
   );
 }
 
-function BinaryConverter() {
-  const [mode, setMode] = useState("number");
-  const [input, setInput] = useState("255");
-  const [inputType, setInputType] = useState<"decimal" | "binary" | "hex" | "octal">("decimal");
-  const [ipInput, setIpInput] = useState("192.168.1.1");
-  const [colorHex, setColorHex] = useState("#1a2b3c");
+function Base64Tool() {
+  const [mode, setMode] = useState("encode");
+  const [input, setInput] = useState("Hello, World!");
+  const [urlSafe, setUrlSafe] = useState(false);
 
-  const convert = () => {
+  const encode = (s: string) => {
     try {
-      let decimal: number;
-      if (inputType === "decimal") decimal = parseInt(input, 10);
-      else if (inputType === "binary") decimal = parseInt(input, 2);
-      else if (inputType === "octal") decimal = parseInt(input, 8);
-      else decimal = parseInt(input, 16);
-      if (isNaN(decimal)) return { decimal: "Invalid", binary: "Invalid", hex: "Invalid", octal: "Invalid", signed8: "Invalid" };
+      let out = btoa(unescape(encodeURIComponent(s)));
+      if (urlSafe) out = out.replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+      return out;
+    } catch { return "Error encoding — check input characters"; }
+  };
+  const decode = (s: string) => {
+    try {
+      let padded = s.replace(/-/g, "+").replace(/_/g, "/");
+      while (padded.length % 4) padded += "=";
+      return decodeURIComponent(escape(atob(padded)));
+    } catch { return "Error decoding — invalid Base64 string"; }
+  };
+
+  const output = mode === "encode" ? encode(input) : decode(input);
+  const byteLen = new TextEncoder().encode(input).length;
+  const ratio = byteLen > 0 ? output.length / byteLen : 0;
+
+  return (
+    <DesktopToolGrid wide
+      inputs={
+        <InputPanel title="Input" icon={Binary} iconColor="bg-violet-500">
+          <ModeSelector modes={[{ id:"encode", label:"Encode" }, { id:"decode", label:"Decode" }]} active={mode} onChange={setMode} />
+          <div>
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">{mode === "encode" ? "Plain Text" : "Base64 String"}</label>
+            <textarea value={input} onChange={e => setInput(e.target.value)} rows={6}
+              className="w-full bg-muted/30 border border-border rounded-xl px-4 py-3 text-sm text-foreground font-mono placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+              placeholder={mode === "encode" ? "Enter text to encode..." : "Enter Base64 to decode..."} />
+          </div>
+          <div className="flex items-center gap-2">
+            <input type="checkbox" id="urlsafe" checked={urlSafe} onChange={e => setUrlSafe(e.target.checked)} className="accent-primary" />
+            <label htmlFor="urlsafe" className="text-sm text-muted-foreground cursor-pointer">URL-safe mode (no +, /, =)</label>
+          </div>
+        </InputPanel>
+      }
+      results={
+        <ResultPanel label="Output" primary={`${output.length} chars`}
+          summaries={<>
+            <SummaryCard label="Input bytes" value={`${byteLen}`} />
+            <SummaryCard label="Size ratio" value={`${fmt(ratio, 2)}×`} />
+          </>}
+        >
+          <div className="font-mono text-xs bg-muted/30 rounded-xl p-4 break-all max-h-40 overflow-y-auto text-foreground/90 select-all leading-relaxed">{output || "—"}</div>
+          <BreakdownRow label="Input length" value={`${input.length} chars`} dot="bg-violet-400" />
+          <BreakdownRow label="Output length" value={`${output.length} chars`} dot="bg-blue-400" />
+          <BreakdownRow label="Input bytes" value={`${byteLen} bytes`} dot="bg-green-500" />
+          <BreakdownRow label="Overhead" value={`${fmt((ratio-1)*100, 1)}%`} />
+        </ResultPanel>
+      }
+    />
+  );
+}
+
+function JsonTool() {
+  const [mode, setMode] = useState("format");
+  const [input, setInput] = useState('{"name":"John","age":30,"city":"Mumbai","active":true}');
+  const [indent, setIndent] = useState("2");
+
+  let output = ""; let error = ""; let parsed: any = null;
+  try {
+    parsed = JSON.parse(input);
+    if (mode === "format") output = JSON.stringify(parsed, null, parseInt(indent)||2);
+    else if (mode === "minify") output = JSON.stringify(parsed);
+    else if (mode === "analyze") output = JSON.stringify(parsed, null, 2);
+  } catch (e: any) { error = e.message; }
+
+  const countKeys = (obj: any, depth = 0): number => {
+    if (typeof obj !== "object" || obj === null) return 0;
+    const keys = Object.keys(obj);
+    return keys.length + keys.reduce((sum, k) => sum + countKeys(obj[k], depth+1), 0);
+  };
+  const keyCount = parsed ? countKeys(parsed) : 0;
+
+  return (
+    <DesktopToolGrid wide
+      inputs={
+        <InputPanel title="JSON Input" icon={FileText} iconColor="bg-yellow-500">
+          <ModeSelector modes={[{ id:"format", label:"Format" }, { id:"minify", label:"Minify" }, { id:"analyze", label:"Analyze" }]} active={mode} onChange={setMode} />
+          <textarea value={input} onChange={e => setInput(e.target.value)} rows={8}
+            className={`w-full bg-muted/30 border rounded-xl px-4 py-3 text-xs text-foreground font-mono focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none ${error ? "border-red-400" : "border-border"}`}
+            placeholder="Paste JSON here..." />
+          {mode === "format" && <InputField label="Indent Spaces" value={indent} onChange={setIndent} type="number" />}
+          {error && <p className="text-xs text-red-400 font-mono">{error}</p>}
+        </InputPanel>
+      }
+      results={
+        <ResultPanel label="Result" primary={error ? "Invalid JSON" : `${output.length} chars`}
+          summaries={<>
+            <SummaryCard label="Total Keys" value={`${keyCount}`} />
+            <SummaryCard label={`Saved`} value={error ? "—" : `${Math.max(0, input.length - output.length)} chars`} />
+          </>}
+        >
+          {!error ? (
+            <div className="font-mono text-xs bg-muted/30 rounded-xl p-4 max-h-48 overflow-y-auto text-foreground/90 select-all leading-relaxed whitespace-pre">{output}</div>
+          ) : (
+            <div className="font-mono text-xs bg-red-500/10 rounded-xl p-4 text-red-400">{error}</div>
+          )}
+          <BreakdownRow label="Input chars" value={`${input.length}`} dot="bg-yellow-400" />
+          <BreakdownRow label="Output chars" value={error ? "—" : `${output.length}`} dot="bg-blue-400" />
+          <BreakdownRow label="Total keys" value={`${keyCount}`} dot="bg-green-500" />
+        </ResultPanel>
+      }
+    />
+  );
+}
+
+function RegexTool() {
+  const [pattern, setPattern] = useState("[A-Z][a-z]+");
+  const [flags, setFlags] = useState("g");
+  const [testText, setTestText] = useState("Hello World from Mumbai, India. Nice Weather Today!");
+
+  let matches: RegExpMatchArray[] = []; let error = "";
+  try {
+    const re = new RegExp(pattern, flags);
+    let m; const src = flags.includes("g");
+    if (src) {
+      while ((m = re.exec(testText)) !== null) { matches.push([...m] as RegExpMatchArray); if (matches.length > 50) break; }
+    } else {
+      m = testText.match(re);
+      if (m) matches.push([...m] as RegExpMatchArray);
+    }
+  } catch (e: any) { error = e.message; }
+
+  const highlighted = () => {
+    if (error || !pattern) return testText;
+    try {
+      return testText.replace(new RegExp(pattern, flags.replace("g","") + "g"), m => `<mark class="bg-primary/30 text-primary rounded px-0.5">${m}</mark>`);
+    } catch { return testText; }
+  };
+
+  const allFlags = ["g","i","m","s","u"];
+
+  return (
+    <DesktopToolGrid wide
+      inputs={
+        <InputPanel title="Regex Parameters" icon={Code} iconColor="bg-blue-500">
+          <InputField label="Pattern" value={pattern} onChange={setPattern} placeholder="e.g. [A-Z][a-z]+" />
+          <div>
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Flags</label>
+            <div className="flex gap-1.5">
+              {allFlags.map(f => (
+                <button key={f} onClick={() => setFlags(prev => prev.includes(f) ? prev.replace(f,"") : prev+f)}
+                  className={`w-9 h-9 rounded-lg text-xs font-bold font-mono ${flags.includes(f) ? "bg-blue-500 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{f}</button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Test Text</label>
+            <textarea value={testText} onChange={e => setTestText(e.target.value)} rows={5}
+              className="w-full bg-muted/30 border border-border rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" />
+          </div>
+          {error && <p className="text-xs text-red-400 font-mono">{error}</p>}
+        </InputPanel>
+      }
+      results={
+        <ResultPanel label="Matches" primary={`${matches.length}`} primarySub="found"
+          summaries={<>
+            <SummaryCard label="Pattern" value={`/${pattern}/${flags}`} />
+            <SummaryCard label="Text Length" value={`${testText.length} chars`} />
+          </>}
+        >
+          <div className="text-sm leading-relaxed bg-muted/20 rounded-xl p-3 font-mono text-xs break-all" dangerouslySetInnerHTML={{ __html: highlighted() }} />
+          <div className="mt-2 space-y-0">
+            {matches.slice(0, 10).map((m, i) => (
+              <BreakdownRow key={i} label={`Match ${i+1}`} value={`"${m[0]}"`} dot="bg-blue-400" />
+            ))}
+            {matches.length > 10 && <BreakdownRow label="..." value={`+${matches.length-10} more`} />}
+          </div>
+        </ResultPanel>
+      }
+    />
+  );
+}
+
+function HashInfo() {
+  const [input, setInput] = useState("Hello, World!");
+
+  const algorithms = [
+    { name: "MD5", bits: 128, note: "❌ Insecure — collision vulnerable" },
+    { name: "SHA-1", bits: 160, note: "❌ Deprecated — use SHA-2+" },
+    { name: "SHA-256", bits: 256, note: "✅ Secure — recommended" },
+    { name: "SHA-384", bits: 384, note: "✅ Strong — good for TLS" },
+    { name: "SHA-512", bits: 512, note: "✅ Very strong — max security" },
+    { name: "bcrypt", bits: null, note: "✅ Best for passwords" },
+    { name: "Argon2", bits: null, note: "✅ Modern password hashing" },
+    { name: "BLAKE3", bits: 256, note: "⚡ Fast + secure" },
+  ];
+  const strLen = new TextEncoder().encode(input).length;
+
+  return (
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Hash Input" icon={Hash} iconColor="bg-orange-500">
+          <div>
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Text to Hash</label>
+            <textarea value={input} onChange={e => setInput(e.target.value)} rows={5}
+              className="w-full bg-muted/30 border border-border rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" />
+          </div>
+          <div className="text-xs text-muted-foreground p-3 bg-muted/20 rounded-xl leading-relaxed">
+            Input: {input.length} chars / {strLen} bytes<br/>
+            Note: Browser-based hashing is limited. Use server-side for production.
+          </div>
+        </InputPanel>
+      }
+      results={
+        <ResultPanel label="Algorithm Guide" primary={`${strLen} bytes`} primarySub="input size"
+          summaries={<>
+            <SummaryCard label="Recommended" value="SHA-256" accent="text-green-500" />
+            <SummaryCard label="For Passwords" value="bcrypt/Argon2" accent="text-green-500" />
+          </>}
+          tip="Never use MD5 or SHA-1 for security. Use SHA-256+ for data integrity, bcrypt/Argon2 for passwords."
+        >
+          {algorithms.map(a => (
+            <BreakdownRow key={a.name} label={a.name} value={a.bits ? `${a.bits} bits` : "variable"} dot={a.note.startsWith("✅") ? "bg-green-500" : a.note.startsWith("⚡") ? "bg-blue-400" : "bg-red-400"} />
+          ))}
+        </ResultPanel>
+      }
+    />
+  );
+}
+
+function DataUnits() {
+  const [value, setValue] = useState("1"); const [fromUnit, setFromUnit] = useState("GB");
+
+  const units: Record<string, number> = {
+    Bit:1, Byte:8, KB:8*1024, MB:8*1024**2, GB:8*1024**3,
+    TB:8*1024**4, PB:8*1024**5, Kbit:1024, Mbit:1024**2, Gbit:1024**3, Tbit:1024**4,
+  };
+  const inBits = (parseFloat(value)||0) * (units[fromUnit]||1);
+  const display = Object.entries(units).filter(([k]) => k !== fromUnit);
+
+  return (
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Data Unit Input" icon={Server} iconColor="bg-teal-500">
+          <InputField label="Value" value={value} onChange={setValue} type="number" />
+          <div>
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">From Unit</label>
+            <div className="flex flex-wrap gap-1.5">
+              {Object.keys(units).map(u => (
+                <button key={u} onClick={() => setFromUnit(u)} className={`px-3 py-1.5 rounded-lg text-xs font-bold font-mono ${fromUnit === u ? "bg-teal-500 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{u}</button>
+              ))}
+            </div>
+          </div>
+        </InputPanel>
+      }
+      results={
+        <ResultPanel label="Conversion Results" primary={`${(inBits).toLocaleString(undefined, { maximumFractionDigits: 0 })} bits`}>
+          {display.map(([unit, factor]) => {
+            const converted = inBits / factor;
+            const formatted = converted >= 1000 ? converted.toLocaleString(undefined, { maximumFractionDigits: 2 }) : converted.toPrecision(4);
+            return <BreakdownRow key={unit} label={unit} value={formatted} dot="bg-teal-400" />;
+          })}
+        </ResultPanel>
+      }
+    />
+  );
+}
+
+function ColorConverter() {
+  const [mode, setMode] = useState("hex");
+  const [hex, setHex] = useState("#22C55E");
+  const [r, setR] = useState("34"); const [g, setG] = useState("197"); const [b, setB] = useState("94");
+  const [h, setH] = useState("142"); const [s, setS] = useState("71"); const [l, setL] = useState("45");
+
+  const hexToRgb = (hex: string) => {
+    const clean = hex.replace("#","");
+    const n = parseInt(clean, 16);
+    return { r:(n>>16)&255, g:(n>>8)&255, b:n&255 };
+  };
+  const rgbToHex = (r:number,g:number,b:number) => "#"+[r,g,b].map(v=>Math.min(255,Math.max(0,v)).toString(16).padStart(2,"0")).join("").toUpperCase();
+  const rgbToHsl = (r:number,g:number,b:number) => {
+    const rr=r/255,gg=g/255,bb=b/255;
+    const max=Math.max(rr,gg,bb),min=Math.min(rr,gg,bb);
+    let h=0,s=0; const l=(max+min)/2;
+    if (max!==min) { const d=max-min; s=l>0.5?d/(2-max-min):d/(max+min);
+      h=max===rr?((gg-bb)/d+(gg<bb?6:0)):max===gg?((bb-rr)/d+2):((rr-gg)/d+4); h/=6; }
+    return { h:Math.round(h*360), s:Math.round(s*100), l:Math.round(l*100) };
+  };
+
+  let displayHex=hex; let displayR=parseInt(r)||0; let displayG=parseInt(g)||0; let displayB=parseInt(b)||0;
+  if (mode==="hex") { const rgb=hexToRgb(hex); displayR=rgb.r; displayG=rgb.g; displayB=rgb.b; }
+  else if (mode==="rgb") { displayHex=rgbToHex(displayR,displayG,displayB); }
+  const hsl = rgbToHsl(displayR,displayG,displayB);
+  const safeHex = displayHex.match(/^#[0-9A-Fa-f]{6}$/) ? displayHex : "#22C55E";
+
+  return (
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Color Input" icon={Globe} iconColor="bg-pink-500">
+          <ModeSelector modes={[{ id:"hex", label:"HEX" }, { id:"rgb", label:"RGB" }]} active={mode} onChange={setMode} />
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-2xl border-2 border-border shadow-inner flex-shrink-0" style={{ backgroundColor: safeHex }} />
+            <div className="flex-1">
+              {mode === "hex" ? (
+                <InputField label="HEX Color" value={hex} onChange={setHex} placeholder="#22C55E" />
+              ) : (
+                <div className="grid grid-cols-3 gap-2">
+                  <InputField label="R" value={r} onChange={setR} type="number" />
+                  <InputField label="G" value={g} onChange={setG} type="number" />
+                  <InputField label="B" value={b} onChange={setB} type="number" />
+                </div>
+              )}
+            </div>
+          </div>
+        </InputPanel>
+      }
+      results={
+        <ResultPanel label="Color Values" primary={displayHex.toUpperCase()}
+          summaries={<>
+            <SummaryCard label="RGB" value={`${displayR}, ${displayG}, ${displayB}`} />
+            <SummaryCard label="HSL" value={`${hsl.h}° ${hsl.s}% ${hsl.l}%`} accent="text-pink-500" />
+          </>}
+        >
+          <BreakdownRow label="HEX" value={displayHex.toUpperCase()} dot="bg-pink-400" bold />
+          <BreakdownRow label="RGB" value={`rgb(${displayR}, ${displayG}, ${displayB})`} dot="bg-blue-400" />
+          <BreakdownRow label="HSL" value={`hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`} dot="bg-green-500" />
+          <BreakdownRow label="CSS rgba" value={`rgba(${displayR},${displayG},${displayB},1)`} dot="bg-purple-400" />
+          <BreakdownRow label="R" value={`${displayR} / 0x${displayR.toString(16).padStart(2,"0").toUpperCase()}`} />
+          <BreakdownRow label="G" value={`${displayG} / 0x${displayG.toString(16).padStart(2,"0").toUpperCase()}`} />
+          <BreakdownRow label="B" value={`${displayB} / 0x${displayB.toString(16).padStart(2,"0").toUpperCase()}`} />
+        </ResultPanel>
+      }
+    />
+  );
+}
+
+function TimestampTool() {
+  const [mode, setMode] = useState("now");
+  const [tsInput, setTsInput] = useState(String(Math.floor(Date.now()/1000)));
+  const [dateInput, setDateInput] = useState(new Date().toISOString().slice(0,19));
+
+  const now = Date.now();
+  const ts = mode === "now" ? Math.floor(now/1000) : mode === "toDate" ? parseInt(tsInput)||0 : Math.floor(new Date(dateInput+"Z").getTime()/1000);
+  const msTs = ts * 1000;
+  const d = new Date(msTs);
+  const isValid = !isNaN(d.getTime());
+
+  return (
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Timestamp Input" icon={Code} iconColor="bg-cyan-500">
+          <ModeSelector modes={[{ id:"now", label:"Current Time" }, { id:"toDate", label:"Unix → Date" }, { id:"fromDate", label:"Date → Unix" }]} active={mode} onChange={setMode} />
+          {mode === "toDate" && <InputField label="Unix Timestamp (sec)" value={tsInput} onChange={setTsInput} />}
+          {mode === "fromDate" && (
+            <div>
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Date Time (UTC)</label>
+              <input type="datetime-local" value={dateInput} onChange={e => setDateInput(e.target.value)}
+                className="w-full bg-muted/30 border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30" />
+            </div>
+          )}
+          {mode === "now" && (
+            <div className="text-sm text-muted-foreground p-3 bg-muted/20 rounded-xl">Shows current UTC timestamp and conversions in real-time.</div>
+          )}
+        </InputPanel>
+      }
+      results={
+        <ResultPanel label="Unix Timestamp" primary={`${ts}`} primarySub="seconds"
+          summaries={<>
+            <SummaryCard label="MS Timestamp" value={`${msTs}`} />
+            <SummaryCard label="Valid" value={isValid ? "✅ Yes" : "❌ No"} accent={isValid ? "text-green-500" : "text-red-500"} />
+          </>}
+        >
+          {isValid && (
+            <>
+              <BreakdownRow label="Unix (sec)" value={`${ts}`} dot="bg-cyan-400" bold />
+              <BreakdownRow label="Unix (ms)" value={`${msTs}`} dot="bg-blue-400" />
+              <BreakdownRow label="UTC Date" value={d.toUTCString()} dot="bg-green-500" />
+              <BreakdownRow label="ISO 8601" value={d.toISOString()} dot="bg-purple-400" />
+              <BreakdownRow label="Local" value={d.toLocaleString()} dot="bg-amber-400" />
+              <BreakdownRow label="Day of Week" value={d.toLocaleDateString("en",{ weekday:"long" })} />
+              <BreakdownRow label="Week Number" value={`Week ${Math.ceil(d.getDate()/7)}`} />
+            </>
+          )}
+        </ResultPanel>
+      }
+    />
+  );
+}
+
+function IpCIDR() {
+  const [cidr, setCidr] = useState("192.168.1.0/24");
+  const [mode, setMode] = useState("cidr");
+
+  const parseCIDR = (input: string) => {
+    try {
+      const [ipStr, prefixStr] = input.split("/");
+      const prefix = parseInt(prefixStr)||24;
+      const parts = ipStr.split(".").map(Number);
+      if (parts.length !== 4 || parts.some(p => isNaN(p) || p < 0 || p > 255)) return null;
+      const ip32 = (parts[0]<<24)|(parts[1]<<16)|(parts[2]<<8)|parts[3];
+      const mask32 = prefix === 0 ? 0 : (~0 << (32-prefix)) >>> 0;
+      const net32 = (ip32 & mask32) >>> 0;
+      const bc32 = (net32 | ~mask32) >>> 0;
+      const toIp = (n: number) => [(n>>>24)&255,(n>>>16)&255,(n>>>8)&255,n&255].join(".");
+      const hosts = prefix >= 31 ? Math.pow(2,32-prefix) : Math.max(0, Math.pow(2,32-prefix)-2);
       return {
-        decimal: decimal.toString(), binary: decimal.toString(2),
-        hex: "0x" + decimal.toString(16).toUpperCase(),
-        octal: "0o" + decimal.toString(8),
-        signed8: decimal > 127 ? String(decimal - 256) : decimal.toString(),
+        network: toIp(net32), broadcast: toIp(bc32),
+        first: toIp(net32+1), last: toIp(bc32-1),
+        mask: toIp(mask32), wildcard: toIp(~mask32 >>> 0),
+        hosts, prefix,
+        ipClass: parts[0] < 128 ? "A" : parts[0] < 192 ? "B" : parts[0] < 224 ? "C" : parts[0] < 240 ? "D" : "E",
+        isPrivate: (parts[0]===10)||(parts[0]===172&&parts[1]>=16&&parts[1]<=31)||(parts[0]===192&&parts[1]===168),
       };
-    } catch { return { decimal: "Error", binary: "Error", hex: "Error", octal: "Error", signed8: "Error" }; }
-  };
-
-  const convertIP = () => {
-    try {
-      const parts = ipInput.split(".").map(Number);
-      if (parts.length !== 4 || parts.some(p => isNaN(p) || p < 0 || p > 255)) return { binary: "Invalid IP", decimal: "", hex: "" };
-      const binary = parts.map(p => p.toString(2).padStart(8, "0")).join(".");
-      const decimal = (parts[0] << 24 >>> 0) + (parts[1] << 16) + (parts[2] << 8) + parts[3];
-      const hex = parts.map(p => p.toString(16).padStart(2, "0").toUpperCase()).join(":");
-      return { binary, decimal: decimal.toString(), hex };
-    } catch { return { binary: "Error", decimal: "", hex: "" }; }
-  };
-
-  const convertColor = () => {
-    try {
-      const hex = colorHex.replace("#", "");
-      if (hex.length !== 6) return null;
-      const r = parseInt(hex.slice(0, 2), 16);
-      const g = parseInt(hex.slice(2, 4), 16);
-      const b = parseInt(hex.slice(4, 6), 16);
-      const max = Math.max(r, g, b) / 255; const min = Math.min(r, g, b) / 255;
-      const l = (max + min) / 2;
-      const s = max === min ? 0 : l < 0.5 ? (max - min) / (max + min) : (max - min) / (2 - max - min);
-      const h = max === min ? 0 : max === r / 255 ? ((g - b) / 255 / (max - min)) % 6 * 60 : max === g / 255 ? ((b - r) / 255 / (max - min) + 2) * 60 : ((r - g) / 255 / (max - min) + 4) * 60;
-      return { r, g, b, hex: hex.toUpperCase(), hsl: `hsl(${Math.round(h < 0 ? h + 360 : h)}, ${Math.round(s * 100)}%, ${Math.round(l * 100)}%)`, rgb: `rgb(${r}, ${g}, ${b})` };
     } catch { return null; }
   };
 
-  const result = convert();
-  const ipResult = convertIP();
-  const colorResult = convertColor();
+  const info = parseCIDR(cidr);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Number Base & IP Converter" icon={Binary} iconColor="bg-blue-500">
-        <ModeBar modes={[{ id: "number", label: "Number Base" }, { id: "ip", label: "IP Address" }, { id: "color", label: "Color Hex" }]} active={mode} onChange={setMode} color="bg-blue-600" />
-        {mode === "number" && (
-          <div className="space-y-3">
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground uppercase mb-1.5 block">Input Format</label>
-              <div className="flex gap-1.5">
-                {(["decimal", "binary", "hex", "octal"] as const).map(t => (
-                  <button key={t} onClick={() => setInputType(t)} className={`flex-1 py-2 rounded-lg text-xs capitalize font-bold ${inputType === t ? "bg-blue-500 text-white" : "bg-muted text-muted-foreground"}`} data-testid={`type-${t}`}>{t}</button>
-                ))}
-              </div>
-            </div>
-            <InputField label={`Input (${inputType})`} value={input} onChange={setInput} />
-            <div className="space-y-2">
-              <Row label="Decimal" value={result.decimal} hi />
-              <Row label="Binary" value={result.binary} />
-              <Row label="Hexadecimal" value={result.hex} />
-              <Row label="Octal" value={result.octal} />
-              <Row label="Signed 8-bit" value={result.signed8} />
-            </div>
-          </div>
-        )}
-        {mode === "ip" && (
-          <div className="space-y-3">
-            <InputField label="IPv4 Address" value={ipInput} onChange={setIpInput} placeholder="192.168.1.1" />
-            <div className="space-y-2">
-              <Row label="Binary (dotted)" value={ipResult.binary} hi />
-              <Row label="32-bit Decimal" value={ipResult.decimal} />
-              <Row label="Hex (colon)" value={ipResult.hex} />
-            </div>
-            <div className="p-2.5 bg-muted/20 rounded-xl text-xs text-muted-foreground">
-              <p className="font-bold mb-1">IP Classes:</p>
-              <p>• Class A: 1.0.0.0 – 126.255.255.255</p>
-              <p>• Class B: 128.0.0.0 – 191.255.255.255</p>
-              <p>• Class C: 192.0.0.0 – 223.255.255.255</p>
-              <p>• Private: 10.x.x.x | 172.16-31.x.x | 192.168.x.x</p>
-            </div>
-          </div>
-        )}
-        {mode === "color" && (
-          <div className="space-y-3">
-            <div className="flex gap-3 items-center">
-              <input type="color" value={colorHex} onChange={e => setColorHex(e.target.value)} className="w-16 h-12 rounded-xl border-0 cursor-pointer bg-transparent" data-testid="input-color" />
-              <InputField label="Hex Color" value={colorHex} onChange={setColorHex} placeholder="#1a2b3c" />
-            </div>
-            {colorResult && (
-              <div className="space-y-2">
-                <div className="w-full h-12 rounded-xl border border-border" style={{ backgroundColor: colorHex }} />
-                <Row label="HEX" value={`#${colorResult.hex}`} hi />
-                <Row label="RGB" value={colorResult.rgb} />
-                <Row label="HSL" value={colorResult.hsl} />
-                <Row label="R G B values" value={`${colorResult.r} / ${colorResult.g} / ${colorResult.b}`} />
-              </div>
-            )}
-          </div>
-        )}
-      </ToolCard>
-    </div>
-  );
-}
-
-function ASCIIConverter() {
-  const [mode, setMode] = useState("ascii");
-  const [text, setText] = useState("Hello, World!");
-
-  const toAscii = () => text.split("").map(c => c.charCodeAt(0)).join(" ");
-  const fromAscii = () => { try { return text.split(/\s+/).map(n => String.fromCharCode(parseInt(n))).join(""); } catch { return "Invalid"; } }
-  const toURL = () => encodeURIComponent(text);
-  const fromURL = () => { try { return decodeURIComponent(text); } catch { return "Invalid URL encoding"; } }
-  const toHTMLEntity = () => text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-  const fromHTMLEntity = () => text.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#039;/g, "'");
-  const toUnicode = () => text.split("").map(c => "U+" + c.codePointAt(0)?.toString(16).toUpperCase().padStart(4, "0")).join(" ");
-
-  const results: Record<string, () => string> = { ascii: toAscii, "from_ascii": fromAscii, "url_encode": toURL, "url_decode": fromURL, "html_encode": toHTMLEntity, "html_decode": fromHTMLEntity, "unicode": toUnicode };
-
-  return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="ASCII / URL / Unicode Converter" icon={Code} iconColor="bg-purple-500">
-        <ModeBar modes={[{ id: "ascii", label: "→ ASCII" }, { id: "from_ascii", label: "ASCII →" }, { id: "url_encode", label: "URL Encode" }, { id: "url_decode", label: "URL Decode" }, { id: "html_encode", label: "HTML Enc" }, { id: "unicode", label: "Unicode" }]} active={mode} onChange={setMode} color="bg-purple-600" />
-        <div>
-          <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Input</label>
-          <textarea value={text} onChange={e => setText(e.target.value)} className="w-full bg-muted border border-border rounded-xl px-4 py-3 min-h-[80px] text-sm resize-none focus:outline-none" data-testid="textarea-input" />
-        </div>
-        <div className="mt-3 p-4 bg-muted/30 rounded-xl">
-          <div className="text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Result</div>
-          <div className="break-all font-mono text-xs text-purple-400 max-h-32 overflow-y-auto">{(results[mode] || toAscii)()}</div>
-        </div>
-        <div className="flex gap-2 mt-2">
-          <button onClick={() => { navigator.clipboard.writeText((results[mode] || toAscii)()); }} className="flex-1 py-2 bg-muted rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground transition-all">Copy Result</button>
-          <button onClick={() => setText((results[mode] || toAscii)())} className="flex-1 py-2 bg-muted rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground transition-all">Use as Input</button>
-        </div>
-      </ToolCard>
-    </div>
-  );
-}
-
-function Base64Tool() {
-  const [input, setInput] = useState("Hello World");
-  const [mode, setMode] = useState<"encode" | "decode" | "url">("encode");
-  const convert = () => {
-    try {
-      if (mode === "encode") return btoa(unescape(encodeURIComponent(input)));
-      if (mode === "decode") return decodeURIComponent(escape(atob(input)));
-      return btoa(unescape(encodeURIComponent(input))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-    } catch { return "Invalid input"; }
-  };
-  return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Base64 Encoder/Decoder" icon={Lock} iconColor="bg-indigo-500">
-        <ModeBar modes={[{ id: "encode", label: "Encode" }, { id: "decode", label: "Decode" }, { id: "url", label: "URL-Safe Base64" }]} active={mode} onChange={(m) => setMode(m as any)} color="bg-indigo-600" />
-        <div>
-          <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Input</label>
-          <textarea value={input} onChange={e => setInput(e.target.value)} className="w-full bg-muted border border-border rounded-xl px-4 py-3 min-h-[80px] text-sm resize-none focus:outline-none" data-testid="textarea-input" />
-        </div>
-        <div className="mt-3 p-4 bg-muted/30 rounded-xl">
-          <div className="text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Result</div>
-          <div className="break-all font-mono text-xs text-indigo-400">{convert()}</div>
-        </div>
-        <div className="flex gap-2 mt-2">
-          <button onClick={() => navigator.clipboard.writeText(convert())} className="flex-1 py-2 bg-muted rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground">Copy</button>
-          <button onClick={() => setInput(convert())} className="flex-1 py-2 bg-muted rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground">Use as Input</button>
-        </div>
-        <div className="p-2 bg-muted/20 rounded-xl text-xs text-muted-foreground mt-2">
-          {mode === "encode" ? "Converts text to Base64 (padded)" : mode === "decode" ? "Decodes Base64 back to text" : "URL-safe variant — replaces + with - and / with _"}
-        </div>
-      </ToolCard>
-    </div>
-  );
-}
-
-function HashGenerator() {
-  const [input, setInput] = useState("Hello World");
-  const [mode, setMode] = useState("hash");
-  const [password, setPassword] = useState("");
-
-  const simpleHash = (str: string, algorithm: string) => {
-    let hash = 5381;
-    for (let i = 0; i < str.length; i++) { hash = ((hash << 5) + hash) + str.charCodeAt(i); hash = hash & hash; }
-    const hex = Math.abs(hash).toString(16).padStart(8, "0");
-    if (algorithm === "md5") return hex.repeat(4);
-    if (algorithm === "sha1") return (hex + hex.split("").reverse().join("")).repeat(2).slice(0, 40);
-    if (algorithm === "sha256") return (hex.repeat(8)).slice(0, 64);
-    return hex.repeat(16).slice(0, 128);
-  };
-
-  const checkPassword = (pwd: string) => {
-    const hasUpper = /[A-Z]/.test(pwd); const hasLower = /[a-z]/.test(pwd);
-    const hasNum = /[0-9]/.test(pwd); const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(pwd);
-    const len = pwd.length;
-    const score = [len >= 8, len >= 12, hasUpper, hasLower, hasNum, hasSpecial].filter(Boolean).length;
-    const level = score <= 2 ? { label: "Weak", color: "text-red-400" } : score <= 4 ? { label: "Medium", color: "text-yellow-400" } : { label: "Strong", color: "text-emerald-400" };
-    const entropy = len > 0 ? len * Math.log2((hasUpper ? 26 : 0) + (hasLower ? 26 : 0) + (hasNum ? 10 : 0) + (hasSpecial ? 32 : 0) || 26) : 0;
-    return { level, score, hasUpper, hasLower, hasNum, hasSpecial, entropy, len };
-  };
-
-  const pwdResult = checkPassword(password);
-
-  return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Hash & Password Tool" icon={Hash} iconColor="bg-rose-500">
-        <ModeBar modes={[{ id: "hash", label: "Hash Generator" }, { id: "password", label: "Password Strength" }]} active={mode} onChange={setMode} color="bg-rose-600" />
-        {mode === "hash" ? (
-          <>
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Input Text</label>
-              <textarea value={input} onChange={e => setInput(e.target.value)} className="w-full bg-muted border border-border rounded-xl px-4 py-3 min-h-[80px] text-sm resize-none focus:outline-none" data-testid="textarea-hash-input" />
-            </div>
-            <div className="space-y-2 mt-2">
-              {[{ algo: "md5", label: "MD5 (32 hex)", color: "text-rose-400" }, { algo: "sha1", label: "SHA1 (40 hex)", color: "text-blue-400" }, { algo: "sha256", label: "SHA256 (64 hex)", color: "text-purple-400" }, { algo: "sha512", label: "SHA512 (128 hex)", color: "text-emerald-400" }].map(h => (
-                <div key={h.algo} className="p-3 bg-muted/30 rounded-xl">
-                  <p className="text-[10px] text-muted-foreground mb-1">{h.label}</p>
-                  <p className={`font-mono text-[10px] break-all ${h.color}`}>{simpleHash(input, h.algo)}</p>
-                </div>
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="IP / CIDR Input" icon={Wifi} iconColor="bg-emerald-500">
+          <ModeSelector modes={[{ id:"cidr", label:"CIDR" }, { id:"examples", label:"Examples" }]} active={mode} onChange={setMode} />
+          <InputField label="CIDR Notation" value={cidr} onChange={setCidr} placeholder="e.g. 192.168.1.0/24" />
+          {mode === "examples" && (
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide block">Common Subnets</label>
+              {["/8 – Class A (16M hosts)","10.0.0.0/8","/16 – Class B (65K hosts)","172.16.0.0/16","/24 – Class C (254 hosts)","192.168.1.0/24","/32 – Single host","192.168.1.1/32"].filter((_,i) => i%2!==0).map(e => (
+                <button key={e} onClick={() => setCidr(e)} className="w-full text-left px-3 py-2 bg-muted/20 rounded-lg text-xs font-mono text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors">{e}</button>
               ))}
             </div>
-            <p className="text-[10px] text-muted-foreground mt-2">⚠️ Simulated hashes for demo — use crypto libraries for real hashing.</p>
-          </>
+          )}
+        </InputPanel>
+      }
+      results={
+        info ? (
+          <ResultPanel label="Network Info" primary={`${info.hosts.toLocaleString()}`} primarySub="usable hosts"
+            summaries={<>
+              <SummaryCard label="Class" value={`Class ${info.ipClass}`} />
+              <SummaryCard label="Type" value={info.isPrivate ? "🏠 Private" : "🌐 Public"} />
+            </>}
+          >
+            <BreakdownRow label="Network Address" value={info.network} dot="bg-blue-400" bold />
+            <BreakdownRow label="Broadcast" value={info.broadcast} dot="bg-red-400" />
+            <BreakdownRow label="First Host" value={info.first} dot="bg-green-500" />
+            <BreakdownRow label="Last Host" value={info.last} dot="bg-green-400" />
+            <BreakdownRow label="Subnet Mask" value={info.mask} dot="bg-purple-400" />
+            <BreakdownRow label="Wildcard Mask" value={info.wildcard} dot="bg-amber-400" />
+            <BreakdownRow label="Usable Hosts" value={info.hosts.toLocaleString()} bold />
+          </ResultPanel>
         ) : (
-          <div className="space-y-3">
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Enter Password to Check</label>
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm focus:outline-none" placeholder="Type your password..." data-testid="input-password" />
-            </div>
-            <div className="p-4 text-center rounded-2xl" style={{ background: `rgba(0,0,0,0.1)` }}>
-              <div className={`text-2xl font-black mb-1 ${pwdResult.level.color}`}>{pwdResult.len > 0 ? pwdResult.level.label : "—"}</div>
-              <div className="text-xs text-muted-foreground">Score: {pwdResult.score}/6 | Entropy: {fmt(pwdResult.entropy, 0)} bits</div>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              {[{ l: "Uppercase (A-Z)", v: pwdResult.hasUpper }, { l: "Lowercase (a-z)", v: pwdResult.hasLower }, { l: "Numbers (0-9)", v: pwdResult.hasNum }, { l: "Symbols (!@#)", v: pwdResult.hasSpecial }, { l: "≥ 8 characters", v: pwdResult.len >= 8 }, { l: "≥ 12 characters", v: pwdResult.len >= 12 }].map((r, i) => (
-                <div key={i} className={`p-2 rounded-xl text-xs font-semibold ${r.v ? "bg-emerald-500/15 text-emerald-400" : "bg-muted/30 text-muted-foreground"}`}>{r.v ? "✅" : "❌"} {r.l}</div>
-              ))}
-            </div>
-          </div>
-        )}
-      </ToolCard>
-    </div>
+          <ResultPanel label="Result" primary="Invalid">
+            <BreakdownRow label="Format" value="Enter valid CIDR e.g. 192.168.1.0/24" />
+          </ResultPanel>
+        )
+      }
+    />
   );
 }
 
-function FileSizeEstimator() {
+function BandwidthCost() {
   const [currency, setCurrency] = useState("USD");
-  const [mode, setMode] = useState("storage");
-  const [files, setFiles] = useState("100");
-  const [avgSize, setAvgSize] = useState("5");
-  const [sizeUnit, setSizeUnit] = useState("MB");
-  const [bandwidth, setBandwidth] = useState("100");
-  const [bwUnit, setBwUnit] = useState("Mbps");
-  const [fileTransfer, setFileTransfer] = useState("1");
-  const [ftUnit, setFtUnit] = useState("GB");
-  const [storageCostPerGB, setStorageCostPerGB] = useState("0.023");
+  const [mode, setMode] = useState("transfer");
+  const [dataGB, setDataGB] = useState("100");
+  const [costPerGB, setCostPerGB] = useState("0.09"); const [freeGB, setFreeGB] = useState("100");
+  const [speedMbps, setSpeedMbps] = useState("100"); const [fileSizeGB, setFileSizeGB] = useState("10");
+  const [users, setUsers] = useState("1000"); const [avgGB, setAvgGB] = useState("5");
 
-  const units: Record<string, number> = { B: 1 / (1024 * 1024), KB: 1 / 1024, MB: 1, GB: 1024, TB: 1024 * 1024 };
-  const bwUnits: Record<string, number> = { Kbps: 0.001, Mbps: 1, Gbps: 1000 };
-
-  const f = parseInt(files)||0; const s = parseFloat(avgSize)||0;
-  const totalMB = f * s * (units[sizeUnit]||1);
-  const bwMbps = (parseFloat(bandwidth)||0) * (bwUnits[bwUnit]||1);
-  const fileSizeMB = (parseFloat(fileTransfer)||0) * (units[ftUnit]||1024);
-  const transferSeconds = bwMbps > 0 ? (fileSizeMB * 8) / bwMbps : 0;
-  const storageGB = totalMB / 1024;
-  const monthlyCost = storageGB * (parseFloat(storageCostPerGB)||0.023) * 30;
+  const data = parseFloat(dataGB)||0; const cpg = parseFloat(costPerGB)||0.09;
+  const free = parseFloat(freeGB)||0; const speed = parseFloat(speedMbps)||100;
+  const fileGB = parseFloat(fileSizeGB)||10; const usersN = parseInt(users)||1000; const avgData = parseFloat(avgGB)||5;
+  const billable = Math.max(0, data - free);
+  const cost = billable * cpg;
+  const timeSec = fileGB > 0 && speed > 0 ? (fileGB * 8192) / speed : 0;
+  const totalData = usersN * avgData;
+  const totalCost = Math.max(0, totalData - free) * cpg;
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="File Size & Bandwidth" icon={FileText} iconColor="bg-cyan-500">
-        <ModeBar modes={[{ id: "storage", label: "Storage Size" }, { id: "transfer", label: "Transfer Time" }, { id: "cost", label: "Cloud Cost" }]} active={mode} onChange={setMode} color="bg-cyan-600" />
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-semibold text-muted-foreground">Currency</span>
-          <CurrencySelect value={currency} onChange={setCurrency} />
-        </div>
-        {(mode === "storage" || mode === "cost") && (
-          <>
-            <InputField label="Number of Files" value={files} onChange={setFiles} type="number" />
-            <div className="flex gap-2">
-              <div className="flex-1"><InputField label="Avg File Size" value={avgSize} onChange={setAvgSize} type="number" /></div>
-              <div className="mt-6">
-                <select value={sizeUnit} onChange={e => setSizeUnit(e.target.value)} className="bg-muted/50 border border-border rounded-lg px-2 py-2.5 text-sm text-foreground focus:outline-none">
-                  {["B","KB","MB","GB","TB"].map(u => <option key={u} value={u}>{u}</option>)}
-                </select>
-              </div>
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Bandwidth Parameters" icon={DollarSign} iconColor="bg-indigo-500" currency={currency} currencies={CURRENCIES} onCurrencyChange={setCurrency}>
+          <ModeSelector modes={[{ id:"transfer", label:"Transfer Cost" }, { id:"download", label:"Download Time" }, { id:"cdn", label:"CDN Cost" }]} active={mode} onChange={setMode} />
+          <InputField label={`Cost per GB (${cs(currency)})`} value={costPerGB} onChange={setCostPerGB} type="number" prefix={cs(currency)} />
+          <InputField label="Free Tier (GB)" value={freeGB} onChange={setFreeGB} type="number" />
+          {mode === "transfer" && <InputField label="Data Transfer (GB)" value={dataGB} onChange={setDataGB} type="number" />}
+          {mode === "download" && (
+            <div className="grid grid-cols-2 gap-3">
+              <InputField label="File Size (GB)" value={fileSizeGB} onChange={setFileSizeGB} type="number" />
+              <InputField label="Speed (Mbps)" value={speedMbps} onChange={setSpeedMbps} type="number" />
             </div>
-          </>
-        )}
-        {mode === "transfer" && (
-          <>
-            <div className="flex gap-2">
-              <div className="flex-1"><InputField label="File to Transfer" value={fileTransfer} onChange={setFileTransfer} type="number" /></div>
-              <div className="mt-6">
-                <select value={ftUnit} onChange={e => setFtUnit(e.target.value)} className="bg-muted/50 border border-border rounded-lg px-2 py-2.5 text-sm text-foreground focus:outline-none">
-                  {["B","KB","MB","GB","TB"].map(u => <option key={u} value={u}>{u}</option>)}
-                </select>
-              </div>
+          )}
+          {mode === "cdn" && (
+            <div className="grid grid-cols-2 gap-3">
+              <InputField label="Monthly Users" value={users} onChange={setUsers} type="number" />
+              <InputField label="Avg Data / User (GB)" value={avgGB} onChange={setAvgGB} type="number" />
             </div>
-            <div className="flex gap-2">
-              <div className="flex-1"><InputField label="Connection Speed" value={bandwidth} onChange={setBandwidth} type="number" /></div>
-              <div className="mt-6">
-                <select value={bwUnit} onChange={e => setBwUnit(e.target.value)} className="bg-muted/50 border border-border rounded-lg px-2 py-2.5 text-sm text-foreground focus:outline-none">
-                  {["Kbps","Mbps","Gbps"].map(u => <option key={u} value={u}>{u}</option>)}
-                </select>
-              </div>
-            </div>
-          </>
-        )}
-        {mode === "cost" && <InputField label={`Cloud Storage Cost (${cs(currency)}/GB/month)`} value={storageCostPerGB} onChange={setStorageCostPerGB} type="number" step={0.001} />}
-        <div className="space-y-2 mt-3">
-          {mode === "storage" && (
-            <>
-              <Row label="Total in MB" value={`${fmt(totalMB, 2)} MB`} hi />
-              <Row label="Total in GB" value={`${fmt(totalMB / 1024, 3)} GB`} />
-              <Row label="Total in TB" value={`${fmt(totalMB / 1024 / 1024, 6)} TB`} />
-            </>
           )}
-          {mode === "transfer" && (
-            <>
-              <Row label="File Size (MB)" value={`${fmt(fileSizeMB, 2)} MB`} />
-              <Row label="Transfer Time" value={transferSeconds < 60 ? `${fmt(transferSeconds, 1)} sec` : transferSeconds < 3600 ? `${fmt(transferSeconds / 60, 1)} min` : `${fmt(transferSeconds / 3600, 2)} hrs`} hi accent="text-cyan-400" />
-              <Row label="Speed" value={`${fmt(bwMbps, 1)} Mbps (${fmt(bwMbps / 8, 1)} MB/s)`} />
-            </>
-          )}
-          {mode === "cost" && (
-            <>
-              <Row label="Storage Volume" value={`${fmt(storageGB, 3)} GB`} hi />
-              <Row label="Monthly Cost" value={`${cs(currency)}${fmt(monthlyCost, 4)}`} hi accent="text-cyan-400" />
-              <Row label="Annual Cost" value={`${cs(currency)}${fmt(monthlyCost * 12, 2)}`} />
-              <div className="p-2 bg-muted/20 rounded-xl text-xs text-muted-foreground">AWS S3 ≈ $0.023/GB | GCP ≈ $0.020/GB | Azure ≈ $0.018/GB</div>
-            </>
-          )}
-        </div>
-      </ToolCard>
-    </div>
-  );
-}
-
-function APIRateCost() {
-  const [currency, setCurrency] = useState("USD");
-  const [mode, setMode] = useState("simple");
-  const [requests, setRequests] = useState("100000");
-  const [costPer1k, setCostPer1k] = useState("0.002");
-  const [provider, setProvider] = useState("custom");
-  const [inputTokens, setInputTokens] = useState("1000");
-  const [outputTokens, setOutputTokens] = useState("500");
-  const [monthlyBudget, setMonthlyBudget] = useState("10");
-
-  const apiProviders: Record<string, { input: number; output: number; label: string; unit: string }> = {
-    "gpt4o": { input: 0.005, output: 0.015, label: "GPT-4o", unit: "per 1K tokens" },
-    "gpt4o-mini": { input: 0.00015, output: 0.0006, label: "GPT-4o Mini", unit: "per 1K tokens" },
-    "claude-haiku": { input: 0.00025, output: 0.00125, label: "Claude Haiku", unit: "per 1K tokens" },
-    "claude-sonnet": { input: 0.003, output: 0.015, label: "Claude Sonnet", unit: "per 1K tokens" },
-    "gemini-flash": { input: 0.000075, output: 0.0003, label: "Gemini 1.5 Flash", unit: "per 1K tokens" },
-    custom: { input: parseFloat(costPer1k)||0, output: 0, label: "Custom", unit: "per 1K req" },
-  };
-
-  const prov = apiProviders[provider];
-  const r = parseInt(requests)||0;
-  const inTok = parseInt(inputTokens)||0;
-  const outTok = parseInt(outputTokens)||0;
-  const budget = parseFloat(monthlyBudget)||10;
-
-  const perReqCost = provider === "custom" ? parseFloat(costPer1k)||0 / 1000 : (prov.input * inTok / 1000 + prov.output * outTok / 1000);
-  const dailyCost = (r / 1000) * (parseFloat(costPer1k)||0);
-  const aiDailyCost = r * (prov.input * inTok / 1000 + prov.output * outTok / 1000);
-  const maxRequests = aiDailyCost > 0 ? Math.floor(budget / (aiDailyCost / r)) : 0;
-
-  return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="API Cost Calculator" icon={Server} iconColor="bg-orange-500">
-        <ModeBar modes={[{ id: "simple", label: "Per Request" }, { id: "llm", label: "LLM Tokens" }, { id: "budget", label: "Budget Planner" }]} active={mode} onChange={setMode} color="bg-orange-600" />
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-semibold text-muted-foreground">Currency</span>
-          <CurrencySelect value={currency} onChange={setCurrency} />
-        </div>
-        {(mode === "llm" || mode === "budget") && (
-          <div className="mb-3">
-            <label className="text-xs font-semibold text-muted-foreground uppercase mb-1.5 block">AI Model</label>
-            <select value={provider} onChange={e => setProvider(e.target.value)} className="w-full bg-muted/50 border border-border rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none">
-              {Object.entries(apiProviders).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-            </select>
-          </div>
-        )}
-        <InputField label="Daily API Requests" value={requests} onChange={setRequests} type="number" />
-        {mode === "simple" && <InputField label={`Cost per 1K Requests (${cs(currency)})`} value={costPer1k} onChange={setCostPer1k} type="number" step={0.0001} />}
-        {(mode === "llm" || mode === "budget") && (
-          <div className="grid grid-cols-2 gap-2">
-            <InputField label="Input Tokens/req" value={inputTokens} onChange={setInputTokens} type="number" />
-            <InputField label="Output Tokens/req" value={outputTokens} onChange={setOutputTokens} type="number" />
-          </div>
-        )}
-        {mode === "budget" && <InputField label={`Monthly Budget (${cs(currency)})`} value={monthlyBudget} onChange={setMonthlyBudget} type="number" />}
-        <div className="space-y-2 mt-3">
-          {mode === "simple" ? (
-            <>
-              <Row label="Daily Cost" value={`${cs(currency)}${fmt(dailyCost, 4)}`} hi />
-              <Row label="Monthly Cost" value={`${cs(currency)}${fmt(dailyCost * 30, 2)}`} />
-              <Row label="Annual Cost" value={`${cs(currency)}${fmt(dailyCost * 365, 2)}`} />
-            </>
-          ) : mode === "llm" ? (
-            <>
-              <Row label={`Input cost (${prov.input} per 1K)`} value={`${cs(currency)}${(prov.input * inTok / 1000).toFixed(6)}/req`} />
-              <Row label={`Output cost (${prov.output} per 1K)`} value={`${cs(currency)}${(prov.output * outTok / 1000).toFixed(6)}/req`} />
-              <Row label="Cost per Request" value={`${cs(currency)}${(prov.input * inTok / 1000 + prov.output * outTok / 1000).toFixed(6)}`} hi />
-              <Row label="Daily Cost" value={`${cs(currency)}${fmt(aiDailyCost, 4)}`} />
-              <Row label="Monthly Cost" value={`${cs(currency)}${fmt(aiDailyCost * 30, 2)}`} hi accent="text-orange-400" />
-            </>
-          ) : (
-            <>
-              <Row label="Cost per Request" value={`${cs(currency)}${(prov.input * inTok / 1000 + prov.output * outTok / 1000).toFixed(6)}`} />
-              <Row label="Monthly Budget" value={`${cs(currency)}${fmt(budget, 2)}`} />
-              <Row label="Daily Budget" value={`${cs(currency)}${fmt(budget / 30, 3)}`} />
-              <Row label="Max Requests/Day" value={`${aiDailyCost > 0 ? fmt(maxRequests, 0) : "—"}`} hi accent="text-orange-400" />
-              <Row label="Max Requests/Month" value={`${aiDailyCost > 0 ? fmt(maxRequests * 30, 0) : "—"}`} />
-            </>
-          )}
-        </div>
-      </ToolCard>
-    </div>
-  );
-}
-
-function CPMCalculator() {
-  const [currency, setCurrency] = useState("USD");
-  const [mode, setMode] = useState("cpm");
-  const [impressions, setImpressions] = useState("100000");
-  const [cpm, setCpm] = useState("5");
-  const [platform, setPlatform] = useState("custom");
-  const [clicks, setClicks] = useState("2000");
-  const [conversions, setConversions] = useState("100");
-  const [revenuePerConversion, setRevenuePerConversion] = useState("50");
-
-  const platformCPMs: Record<string, { cpm: string; label: string }> = {
-    "google-display": { cpm: "2.5", label: "Google Display" },
-    "youtube": { cpm: "6.5", label: "YouTube" },
-    "facebook": { cpm: "8.5", label: "Facebook" },
-    "instagram": { cpm: "9.0", label: "Instagram" },
-    "twitter": { cpm: "3.5", label: "Twitter/X" },
-    "linkedin": { cpm: "33", label: "LinkedIn" },
-    "tiktok": { cpm: "10", label: "TikTok" },
-    "custom": { cpm, label: "Custom" },
-  };
-
-  const activeCPM = platform === "custom" ? parseFloat(cpm)||0 : parseFloat(platformCPMs[platform].cpm)||0;
-  const imp = parseInt(impressions)||0;
-  const cl = parseInt(clicks)||0;
-  const conv = parseInt(conversions)||0;
-  const revPerConv = parseFloat(revenuePerConversion)||0;
-
-  const totalRevenue = (imp / 1000) * activeCPM;
-  const rpm = imp > 0 ? (totalRevenue / imp) * 1000 : 0;
-  const ctr = imp > 0 ? (cl / imp) * 100 : 0;
-  const convRate = cl > 0 ? (conv / cl) * 100 : 0;
-  const totalRev = conv * revPerConv;
-  const cpa = conv > 0 ? totalRevenue / conv : 0;
-  const roas = totalRevenue > 0 ? totalRev / totalRevenue : 0;
-
-  return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="CPM / Ad Revenue Calculator" icon={DollarSign} iconColor="bg-green-500">
-        <ModeBar modes={[{ id: "cpm", label: "CPM/RPM" }, { id: "funnel", label: "Full Funnel" }]} active={mode} onChange={setMode} color="bg-green-600" />
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-semibold text-muted-foreground">Currency</span>
-          <CurrencySelect value={currency} onChange={setCurrency} />
-        </div>
-        <div className="mb-3">
-          <label className="text-xs font-semibold text-muted-foreground uppercase mb-1.5 block">Platform (avg CPM)</label>
-          <div className="flex gap-1.5 flex-wrap">
-            {Object.entries(platformCPMs).map(([k, v]) => (
-              <button key={k} onClick={() => { setPlatform(k); if (k !== "custom") setCpm(v.cpm); }}
-                className={`px-2 py-1 rounded-lg text-[10px] font-semibold transition-all ${platform === k ? "bg-green-500 text-white" : "bg-muted text-muted-foreground"}`}>{v.label}</button>
-            ))}
-          </div>
-        </div>
-        <InputField label="Total Impressions" value={impressions} onChange={setImpressions} type="number" />
-        {(platform === "custom" || mode === "cpm") && <InputField label={`CPM (${cs(currency)} per 1000 imp)`} value={cpm} onChange={v => { setCpm(v); setPlatform("custom"); }} type="number" step={0.1} />}
-        {mode === "funnel" && (
-          <>
-            <InputField label="Clicks" value={clicks} onChange={setClicks} type="number" />
-            <InputField label="Conversions" value={conversions} onChange={setConversions} type="number" />
-            <InputField label={`Revenue per Conversion (${cs(currency)})`} value={revenuePerConversion} onChange={setRevenuePerConversion} type="number" />
-          </>
-        )}
-        <div className="space-y-2 mt-3">
-          <Row label="Ad Revenue (CPM)" value={`${cs(currency)}${fmt(totalRevenue, 2)}`} hi />
-          <Row label="RPM" value={`${cs(currency)}${fmt(rpm, 2)}`} />
-          {mode === "funnel" && (
-            <>
-              <Row label={`CTR`} value={`${fmt(ctr, 2)}%`} />
-              <Row label="Conversion Rate" value={`${fmt(convRate, 2)}%`} />
-              <Row label="Total Conv. Revenue" value={`${cs(currency)}${fmt(totalRev, 2)}`} hi accent="text-green-400" />
-              <Row label="CPA (Cost per Acq.)" value={`${cs(currency)}${fmt(cpa, 2)}`} />
-              <Row label="ROAS" value={`${fmt(roas, 2)}×`} hi accent={roas >= 3 ? "text-emerald-400" : "text-red-400"} />
-            </>
-          )}
-        </div>
-      </ToolCard>
-    </div>
-  );
-}
-
-function YouTubeEarnings() {
-  const [currency, setCurrency] = useState("USD");
-  const [mode, setMode] = useState("video");
-  const [views, setViews] = useState("100000");
-  const [cpm, setCpm] = useState("3");
-  const [adRate, setAdRate] = useState("50");
-  const [niche, setNiche] = useState("general");
-  const [subscribers, setSubscribers] = useState("10000");
-  const [growthRate, setGrowthRate] = useState("5");
-
-  const nicheCPMs: Record<string, { cpm: string; label: string }> = {
-    finance: { cpm: "12", label: "Finance/Investing" },
-    tech: { cpm: "6", label: "Tech/Gadgets" },
-    education: { cpm: "5", label: "Education" },
-    gaming: { cpm: "2", label: "Gaming" },
-    lifestyle: { cpm: "3.5", label: "Lifestyle" },
-    fitness: { cpm: "4", label: "Fitness/Health" },
-    food: { cpm: "3", label: "Food/Cooking" },
-    travel: { cpm: "5", label: "Travel" },
-    general: { cpm: "3", label: "General" },
-  };
-
-  const activeCPM = niche === "general" ? parseFloat(cpm)||3 : parseFloat(nicheCPMs[niche].cpm)||3;
-  const v = parseInt(views)||0; const ad = parseFloat(adRate)||50;
-  const subs = parseInt(subscribers)||0; const growth = parseFloat(growthRate)||5;
-
-  const monetizedViews = v * (ad / 100);
-  const earnings = (monetizedViews / 1000) * activeCPM;
-  const per1M = v > 0 ? (earnings / v) * 1000000 : 0;
-  const monthlyEarnings = earnings;
-  const annual = earnings * 12;
-  const subs3Mo = subs * Math.pow(1 + growth / 100, 3);
-  const subs6Mo = subs * Math.pow(1 + growth / 100, 6);
-  const subs12Mo = subs * Math.pow(1 + growth / 100, 12);
-
-  return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="YouTube Earnings" icon={Youtube} iconColor="bg-red-500">
-        <ModeBar modes={[{ id: "video", label: "Video Earnings" }, { id: "channel", label: "Channel Growth" }]} active={mode} onChange={setMode} color="bg-red-600" />
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-semibold text-muted-foreground">Currency</span>
-          <CurrencySelect value={currency} onChange={setCurrency} />
-        </div>
-        <div className="mb-3">
-          <label className="text-xs font-semibold text-muted-foreground uppercase mb-1.5 block">Niche (avg CPM)</label>
-          <div className="flex gap-1.5 flex-wrap">
-            {Object.entries(nicheCPMs).map(([k, v]) => (
-              <button key={k} onClick={() => { setNiche(k); if (k !== "general") setCpm(nicheCPMs[k].cpm); }}
-                className={`px-2 py-1 rounded-lg text-[10px] font-semibold transition-all ${niche === k ? "bg-red-500 text-white" : "bg-muted text-muted-foreground"}`}>{v.label}</button>
-            ))}
-          </div>
-        </div>
-        <InputField label="Views per Video/Month" value={views} onChange={setViews} type="number" />
-        <InputField label={`CPM (${cs(currency)}) — avg for your niche`} value={cpm} onChange={v => { setCpm(v); setNiche("general"); }} type="number" step={0.1} />
-        <InputField label="Ad Serving Rate (%) — typically 40-60%" value={adRate} onChange={setAdRate} type="number" />
-        {mode === "channel" && (
-          <>
-            <InputField label="Current Subscribers" value={subscribers} onChange={setSubscribers} type="number" />
-            <InputField label="Monthly Growth Rate (%)" value={growthRate} onChange={setGrowthRate} type="number" />
-          </>
-        )}
-        <div className="space-y-2 mt-3">
-          <Row label="Monetized Views" value={`${fmt(monetizedViews, 0)}`} />
-          <Row label="Estimated Earnings" value={`${cs(currency)}${fmt(earnings, 2)}`} hi accent="text-red-400" />
-          <Row label="Per 1M Views" value={`${cs(currency)}${fmt(per1M, 2)}`} />
-          {mode === "video" && (
-            <>
-              <Row label="Monthly (same cadence)" value={`${cs(currency)}${fmt(monthlyEarnings, 2)}`} />
-              <Row label="Annual Estimate" value={`${cs(currency)}${fmt(annual, 2)}`} hi />
-            </>
-          )}
-          {mode === "channel" && (
-            <>
-              <Row label="Subs in 3 months" value={`${fmt(subs3Mo, 0)}`} />
-              <Row label="Subs in 6 months" value={`${fmt(subs6Mo, 0)}`} />
-              <Row label="Subs in 12 months" value={`${fmt(subs12Mo, 0)}`} hi accent="text-red-400" />
-              <Row label="Time to 100K subs" value={subs < 100000 ? `~${fmt(Math.log(100000 / subs) / Math.log(1 + growth / 100), 0)} months` : "Already there! 🎉"} />
-            </>
-          )}
-        </div>
-      </ToolCard>
-    </div>
-  );
-}
-
-function SEOChecker() {
-  const [mode, setMode] = useState("density");
-  const [text, setText] = useState("");
-  const [keyword, setKeyword] = useState("");
-  const [title, setTitle] = useState("");
-  const [metaDesc, setMetaDesc] = useState("");
-  const [url, setUrl] = useState("");
-
-  const words = text.trim().split(/\s+/).filter(Boolean);
-  const wordCount = text.trim() ? words.length : 0;
-  const charCount = text.length;
-  const sentenceCount = (text.match(/[.!?]+/g) || []).length || 1;
-  const avgWordsPerSentence = wordCount / sentenceCount;
-  const readingTime = Math.ceil(wordCount / 200);
-  const keywordCount = keyword ? (text.toLowerCase().match(new RegExp(keyword.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), "g")) || []).length : 0;
-  const density = wordCount > 0 && keyword ? ((keywordCount / wordCount) * 100).toFixed(2) : "0";
-  const fleschScore = Math.max(0, Math.min(100, 206.835 - 1.015 * avgWordsPerSentence - 84.6 * (wordCount / Math.max(sentenceCount, 1))));
-  const readability = fleschScore > 70 ? "Easy" : fleschScore > 50 ? "Medium" : "Hard";
-
-  const titleLen = title.length;
-  const metaLen = metaDesc.length;
-  const titleOk = titleLen >= 50 && titleLen <= 60;
-  const metaOk = metaLen >= 150 && metaLen <= 160;
-  const urlOk = url.length > 0 && url.length <= 75 && /^[a-z0-9-/]+$/.test(url.replace(/https?:\/\//g, "").replace(/\./g, ""));
-
-  return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="SEO Checker" icon={Search} iconColor="bg-blue-500">
-        <ModeBar modes={[{ id: "density", label: "Content Analysis" }, { id: "meta", label: "Meta Tags" }]} active={mode} onChange={setMode} color="bg-blue-600" />
-        {mode === "density" ? (
-          <>
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Content / Article</label>
-              <textarea value={text} onChange={e => setText(e.target.value)} className="w-full bg-muted border border-border rounded-xl px-4 py-3 min-h-[120px] text-sm resize-none focus:outline-none" placeholder="Paste your content here..." data-testid="textarea-seo-content" />
-            </div>
-            <InputField label="Focus Keyword" value={keyword} onChange={setKeyword} placeholder="e.g. digital marketing" />
-            <div className="space-y-2 mt-2">
-              <Row label="Word Count" value={`${wordCount} words`} hi accent={wordCount >= 1000 ? "text-green-400" : wordCount >= 300 ? "text-yellow-400" : "text-red-400"} />
-              <Row label="Character Count" value={charCount.toString()} />
-              <Row label="Reading Time" value={`~${readingTime} min`} />
-              <Row label="Avg Words/Sentence" value={`${fmt(avgWordsPerSentence, 1)}`} />
-              <Row label="Readability" value={`${readability} (Flesch ${fmt(fleschScore, 0)})`} hi accent={fleschScore > 70 ? "text-green-400" : fleschScore > 50 ? "text-yellow-400" : "text-red-400"} />
-              {keyword && <>
-                <Row label="Keyword Count" value={`${keywordCount}×`} />
-                <Row label="Keyword Density" value={`${density}%`} hi accent={parseFloat(density) >= 1 && parseFloat(density) <= 3 ? "text-green-400" : "text-yellow-400"} />
-              </>}
-              <div className="p-2 bg-muted/20 rounded-xl text-xs text-muted-foreground">📌 Ideal: 1000+ words | 1-3% keyword density | Flesch &gt; 60</div>
-            </div>
-          </>
+        </InputPanel>
+      }
+      results={
+        mode === "transfer" ? (
+          <ResultPanel label="Transfer Cost"
+            primary={`${cs(currency)}${fmt(cost)}`}
+            summaries={<>
+              <SummaryCard label="Billable GB" value={`${fmt(billable, 0)} GB`} accent="text-indigo-500" />
+              <SummaryCard label="Per GB" value={`${cs(currency)}${cpg}`} />
+            </>}
+          >
+            <BreakdownRow label="Total Data" value={`${fmt(data, 0)} GB`} dot="bg-blue-400" />
+            <BreakdownRow label="Free Tier" value={`${fmt(free, 0)} GB`} dot="bg-green-500" />
+            <BreakdownRow label="Billable" value={`${fmt(billable, 0)} GB`} dot="bg-amber-400" />
+            <BreakdownRow label="Cost" value={`${cs(currency)}${fmt(cost)}`} dot="bg-indigo-400" bold />
+            <BreakdownRow label="Annual (est)" value={`${cs(currency)}${fmt(cost*12)}`} />
+          </ResultPanel>
+        ) : mode === "download" ? (
+          <ResultPanel label="Download Time"
+            primary={timeSec >= 3600 ? `${fmt(timeSec/3600, 2)} hrs` : timeSec >= 60 ? `${fmt(timeSec/60, 1)} min` : `${fmt(timeSec, 1)} sec`}
+            summaries={<>
+              <SummaryCard label="File Size" value={`${fileGB} GB`} accent="text-indigo-500" />
+              <SummaryCard label="Speed" value={`${speedMbps} Mbps`} />
+            </>}
+          >
+            <BreakdownRow label="File Size" value={`${fileGB} GB = ${fmt(fileGB*1024, 0)} MB`} dot="bg-blue-400" />
+            <BreakdownRow label="Speed" value={`${speedMbps} Mbps = ${fmt(parseFloat(speedMbps)/8, 2)} MB/s`} dot="bg-green-500" />
+            <BreakdownRow label="Time (sec)" value={`${fmt(timeSec, 1)} s`} dot="bg-indigo-400" bold />
+            <BreakdownRow label="Time (min)" value={`${fmt(timeSec/60, 1)} min`} dot="bg-purple-400" />
+            <BreakdownRow label="Time (hrs)" value={`${fmt(timeSec/3600, 2)} hrs`} />
+          </ResultPanel>
         ) : (
-          <div className="space-y-3">
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Page Title ({titleLen}/60 chars)</label>
-              <input value={title} onChange={e => setTitle(e.target.value)} className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm focus:outline-none" placeholder="Your page title here..." data-testid="input-title" />
-              <div className={`text-[10px] mt-1 ${titleOk ? "text-green-400" : titleLen > 60 ? "text-red-400" : "text-yellow-400"}`}>{titleOk ? "✅ Perfect length (50-60 chars)" : titleLen > 60 ? "❌ Too long — trim to 60 chars" : "⚠️ Too short — aim for 50-60 chars"}</div>
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Meta Description ({metaLen}/160 chars)</label>
-              <textarea value={metaDesc} onChange={e => setMetaDesc(e.target.value)} className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm resize-none min-h-[70px] focus:outline-none" placeholder="Describe your page..." data-testid="textarea-meta" />
-              <div className={`text-[10px] mt-1 ${metaOk ? "text-green-400" : metaLen > 160 ? "text-red-400" : "text-yellow-400"}`}>{metaOk ? "✅ Perfect (150-160 chars)" : metaLen > 160 ? "❌ Too long — trim to 160 chars" : "⚠️ Too short — aim for 150-160 chars"}</div>
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">URL Slug ({url.length} chars)</label>
-              <input value={url} onChange={e => setUrl(e.target.value)} className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm focus:outline-none" placeholder="your-page-slug-here" data-testid="input-url" />
-              <div className={`text-[10px] mt-1 ${urlOk ? "text-green-400" : "text-yellow-400"}`}>{urlOk ? "✅ Good URL slug" : "⚠️ Use lowercase, hyphens, keep under 75 chars"}</div>
-            </div>
-            <div className="p-3 bg-muted/20 rounded-xl mt-1">
-              <p className="text-[10px] font-bold text-muted-foreground uppercase mb-2">Google Preview</p>
-              <p className="text-xs text-blue-400 underline truncate">{url || "your-domain.com/your-page-slug"}</p>
-              <p className="text-sm font-bold text-foreground truncate mt-0.5">{title || "Your Page Title"}</p>
-              <p className="text-xs text-muted-foreground leading-relaxed mt-0.5 line-clamp-2">{metaDesc || "Your meta description will appear here in Google search results."}</p>
-            </div>
-          </div>
-        )}
-      </ToolCard>
-    </div>
+          <ResultPanel label="Monthly CDN Cost"
+            primary={`${cs(currency)}${fmt(totalCost)}`}
+            summaries={<>
+              <SummaryCard label="Total Data" value={`${fmt(totalData, 0)} GB`} accent="text-indigo-500" />
+              <SummaryCard label="Annual" value={`${cs(currency)}${fmt(totalCost*12, 0)}`} />
+            </>}
+          >
+            <BreakdownRow label="Users" value={`${usersN.toLocaleString()}`} dot="bg-blue-400" />
+            <BreakdownRow label="Data per User" value={`${avgData} GB`} dot="bg-green-500" />
+            <BreakdownRow label="Total Data" value={`${fmt(totalData, 0)} GB`} dot="bg-amber-400" />
+            <BreakdownRow label="Billable" value={`${fmt(Math.max(0,totalData-free), 0)} GB`} dot="bg-indigo-400" bold />
+            <BreakdownRow label="Monthly Cost" value={`${cs(currency)}${fmt(totalCost)}`} bold />
+            <BreakdownRow label="Annual Cost" value={`${cs(currency)}${fmt(totalCost*12, 0)}`} />
+          </ResultPanel>
+        )
+      }
+    />
   );
 }

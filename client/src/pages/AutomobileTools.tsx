@@ -1,7 +1,6 @@
-import { useState, useMemo } from "react";
-import { motion } from "framer-motion";
-import { Car, Fuel, Gauge, Settings, Zap, Clock, DollarSign, TrendingDown, Shield, RotateCcw } from "lucide-react";
-import { ToolCard, InputField } from "@/components/ToolCard";
+import { useState } from "react";
+import { Car, Fuel, Gauge, Settings, Zap, Clock, DollarSign, TrendingDown, Shield } from "lucide-react";
+import { DesktopToolGrid, InputPanel, ResultPanel, SummaryCard, BreakdownRow, InputField, ModeSelector } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
 
 type ToolType = "mileage" | "tyre" | "rpm" | "gear" | "evrange" | "charging" | "toll" | "depreciation" | "insurance";
@@ -13,36 +12,8 @@ const CURRENCIES = [
   { code: "AUD", symbol: "A$" }, { code: "CAD", symbol: "C$" },
   { code: "AED", symbol: "د.إ" }, { code: "SGD", symbol: "S$" },
 ];
-function cs(code: string) { return CURRENCIES.find(c => c.code === code)?.symbol || "₹"; }
-function CurrencySelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  return (
-    <select value={value} onChange={e => onChange(e.target.value)}
-      className="bg-muted/50 border border-border rounded-lg px-2 py-1.5 text-sm text-foreground focus:outline-none" data-testid="select-currency">
-      {CURRENCIES.map(c => <option key={c.code} value={c.code}>{c.code} ({c.symbol})</option>)}
-    </select>
-  );
-}
-function ModeBar({ modes, active, onChange, color = "bg-slate-600" }: { modes: { id: string; label: string }[]; active: string; onChange: (id: string) => void; color?: string }) {
-  return (
-    <div className="flex gap-1 p-1 bg-muted rounded-xl mb-4 flex-wrap">
-      {modes.map(m => (
-        <button key={m.id} onClick={() => onChange(m.id)} data-testid={`mode-${m.id}`}
-          className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex-1 ${active === m.id ? `${color} text-white shadow-sm` : "text-muted-foreground hover:text-foreground"}`}>
-          {m.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-function Row({ label, value, hi, accent }: { label: string; value: string; hi?: boolean; accent?: string }) {
-  return (
-    <div className={`flex justify-between items-center p-2.5 rounded-xl ${hi ? "bg-slate-500/15 border border-slate-500/20" : "bg-muted/30"}`}>
-      <span className="text-xs font-semibold text-muted-foreground">{label}</span>
-      <span className={`text-sm font-bold ${hi ? (accent || "text-slate-300") : "text-foreground"}`}>{value}</span>
-    </div>
-  );
-}
-function fmt(n: number, d = 2) { if (!isFinite(n) || isNaN(n)) return "—"; return parseFloat(n.toFixed(d)).toLocaleString(); }
+const cs = (code: string) => CURRENCIES.find(c => c.code === code)?.symbol || "₹";
+const fmt = (n: number, d = 2) => isFinite(n) && !isNaN(n) ? parseFloat(n.toFixed(d)).toLocaleString() : "—";
 
 export default function AutomobileTools() {
   const [activeTool, setActiveTool] = useState<ToolType>("mileage");
@@ -58,634 +29,606 @@ export default function AutomobileTools() {
     { id: "insurance", label: "Insurance", icon: Shield },
   ];
   return (
-    <PageWrapper title="Automobile Tools" subtitle="Vehicle calculators" accentColor="bg-slate-500" tools={tools} activeTool={activeTool} onToolChange={(id) => setActiveTool(id as ToolType)}>
-      {activeTool === "mileage" && <MileageCostCalculator />}
-      {activeTool === "tyre" && <TyreSizeConverter />}
-      {activeTool === "rpm" && <RPMSpeedCalculator />}
-      {activeTool === "gear" && <GearRatioCalculator />}
-      {activeTool === "evrange" && <EVRangeEstimator />}
-      {activeTool === "charging" && <ChargingTimeCalculator />}
-      {activeTool === "toll" && <TollCostEstimator />}
-      {activeTool === "depreciation" && <DepreciationCalculator />}
-      {activeTool === "insurance" && <InsuranceEstimator />}
+    <PageWrapper title="Automobile Tools" subtitle="Vehicle, fuel, EV and cost calculators" accentColor="bg-slate-600" tools={tools} activeTool={activeTool} onToolChange={id => setActiveTool(id as ToolType)}>
+      {activeTool === "mileage" && <Mileage />}
+      {activeTool === "tyre" && <TyreSize />}
+      {activeTool === "rpm" && <RPMSpeed />}
+      {activeTool === "gear" && <GearRatio />}
+      {activeTool === "evrange" && <EVRange />}
+      {activeTool === "charging" && <Charging />}
+      {activeTool === "toll" && <Toll />}
+      {activeTool === "depreciation" && <Depreciation />}
+      {activeTool === "insurance" && <Insurance />}
     </PageWrapper>
   );
 }
 
-function MileageCostCalculator() {
+function Mileage() {
   const [currency, setCurrency] = useState("INR");
   const [mode, setMode] = useState("trip");
   const [fuelType, setFuelType] = useState("petrol");
-  const [distance, setDistance] = useState("500");
-  const [distUnit, setDistUnit] = useState("km");
-  const [mileage, setMileage] = useState("15");
-  const [mileageUnit, setMileageUnit] = useState("kmpl");
-  const [fuelPrice, setFuelPrice] = useState("105");
-  const [budget, setBudget] = useState("1000");
+  const [distance, setDistance] = useState("500"); const [distUnit, setDistUnit] = useState("km");
+  const [mileage, setMileage] = useState("15"); const [mileageUnit, setMileageUnit] = useState("kmpl");
+  const [fuelPrice, setFuelPrice] = useState("105"); const [budget, setBudget] = useState("1000");
 
-  const fuelDefaults: Record<string, { price: string; mileage: string }> = {
-    petrol: { price: "105", mileage: "15" }, diesel: { price: "92", mileage: "18" },
-    cng: { price: "85", mileage: "25" }, ev: { price: "8", mileage: "6" },
+  const ftDefaults: Record<string, { price:string; mileage:string }> = {
+    petrol:{ price:"105", mileage:"15" }, diesel:{ price:"92", mileage:"18" },
+    cng:{ price:"85", mileage:"25" }, ev:{ price:"8", mileage:"6" },
   };
-
-  const distKm = distUnit === "km" ? parseFloat(distance)||0 : (parseFloat(distance)||0) * 1.60934;
-  const mileageKmpl = mileageUnit === "kmpl" ? parseFloat(mileage)||1
-    : mileageUnit === "mpg" ? (parseFloat(mileage)||0) * 0.425144
-    : mileageUnit === "l100km" ? 100 / (parseFloat(mileage)||1) : parseFloat(mileage)||1;
-
-  const fuelNeeded = mileageKmpl > 0 ? distKm / mileageKmpl : 0;
+  const distKm = distUnit === "km" ? parseFloat(distance)||0 : (parseFloat(distance)||0)*1.60934;
+  const mKmpl = mileageUnit === "kmpl" ? parseFloat(mileage)||1 : mileageUnit === "mpg" ? (parseFloat(mileage)||0)*0.425144 : 100/(parseFloat(mileage)||1);
+  const fuelNeeded = mKmpl > 0 ? distKm/mKmpl : 0;
   const totalCost = fuelNeeded * (parseFloat(fuelPrice)||0);
-  const costPerKm = distKm > 0 ? totalCost / distKm : 0;
-  const costPerMile = costPerKm * 1.60934;
-  const budgetDist = parseFloat(budget) > 0 && parseFloat(fuelPrice) > 0 && mileageKmpl > 0
-    ? (parseFloat(budget) / parseFloat(fuelPrice)) * mileageKmpl : 0;
-
-  const handleFuelType = (ft: string) => {
-    setFuelType(ft);
-    setFuelPrice(fuelDefaults[ft].price);
-    setMileage(fuelDefaults[ft].mileage);
-  };
+  const costPerKm = distKm > 0 ? totalCost/distKm : 0;
+  const budgetDist = parseFloat(budget) > 0 && parseFloat(fuelPrice) > 0 && mKmpl > 0 ? (parseFloat(budget)/parseFloat(fuelPrice))*mKmpl : 0;
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Mileage & Fuel Cost" icon={Fuel} iconColor="bg-orange-500">
-        <ModeBar modes={[{ id: "trip", label: "Trip Cost" }, { id: "budget", label: "Budget → Range" }]} active={mode} onChange={setMode} color="bg-orange-600" />
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-semibold text-muted-foreground">Currency</span>
-          <CurrencySelect value={currency} onChange={setCurrency} />
-        </div>
-        <div className="mb-3">
-          <label className="text-xs font-semibold text-muted-foreground uppercase mb-1.5 block">Fuel Type</label>
-          <div className="grid grid-cols-4 gap-1.5">
-            {Object.keys(fuelDefaults).map(ft => (
-              <button key={ft} onClick={() => handleFuelType(ft)} data-testid={`fuel-${ft}`}
-                className={`py-2 rounded-lg text-xs font-bold capitalize transition-all ${fuelType === ft ? "bg-orange-500 text-white" : "bg-muted text-muted-foreground"}`}>{ft}</button>
-            ))}
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <div className="flex-1"><InputField label="Distance" value={distance} onChange={setDistance} type="number" /></div>
-          <div className="mt-6">
-            <select value={distUnit} onChange={e => setDistUnit(e.target.value)} className="bg-muted/50 border border-border rounded-lg px-2 py-2.5 text-sm text-foreground focus:outline-none">
-              {["km", "miles"].map(u => <option key={u} value={u}>{u}</option>)}
-            </select>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <div className="flex-1"><InputField label={fuelType === "ev" ? "Efficiency" : "Mileage"} value={mileage} onChange={setMileage} type="number" /></div>
-          <div className="mt-6">
-            <select value={mileageUnit} onChange={e => setMileageUnit(e.target.value)} className="bg-muted/50 border border-border rounded-lg px-2 py-2.5 text-sm text-foreground focus:outline-none">
-              {fuelType === "ev" ? ["km/kWh", "mi/kWh", "kWh/100km"].map(u => <option key={u} value={u}>{u}</option>)
-                : ["kmpl", "mpg", "l100km"].map(u => <option key={u} value={u}>{u}</option>)}
-            </select>
-          </div>
-        </div>
-        <InputField label={`${fuelType === "ev" ? "Electricity" : "Fuel"} Price (${cs(currency)}/${fuelType === "ev" ? "kWh" : "L"})`} value={fuelPrice} onChange={setFuelPrice} type="number" />
-        {mode === "budget" && <InputField label={`Your Budget (${cs(currency)})`} value={budget} onChange={setBudget} type="number" />}
-        <div className="space-y-2 mt-3">
-          {mode === "trip" ? (
-            <>
-              <Row label={`Distance in km`} value={`${fmt(distKm)} km`} />
-              <Row label={`${fuelType === "ev" ? "Energy" : "Fuel"} Needed`} value={`${fmt(fuelNeeded)} ${fuelType === "ev" ? "kWh" : "L"}`} />
-              <Row label="Total Cost" value={`${cs(currency)}${fmt(totalCost)}`} hi />
-              <Row label="Cost per km" value={`${cs(currency)}${fmt(costPerKm, 3)}/km`} />
-              <Row label="Cost per mile" value={`${cs(currency)}${fmt(costPerMile, 3)}/mi`} />
-            </>
-          ) : (
-            <>
-              <Row label={`Fuel you can buy`} value={`${fmt((parseFloat(budget)||0) / (parseFloat(fuelPrice)||1))} ${fuelType === "ev" ? "kWh" : "L"}`} />
-              <Row label="Max Distance (km)" value={`${fmt(budgetDist)} km`} hi />
-              <Row label="Max Distance (miles)" value={`${fmt(budgetDist / 1.60934)} mi`} />
-            </>
-          )}
-        </div>
-      </ToolCard>
-    </div>
-  );
-}
-
-function TyreSizeConverter() {
-  const [mode, setMode] = useState("info");
-  const [width, setWidth] = useState("225");
-  const [aspect, setAspect] = useState("45");
-  const [rim, setRim] = useState("17");
-  const [width2, setWidth2] = useState("235");
-  const [aspect2, setAspect2] = useState("45");
-  const [rim2, setRim2] = useState("17");
-
-  const calcTyre = (w: string, a: string, r: string) => {
-    const wN = parseFloat(w)||225; const aN = parseFloat(a)||45; const rN = parseFloat(r)||17;
-    const sidewall = wN * aN / 100;
-    const diamMm = sidewall * 2 + rN * 25.4;
-    const diamIn = diamMm / 25.4;
-    const circ = Math.PI * diamMm;
-    const revsKm = 1000000 / circ;
-    return { wN, aN, rN, sidewall, diamMm, diamIn, circ, revsKm };
-  };
-
-  const t1 = calcTyre(width, aspect, rim);
-  const t2 = calcTyre(width2, aspect2, rim2);
-  const speedErr = t1.diamMm > 0 ? ((t2.diamMm - t1.diamMm) / t1.diamMm) * 100 : 0;
-
-  return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Tyre Size Calculator" icon={Settings} iconColor="bg-gray-500">
-        <ModeBar modes={[{ id: "info", label: "Tyre Info" }, { id: "compare", label: "Compare Sizes" }]} active={mode} onChange={setMode} />
-        <div className="p-2 bg-muted/30 rounded-xl text-xs text-muted-foreground mb-3 font-mono">Format: Width/Aspect R Rim — e.g. 225/45 R17</div>
-        <div className="grid grid-cols-3 gap-2">
-          <InputField label="Width (mm)" value={width} onChange={setWidth} type="number" />
-          <InputField label="Aspect (%)" value={aspect} onChange={setAspect} type="number" />
-          <InputField label="Rim (in)" value={rim} onChange={setRim} type="number" />
-        </div>
-        {mode === "compare" && (
-          <div className="mt-3">
-            <div className="text-xs font-semibold text-muted-foreground mb-2">Tyre 2 (new size)</div>
-            <div className="grid grid-cols-3 gap-2">
-              <InputField label="Width (mm)" value={width2} onChange={setWidth2} type="number" />
-              <InputField label="Aspect (%)" value={aspect2} onChange={setAspect2} type="number" />
-              <InputField label="Rim (in)" value={rim2} onChange={setRim2} type="number" />
-            </div>
-          </div>
-        )}
-        <div className="space-y-2 mt-3">
-          <Row label="Sidewall Height" value={`${fmt(t1.sidewall, 1)} mm`} />
-          <Row label="Overall Diameter" value={`${fmt(t1.diamIn, 1)}" (${fmt(t1.diamMm, 0)} mm)`} hi />
-          <Row label="Circumference" value={`${fmt(t1.circ / 1000, 3)} m`} />
-          <Row label="Revs per km" value={fmt(t1.revsKm, 0)} />
-          {mode === "compare" && (
-            <>
-              <div className="mt-2 text-[10px] font-bold text-muted-foreground uppercase">Tyre 2 Results</div>
-              <Row label="T2 Diameter" value={`${fmt(t2.diamIn, 1)}" (${fmt(t2.diamMm, 0)} mm)`} />
-              <Row label="T2 Circumference" value={`${fmt(t2.circ / 1000, 3)} m`} />
-              <Row label="T2 Revs/km" value={fmt(t2.revsKm, 0)} />
-              <Row label="Speedometer Error" value={`${speedErr > 0 ? "+" : ""}${fmt(speedErr, 2)}%`} hi accent={Math.abs(speedErr) > 3 ? "text-red-400" : "text-emerald-400"} />
-              <div className="p-2 bg-muted/20 rounded-xl text-xs text-muted-foreground">{Math.abs(speedErr) > 3 ? "⚠️ Large size difference — may affect speedometer accuracy" : "✅ Within acceptable tolerance"}</div>
-            </>
-          )}
-        </div>
-      </ToolCard>
-    </div>
-  );
-}
-
-function RPMSpeedCalculator() {
-  const [mode, setMode] = useState("speed");
-  const [speedUnit, setSpeedUnit] = useState("kmh");
-  const [rpm, setRpm] = useState("3000");
-  const [speed, setSpeed] = useState("100");
-  const [gearRatio, setGearRatio] = useState("3.5");
-  const [finalDrive, setFinalDrive] = useState("3.73");
-  const [tyreDiameter, setTyreDiameter] = useState("26");
-
-  const r = parseFloat(rpm)||0; const s = parseFloat(speed)||0;
-  const gr = parseFloat(gearRatio)||1; const fd = parseFloat(finalDrive)||1;
-  const td = parseFloat(tyreDiameter)||26;
-  const circ = Math.PI * td * 0.0254;
-  const calcSpeed = () => { const kmh = (r * circ * 60) / (gr * fd * 1000); return speedUnit === "kmh" ? kmh : kmh * 0.621371; };
-  const calcRPM = () => { const kmh = speedUnit === "kmh" ? s : s * 1.60934; return (kmh * gr * fd * 1000) / (circ * 60); };
-  const result = mode === "speed" ? calcSpeed() : calcRPM();
-  const resultLabel = mode === "speed" ? (speedUnit === "kmh" ? "km/h" : "mph") : "RPM";
-
-  const gearPresets = [
-    { label: "1st", ratio: "3.5" }, { label: "2nd", ratio: "2.0" },
-    { label: "3rd", ratio: "1.3" }, { label: "4th", ratio: "1.0" },
-    { label: "5th", ratio: "0.8" }, { label: "6th", ratio: "0.65" },
-  ];
-
-  return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="RPM / Speed Calculator" icon={Gauge} iconColor="bg-red-500">
-        <ModeBar modes={[{ id: "speed", label: "Find Speed" }, { id: "rpm", label: "Find RPM" }]} active={mode} onChange={setMode} color="bg-red-600" />
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-semibold text-muted-foreground">Speed Unit</span>
-          <div className="flex gap-1.5">
-            {["kmh", "mph"].map(u => (
-              <button key={u} onClick={() => setSpeedUnit(u)} className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${speedUnit === u ? "bg-red-500 text-white" : "bg-muted text-muted-foreground"}`}>{u}</button>
-            ))}
-          </div>
-        </div>
-        {mode === "speed" ? <InputField label="Engine RPM" value={rpm} onChange={setRpm} type="number" />
-          : <InputField label={`Speed (${speedUnit === "kmh" ? "km/h" : "mph"})`} value={speed} onChange={setSpeed} type="number" />}
-        <div className="mb-2">
-          <label className="text-xs font-semibold text-muted-foreground uppercase mb-1.5 block">Gear Ratio Preset</label>
-          <div className="flex gap-1.5 flex-wrap">
-            {gearPresets.map(g => (
-              <button key={g.label} onClick={() => setGearRatio(g.ratio)} className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${gearRatio === g.ratio ? "bg-red-500 text-white" : "bg-muted text-muted-foreground"}`}>{g.label}</button>
-            ))}
-          </div>
-        </div>
-        <InputField label="Gear Ratio" value={gearRatio} onChange={setGearRatio} type="number" step={0.1} />
-        <InputField label="Final Drive Ratio" value={finalDrive} onChange={setFinalDrive} type="number" step={0.01} />
-        <InputField label="Tyre Diameter (inches)" value={tyreDiameter} onChange={setTyreDiameter} type="number" />
-        <div className="mt-3 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-center">
-          <div className="text-3xl font-black text-red-400 mb-1">{fmt(result, 1)} {resultLabel}</div>
-          <div className="text-xs text-muted-foreground">{mode === "speed" ? "Vehicle Speed" : "Engine RPM"}</div>
-        </div>
-      </ToolCard>
-    </div>
-  );
-}
-
-function GearRatioCalculator() {
-  const [mode, setMode] = useState("simple");
-  const [drivingTeeth, setDrivingTeeth] = useState("15");
-  const [drivenTeeth, setDrivenTeeth] = useState("45");
-  const [inputRPM, setInputRPM] = useState("3000");
-
-  const transmissionGears = [
-    { gear: "1st", ratio: "3.5" }, { gear: "2nd", ratio: "2.0" },
-    { gear: "3rd", ratio: "1.3" }, { gear: "4th", ratio: "1.0" },
-    { gear: "5th", ratio: "0.8" }, { gear: "6th", ratio: "0.65" },
-  ];
-
-  const driving = parseInt(drivingTeeth)||1;
-  const driven = parseInt(drivenTeeth)||1;
-  const ratio = driven / driving;
-  const inRpm = parseFloat(inputRPM)||3000;
-  const outRpm = inRpm / ratio;
-  const torqueMultiplier = ratio;
-
-  return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Gear Ratio Calculator" icon={Settings} iconColor="bg-purple-500">
-        <ModeBar modes={[{ id: "simple", label: "Simple Ratio" }, { id: "transmission", label: "Transmission" }]} active={mode} onChange={setMode} color="bg-purple-600" />
-        {mode === "simple" ? (
-          <div className="space-y-3">
-            <InputField label="Driving Gear Teeth (input)" value={drivingTeeth} onChange={setDrivingTeeth} type="number" />
-            <InputField label="Driven Gear Teeth (output)" value={drivenTeeth} onChange={setDrivenTeeth} type="number" />
-            <InputField label="Input RPM" value={inputRPM} onChange={setInputRPM} type="number" />
-            <div className="space-y-2 mt-2">
-              <Row label="Gear Ratio" value={`${fmt(ratio, 3)}:1`} hi />
-              <Row label="Output RPM" value={`${fmt(outRpm, 0)} RPM`} />
-              <Row label="Torque Multiplier" value={`${fmt(torqueMultiplier, 3)}×`} />
-              <Row label="Type" value={ratio > 1 ? "⬇️ Speed reduction / torque up" : "⬆️ Speed increase / torque down"} />
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <InputField label="Engine RPM" value={inputRPM} onChange={setInputRPM} type="number" />
-            <div className="space-y-1.5">
-              {transmissionGears.map(g => {
-                const gRatio = parseFloat(g.ratio);
-                const outR = inRpm / gRatio;
-                return (
-                  <div key={g.gear} className="flex items-center justify-between p-2.5 bg-muted/30 rounded-xl">
-                    <span className="text-xs font-bold text-muted-foreground">{g.gear} ({g.ratio}:1)</span>
-                    <span className="text-sm font-bold text-purple-400">{fmt(outR, 0)} RPM out</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </ToolCard>
-    </div>
-  );
-}
-
-function EVRangeEstimator() {
-  const [currency, setCurrency] = useState("INR");
-  const [mode, setMode] = useState("range");
-  const [batteryCapacity, setBatteryCapacity] = useState("75");
-  const [efficiency, setEfficiency] = useState("15");
-  const [currentCharge, setCurrentCharge] = useState("80");
-  const [drivingMode, setDrivingMode] = useState("mixed");
-  const [temperature, setTemperature] = useState("25");
-  const [electricityRate, setElectricityRate] = useState("8");
-
-  const efficiencyByMode: Record<string, number> = { city: 12, highway: 18, mixed: 15 };
-  const tempFactor = (t: number) => t < 0 ? 0.65 : t < 10 ? 0.8 : t > 35 ? 0.9 : 1.0;
-
-  const capacity = parseFloat(batteryCapacity)||75;
-  const eff = parseFloat(efficiency) || efficiencyByMode[drivingMode];
-  const charge = parseFloat(currentCharge)||100;
-  const temp = parseFloat(temperature)||25;
-  const elRate = parseFloat(electricityRate)||8;
-
-  const usableEnergy = capacity * (charge / 100);
-  const tFactor = tempFactor(temp);
-  const estimatedRange = usableEnergy / (eff / 100) * tFactor;
-  const fullChargeCost = capacity * elRate;
-  const costPer100km = eff * elRate / 100;
-
-  return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="EV Range Estimator" icon={Zap} iconColor="bg-green-500">
-        <ModeBar modes={[{ id: "range", label: "Estimate Range" }, { id: "cost", label: "Charging Cost" }]} active={mode} onChange={setMode} color="bg-green-600" />
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-semibold text-muted-foreground">Currency</span>
-          <CurrencySelect value={currency} onChange={setCurrency} />
-        </div>
-        <InputField label="Battery Capacity (kWh)" value={batteryCapacity} onChange={setBatteryCapacity} type="number" />
-        <InputField label="Current Charge (%)" value={currentCharge} onChange={setCurrentCharge} type="number" max={100} />
-        <div className="mb-3">
-          <label className="text-xs font-semibold text-muted-foreground uppercase mb-1.5 block">Driving Mode</label>
-          <div className="flex gap-1.5">
-            {Object.keys(efficiencyByMode).map(m => (
-              <button key={m} onClick={() => { setDrivingMode(m); setEfficiency(String(efficiencyByMode[m])); }} data-testid={`drive-${m}`}
-                className={`flex-1 py-2 rounded-lg text-xs font-bold capitalize transition-all ${drivingMode === m ? "bg-green-500 text-white" : "bg-muted text-muted-foreground"}`}>{m}</button>
-            ))}
-          </div>
-        </div>
-        <InputField label="Energy Usage (kWh/100km)" value={efficiency} onChange={setEfficiency} type="number" />
-        <InputField label="Ambient Temperature (°C)" value={temperature} onChange={setTemperature} type="number" />
-        {mode === "cost" && <InputField label={`Electricity Rate (${cs(currency)}/kWh)`} value={electricityRate} onChange={setElectricityRate} type="number" />}
-        <div className="space-y-2 mt-3">
-          <Row label="Usable Energy" value={`${fmt(usableEnergy, 1)} kWh`} />
-          <Row label={`Temperature Factor (${temp}°C)`} value={`${fmt(tFactor * 100, 0)}%`} />
-          <Row label="Estimated Range" value={`${fmt(estimatedRange, 0)} km`} hi accent="text-green-400" />
-          <Row label="Range in miles" value={`${fmt(estimatedRange * 0.621371, 0)} mi`} />
-          {mode === "cost" && <>
-            <Row label="Full Charge Cost" value={`${cs(currency)}${fmt(fullChargeCost)}`} hi />
-            <Row label={`Cost per 100km`} value={`${cs(currency)}${fmt(costPer100km, 1)}`} />
-          </>}
-        </div>
-      </ToolCard>
-    </div>
-  );
-}
-
-function ChargingTimeCalculator() {
-  const [currency, setCurrency] = useState("INR");
-  const [batteryCapacity, setBatteryCapacity] = useState("75");
-  const [currentCharge, setCurrentCharge] = useState("20");
-  const [targetCharge, setTargetCharge] = useState("80");
-  const [chargerType, setChargerType] = useState("custom");
-  const [chargerPower, setChargerPower] = useState("11");
-  const [electricityRate, setElectricityRate] = useState("8");
-
-  const chargerPresets: Record<string, { power: number; label: string }> = {
-    "2pin_home": { power: 1.8, label: "2-Pin Home (1.8kW)" },
-    "level2_home": { power: 7.2, label: "Level 2 AC (7.2kW)" },
-    "level2_public": { power: 22, label: "Public AC (22kW)" },
-    "dc_fast_50": { power: 50, label: "DC Fast (50kW)" },
-    "dc_fast_150": { power: 150, label: "DC Superfast (150kW)" },
-    "dc_ultra": { power: 350, label: "Ultra Fast (350kW)" },
-    custom: { power: parseFloat(chargerPower)||11, label: "Custom" },
-  };
-
-  const capacity = parseFloat(batteryCapacity)||75;
-  const current = parseFloat(currentCharge)||0;
-  const target = parseFloat(targetCharge)||100;
-  const power = chargerPresets[chargerType].power;
-  const elRate = parseFloat(electricityRate)||8;
-
-  const energyNeeded = capacity * ((target - current) / 100);
-  const chargingTime = energyNeeded / power;
-  const hours = Math.floor(chargingTime);
-  const minutes = Math.round((chargingTime - hours) * 60);
-  const chargingCost = energyNeeded * elRate;
-
-  return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="EV Charging Time" icon={Clock} iconColor="bg-blue-500">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-semibold text-muted-foreground">Currency</span>
-          <CurrencySelect value={currency} onChange={setCurrency} />
-        </div>
-        <div className="mb-3">
-          <label className="text-xs font-semibold text-muted-foreground uppercase mb-1.5 block">Charger Type</label>
-          <select value={chargerType} onChange={e => setChargerType(e.target.value)} className="w-full bg-muted/50 border border-border rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none">
-            {Object.entries(chargerPresets).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-          </select>
-        </div>
-        {chargerType === "custom" && <InputField label="Charger Power (kW)" value={chargerPower} onChange={setChargerPower} type="number" />}
-        <InputField label="Battery Capacity (kWh)" value={batteryCapacity} onChange={setBatteryCapacity} type="number" />
-        <div className="grid grid-cols-2 gap-2">
-          <InputField label="Current Charge (%)" value={currentCharge} onChange={setCurrentCharge} type="number" max={100} />
-          <InputField label="Target Charge (%)" value={targetCharge} onChange={setTargetCharge} type="number" max={100} />
-        </div>
-        <InputField label={`Electricity Rate (${cs(currency)}/kWh)`} value={electricityRate} onChange={setElectricityRate} type="number" />
-        <div className="space-y-2 mt-3">
-          <Row label="Energy to add" value={`${fmt(energyNeeded, 1)} kWh`} />
-          <Row label="Charger Power" value={`${power} kW`} />
-          <Row label="Charging Time" value={`${hours}h ${minutes}m`} hi accent="text-blue-400" />
-          <Row label={`Charging Cost`} value={`${cs(currency)}${fmt(chargingCost, 1)}`} hi />
-        </div>
-      </ToolCard>
-    </div>
-  );
-}
-
-function TollCostEstimator() {
-  const [currency, setCurrency] = useState("INR");
-  const [mode, setMode] = useState("distance");
-  const [distance, setDistance] = useState("200");
-  const [distUnit, setDistUnit] = useState("km");
-  const [ratePerKm, setRatePerKm] = useState("1.5");
-  const [vehicleType, setVehicleType] = useState("car");
-  const [numTolls, setNumTolls] = useState("5");
-  const [ratePerToll, setRatePerToll] = useState("60");
-
-  const multipliers: Record<string, { mul: number; label: string }> = {
-    two_wheeler: { mul: 0.5, label: "2-Wheeler" }, car: { mul: 1, label: "Car/Jeep" },
-    lcv: { mul: 1.5, label: "LCV/Mini" }, bus: { mul: 2.5, label: "Bus/Truck" },
-    hcv: { mul: 3.5, label: "HCV/Multi-axle" },
-  };
-
-  const d = parseFloat(distance)||0;
-  const distKm = distUnit === "km" ? d : d * 1.60934;
-  const rate = parseFloat(ratePerKm)||0;
-  const mul = multipliers[vehicleType].mul;
-  const tolls = parseInt(numTolls)||0;
-  const perToll = parseFloat(ratePerToll)||0;
-  const distanceToll = distKm * rate * mul;
-  const fixedToll = tolls * perToll * mul;
-
-  return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Toll Cost Estimator" icon={DollarSign} iconColor="bg-amber-500">
-        <ModeBar modes={[{ id: "distance", label: "By Distance" }, { id: "manual", label: "Manual Tolls" }]} active={mode} onChange={setMode} color="bg-amber-600" />
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-semibold text-muted-foreground">Currency</span>
-          <CurrencySelect value={currency} onChange={setCurrency} />
-        </div>
-        <div className="mb-3">
-          <label className="text-xs font-semibold text-muted-foreground uppercase mb-1.5 block">Vehicle Type</label>
-          <div className="flex gap-1.5 flex-wrap">
-            {Object.entries(multipliers).map(([k, v]) => (
-              <button key={k} onClick={() => setVehicleType(k)} data-testid={`vehicle-${k}`}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${vehicleType === k ? "bg-amber-500 text-white" : "bg-muted text-muted-foreground"}`}>{v.label}</button>
-            ))}
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <div className="flex-1"><InputField label="Distance" value={distance} onChange={setDistance} type="number" /></div>
-          <div className="mt-6">
-            <select value={distUnit} onChange={e => setDistUnit(e.target.value)} className="bg-muted/50 border border-border rounded-lg px-2 py-2.5 text-sm text-foreground focus:outline-none">
-              {["km", "miles"].map(u => <option key={u} value={u}>{u}</option>)}
-            </select>
-          </div>
-        </div>
-        {mode === "distance" ? (
-          <InputField label={`Toll Rate (${cs(currency)}/km)`} value={ratePerKm} onChange={setRatePerKm} type="number" step={0.1} />
-        ) : (
-          <div className="grid grid-cols-2 gap-2">
-            <InputField label="Number of Tolls" value={numTolls} onChange={setNumTolls} type="number" />
-            <InputField label={`Rate per Toll (${cs(currency)})`} value={ratePerToll} onChange={setRatePerToll} type="number" />
-          </div>
-        )}
-        <div className="space-y-2 mt-3">
-          <Row label="Distance (km)" value={`${fmt(distKm)} km`} />
-          <Row label={`Vehicle Multiplier`} value={`${mul}×`} />
-          <Row label="Estimated Toll" value={`${cs(currency)}${fmt(mode === "distance" ? distanceToll : fixedToll)}`} hi accent="text-amber-400" />
-          {mode === "manual" && <Row label="Per Toll Average" value={`${cs(currency)}${fmt(perToll * mul)}`} />}
-        </div>
-      </ToolCard>
-    </div>
-  );
-}
-
-function DepreciationCalculator() {
-  const [currency, setCurrency] = useState("INR");
-  const [mode, setMode] = useState("reducing");
-  const [purchasePrice, setPurchasePrice] = useState("1200000");
-  const [age, setAge] = useState("3");
-  const [deprecationRate, setDeprecationRate] = useState("15");
-  const [residualValue, setResidualValue] = useState("200000");
-  const [usefulLife, setUsefulLife] = useState("10");
-
-  const price = parseFloat(purchasePrice)||0;
-  const years = parseInt(age)||0;
-  const rate = parseFloat(deprecationRate)||15;
-  const residual = parseFloat(residualValue)||0;
-  const life = parseInt(usefulLife)||10;
-
-  const reducingValue = price * Math.pow(1 - rate / 100, years);
-  const straightLineDepr = life > 0 ? (price - residual) / life : 0;
-  const straightLineValue = price - straightLineDepr * years;
-  const currentValue = mode === "reducing" ? reducingValue : Math.max(residual, straightLineValue);
-  const totalLost = price - currentValue;
-  const pctLost = price > 0 ? (totalLost / price) * 100 : 0;
-
-  const yearByYear = Array.from({ length: Math.min(years + 2, 8) }, (_, i) => ({
-    year: i + 1,
-    value: mode === "reducing" ? price * Math.pow(1 - rate / 100, i + 1) : Math.max(residual, price - straightLineDepr * (i + 1)),
-  }));
-
-  return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Car Depreciation" icon={TrendingDown} iconColor="bg-red-500">
-        <ModeBar modes={[{ id: "reducing", label: "Reducing Balance" }, { id: "straight", label: "Straight Line" }]} active={mode} onChange={setMode} color="bg-red-600" />
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-semibold text-muted-foreground">Currency</span>
-          <CurrencySelect value={currency} onChange={setCurrency} />
-        </div>
-        <InputField label={`Purchase Price (${cs(currency)})`} value={purchasePrice} onChange={setPurchasePrice} type="number" />
-        <InputField label="Current Age (years)" value={age} onChange={setAge} type="number" />
-        {mode === "reducing" ? (
-          <InputField label="Annual Depreciation Rate (%)" value={deprecationRate} onChange={setDeprecationRate} type="number" />
-        ) : (
-          <>
-            <InputField label={`Residual Value (${cs(currency)})`} value={residualValue} onChange={setResidualValue} type="number" />
-            <InputField label="Useful Life (years)" value={usefulLife} onChange={setUsefulLife} type="number" />
-          </>
-        )}
-        <div className="space-y-2 mt-3">
-          <Row label="Purchase Price" value={`${cs(currency)}${fmt(price, 0)}`} />
-          <Row label="Current Value" value={`${cs(currency)}${fmt(currentValue, 0)}`} hi accent="text-emerald-400" />
-          <Row label="Value Lost" value={`${cs(currency)}${fmt(totalLost, 0)}`} accent="text-red-400" />
-          <Row label="Percent Lost" value={`${fmt(pctLost, 1)}%`} />
-        </div>
-        <div className="mt-3">
-          <div className="text-[10px] font-bold text-muted-foreground uppercase mb-2">Year-by-Year Value</div>
-          <div className="space-y-1">
-            {yearByYear.map(y => (
-              <div key={y.year} className="flex justify-between items-center px-2.5 py-1.5 bg-muted/20 rounded-lg">
-                <span className="text-[10px] text-muted-foreground">Year {y.year}</span>
-                <span className="text-xs font-bold text-foreground">{cs(currency)}{fmt(y.value, 0)}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </ToolCard>
-    </div>
-  );
-}
-
-function InsuranceEstimator() {
-  const [currency, setCurrency] = useState("INR");
-  const [mode, setMode] = useState("premium");
-  const [carValue, setCarValue] = useState("1200000");
-  const [driverAge, setDriverAge] = useState("30");
-  const [yearsNoClaim, setYearsNoClaim] = useState("3");
-  const [coverType, setCoverType] = useState("comprehensive");
-  const [addons, setAddons] = useState<string[]>([]);
-  const [engineCC, setEngineCC] = useState("1500");
-
-  const toggleAddon = (a: string) => setAddons(prev => prev.includes(a) ? prev.filter(x => x !== a) : [...prev, a]);
-  const addonCosts: Record<string, number> = { "Zero Dep": 0.008, "Engine Protect": 0.005, "Return to Invoice": 0.012, "Roadside Assist": 500, "NCB Protect": 0.006 };
-
-  const value = parseFloat(carValue)||0;
-  const age = parseInt(driverAge)||30;
-  const ncb = parseInt(yearsNoClaim)||0;
-  const cc = parseInt(engineCC)||1500;
-
-  const baseRate = coverType === "comprehensive" ? (cc <= 1000 ? 0.032 : cc <= 1500 ? 0.035 : 0.04) : 0.02;
-  const ageMultiplier = age < 25 ? 1.5 : age > 65 ? 1.3 : 1;
-  const ncbDiscount = [0, 0.2, 0.25, 0.35, 0.45, 0.5][Math.min(ncb, 5)];
-  const basePremium = value * baseRate * ageMultiplier;
-  const discountAmt = basePremium * ncbDiscount;
-  const addonCostTotal = addons.reduce((sum, a) => sum + (typeof addonCosts[a] === "number" && addonCosts[a] < 1 ? value * addonCosts[a] : addonCosts[a]), 0);
-  const finalPremium = basePremium - discountAmt + addonCostTotal;
-
-  return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Insurance Premium Estimator" icon={Shield} iconColor="bg-blue-500">
-        <ModeBar modes={[{ id: "premium", label: "Premium Calc" }, { id: "ncb", label: "NCB Calculator" }]} active={mode} onChange={setMode} color="bg-blue-600" />
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-semibold text-muted-foreground">Currency</span>
-          <CurrencySelect value={currency} onChange={setCurrency} />
-        </div>
-        <InputField label={`Car Value / IDV (${cs(currency)})`} value={carValue} onChange={setCarValue} type="number" />
-        <InputField label="Engine Capacity (cc)" value={engineCC} onChange={setEngineCC} type="number" />
-        <InputField label="Driver Age (years)" value={driverAge} onChange={setDriverAge} type="number" />
-        <InputField label="Claim-Free Years (NCB)" value={yearsNoClaim} onChange={setYearsNoClaim} type="number" />
-        <div className="mb-3">
-          <label className="text-xs font-semibold text-muted-foreground uppercase mb-1.5 block">Coverage Type</label>
-          <div className="flex gap-1.5">
-            {["comprehensive", "thirdparty"].map(c => (
-              <button key={c} onClick={() => setCoverType(c)} data-testid={`cover-${c}`}
-                className={`flex-1 py-2 rounded-lg text-xs font-bold capitalize transition-all ${coverType === c ? "bg-blue-500 text-white" : "bg-muted text-muted-foreground"}`}>
-                {c === "thirdparty" ? "Third Party" : c}
-              </button>
-            ))}
-          </div>
-        </div>
-        {mode === "premium" && (
-          <div className="mb-3">
-            <label className="text-xs font-semibold text-muted-foreground uppercase mb-1.5 block">Add-Ons</label>
-            <div className="flex gap-1.5 flex-wrap">
-              {Object.keys(addonCosts).map(a => (
-                <button key={a} onClick={() => toggleAddon(a)} className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-all ${addons.includes(a) ? "bg-blue-500 text-white" : "bg-muted text-muted-foreground"}`}>{a}</button>
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Fuel & Distance" icon={Fuel} iconColor="bg-orange-500" currency={currency} currencies={CURRENCIES} onCurrencyChange={setCurrency}>
+          <ModeSelector modes={[{ id:"trip", label:"Trip Cost" }, { id:"budget", label:"Budget Range" }]} active={mode} onChange={setMode} />
+          <div>
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Fuel Type</label>
+            <div className="grid grid-cols-4 gap-1.5">
+              {Object.keys(ftDefaults).map(ft => (
+                <button key={ft} onClick={() => { setFuelType(ft); setFuelPrice(ftDefaults[ft].price); setMileage(ftDefaults[ft].mileage); }} data-testid={`fuel-${ft}`}
+                  className={`py-2 rounded-lg text-xs font-bold capitalize ${fuelType === ft ? "bg-orange-500 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{ft}</button>
               ))}
             </div>
           </div>
-        )}
-        <div className="space-y-2 mt-3">
-          {mode === "premium" ? (
+          <div className="grid grid-cols-2 gap-3">
+            <InputField label="Distance" value={distance} onChange={setDistance} type="number" />
+            <div>
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Unit</label>
+              <div className="flex gap-1.5">
+                {["km","miles"].map(u => <button key={u} onClick={() => setDistUnit(u)} className={`flex-1 py-2.5 rounded-xl text-xs font-bold ${distUnit === u ? "bg-orange-500 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{u}</button>)}
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <InputField label="Mileage" value={mileage} onChange={setMileage} type="number" />
+            <div>
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Unit</label>
+              <select value={mileageUnit} onChange={e => setMileageUnit(e.target.value)} className="w-full bg-muted/30 border border-border rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none">
+                {(fuelType === "ev" ? ["km/kWh","mi/kWh"] : ["kmpl","mpg","l100km"]).map(u => <option key={u} value={u}>{u}</option>)}
+              </select>
+            </div>
+          </div>
+          <InputField label={`${fuelType === "ev" ? "Electricity" : "Fuel"} Price (${cs(currency)}/L)`} value={fuelPrice} onChange={setFuelPrice} type="number" prefix={cs(currency)} />
+          {mode === "budget" && <InputField label="Your Budget" value={budget} onChange={setBudget} type="number" prefix={cs(currency)} />}
+        </InputPanel>
+      }
+      results={
+        mode === "trip" ? (
+          <ResultPanel label="Trip Fuel Cost"
+            primary={`${cs(currency)}${fmt(totalCost)}`}
+            summaries={<>
+              <SummaryCard label="Fuel Needed" value={`${fmt(fuelNeeded, 1)} ${fuelType === "ev" ? "kWh" : "L"}`} accent="text-orange-500" />
+              <SummaryCard label="Cost per km" value={`${cs(currency)}${fmt(costPerKm, 3)}`} />
+            </>}
+          >
+            <BreakdownRow label={`Distance (km)`} value={`${fmt(distKm)} km`} dot="bg-blue-400" />
+            <BreakdownRow label="Fuel / Energy Needed" value={`${fmt(fuelNeeded, 1)} ${fuelType === "ev" ? "kWh" : "L"}`} dot="bg-orange-400" />
+            <BreakdownRow label="Total Cost" value={`${cs(currency)}${fmt(totalCost)}`} dot="bg-green-500" bold />
+            <BreakdownRow label="Cost per km" value={`${cs(currency)}${fmt(costPerKm, 3)}/km`} dot="bg-purple-400" />
+            <BreakdownRow label="Cost per mile" value={`${cs(currency)}${fmt(costPerKm*1.60934, 3)}/mi`} />
+          </ResultPanel>
+        ) : (
+          <ResultPanel label="Maximum Range"
+            primary={`${fmt(budgetDist)} km`}
+            summaries={<>
+              <SummaryCard label="In Miles" value={`${fmt(budgetDist/1.60934)} mi`} accent="text-orange-500" />
+              <SummaryCard label="Fuel Buyable" value={`${fmt((parseFloat(budget)||0)/(parseFloat(fuelPrice)||1), 1)} ${fuelType === "ev" ? "kWh" : "L"}`} />
+            </>}
+          >
+            <BreakdownRow label="Budget" value={`${cs(currency)}${fmt(parseFloat(budget)||0)}`} dot="bg-blue-400" />
+            <BreakdownRow label="Fuel Price" value={`${cs(currency)}${fmt(parseFloat(fuelPrice)||0)}/L`} dot="bg-orange-400" />
+            <BreakdownRow label="Mileage" value={`${fmt(mKmpl, 1)} km/L`} dot="bg-green-500" />
+            <BreakdownRow label="Max Range (km)" value={`${fmt(budgetDist)} km`} bold />
+          </ResultPanel>
+        )
+      }
+    />
+  );
+}
+
+function TyreSize() {
+  const [mode, setMode] = useState("info");
+  const [w1, setW1] = useState("225"); const [a1, setA1] = useState("45"); const [r1, setR1] = useState("17");
+  const [w2, setW2] = useState("235"); const [a2, setA2] = useState("45"); const [r2, setR2] = useState("17");
+
+  const calc = (w: string, a: string, r: string) => {
+    const wN = parseFloat(w)||225; const aN = parseFloat(a)||45; const rN = parseFloat(r)||17;
+    const sw = wN * aN/100; const diamMm = sw*2 + rN*25.4;
+    return { sw, diamMm, diamIn: diamMm/25.4, circ: Math.PI*diamMm, revKm: 1000000/(Math.PI*diamMm) };
+  };
+  const t1 = calc(w1,a1,r1); const t2 = calc(w2,a2,r2);
+  const speedErr = t1.diamMm > 0 ? ((t2.diamMm-t1.diamMm)/t1.diamMm)*100 : 0;
+
+  return (
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Tyre Dimensions" icon={Settings} iconColor="bg-gray-600">
+          <ModeSelector modes={[{ id:"info", label:"Tyre Info" }, { id:"compare", label:"Compare Sizes" }]} active={mode} onChange={setMode} />
+          <div className="text-xs text-muted-foreground p-2.5 bg-muted/20 rounded-lg">Format: Width/Aspect R Rim — e.g. 225/45 R17</div>
+          <div className="grid grid-cols-3 gap-2">
+            <InputField label="Width (mm)" value={w1} onChange={setW1} type="number" />
+            <InputField label="Aspect (%)" value={a1} onChange={setA1} type="number" />
+            <InputField label="Rim (in)" value={r1} onChange={setR1} type="number" />
+          </div>
+          {mode === "compare" && (
             <>
-              <Row label="Base Premium" value={`${cs(currency)}${fmt(basePremium, 0)}`} />
-              <Row label={`NCB Discount (${ncbDiscount * 100}%)`} value={`-${cs(currency)}${fmt(discountAmt, 0)}`} accent="text-green-400" />
-              {addons.length > 0 && <Row label="Add-On Cost" value={`+${cs(currency)}${fmt(addonCostTotal, 0)}`} />}
-              <Row label="Annual Premium" value={`${cs(currency)}${fmt(finalPremium, 0)}`} hi accent="text-blue-400" />
-              <Row label="Monthly (approx)" value={`${cs(currency)}${fmt(finalPremium / 12, 0)}`} />
-            </>
-          ) : (
-            <>
-              {[0, 1, 2, 3, 4, 5].map(yr => {
-                const disc = [0, 0.2, 0.25, 0.35, 0.45, 0.5][yr];
-                return (
-                  <div key={yr} className="flex justify-between items-center p-2.5 bg-muted/30 rounded-xl">
-                    <span className="text-xs font-semibold text-muted-foreground">{yr} claim-free year{yr !== 1 ? "s" : ""}</span>
-                    <span className="text-sm font-bold text-blue-400">{disc * 100}% NCB</span>
-                  </div>
-                );
-              })}
+              <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide pt-2">New / Replacement Tyre</div>
+              <div className="grid grid-cols-3 gap-2">
+                <InputField label="Width (mm)" value={w2} onChange={setW2} type="number" />
+                <InputField label="Aspect (%)" value={a2} onChange={setA2} type="number" />
+                <InputField label="Rim (in)" value={r2} onChange={setR2} type="number" />
+              </div>
             </>
           )}
-        </div>
-      </ToolCard>
-    </div>
+        </InputPanel>
+      }
+      results={
+        <ResultPanel label="Tyre Specifications"
+          primary={`${fmt(t1.diamIn, 1)}"`}
+          primarySub={`(${fmt(t1.diamMm, 0)} mm)`}
+          summaries={<>
+            <SummaryCard label="Circumference" value={`${fmt(t1.circ/1000, 3)} m`} />
+            <SummaryCard label="Revs per km" value={`${fmt(t1.revKm, 0)}`} />
+          </>}
+        >
+          <BreakdownRow label="Sidewall Height" value={`${fmt(t1.sw, 1)} mm`} dot="bg-blue-400" />
+          <BreakdownRow label="Overall Diameter" value={`${fmt(t1.diamIn, 2)}" / ${fmt(t1.diamMm, 1)} mm`} dot="bg-green-500" bold />
+          <BreakdownRow label="Circumference" value={`${fmt(t1.circ/1000, 3)} m`} dot="bg-purple-400" />
+          <BreakdownRow label="Revs per km" value={`${fmt(t1.revKm, 0)}`} dot="bg-amber-400" />
+          {mode === "compare" && (
+            <>
+              <BreakdownRow label="T2 Diameter" value={`${fmt(t2.diamIn, 2)}" / ${fmt(t2.diamMm, 1)} mm`} />
+              <BreakdownRow label="T2 Revs/km" value={`${fmt(t2.revKm, 0)}`} />
+              <BreakdownRow label="Speedometer Error" value={`${speedErr > 0 ? "+" : ""}${fmt(speedErr, 2)}%`} bold />
+            </>
+          )}
+        </ResultPanel>
+      }
+    />
+  );
+}
+
+function RPMSpeed() {
+  const [mode, setMode] = useState("speed");
+  const [rpm, setRpm] = useState("3000"); const [speed, setSpeed] = useState("100");
+  const [gearRatio, setGearRatio] = useState("3.5"); const [finalDrive, setFinalDrive] = useState("3.73");
+  const [tyreDiam, setTyreDiam] = useState("26"); const [speedUnit, setSpeedUnit] = useState("kmh");
+
+  const circ = Math.PI * (parseFloat(tyreDiam)||26) * 0.0254;
+  const gr = parseFloat(gearRatio)||1; const fd = parseFloat(finalDrive)||1;
+  const rpmN = parseFloat(rpm)||0;
+  const calcSpeed = () => { const k = (rpmN * circ * 60) / (gr * fd * 1000); return speedUnit === "kmh" ? k : k*0.621371; };
+  const calcRPM = () => { const kmh = speedUnit === "kmh" ? parseFloat(speed)||0 : (parseFloat(speed)||0)*1.60934; return (kmh * gr * fd * 1000) / (circ * 60); };
+  const result = mode === "speed" ? calcSpeed() : calcRPM();
+
+  const gearPresets = [{ l:"1st",r:"3.5" },{ l:"2nd",r:"2.0" },{ l:"3rd",r:"1.3" },{ l:"4th",r:"1.0" },{ l:"5th",r:"0.8" },{ l:"6th",r:"0.65" }];
+
+  return (
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="RPM / Speed Parameters" icon={Gauge} iconColor="bg-red-500">
+          <ModeSelector modes={[{ id:"speed", label:"Find Speed" }, { id:"rpm", label:"Find RPM" }]} active={mode} onChange={setMode} />
+          <div>
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Speed Unit</label>
+            <div className="flex gap-1.5">
+              {["kmh","mph"].map(u => <button key={u} onClick={() => setSpeedUnit(u)} className={`flex-1 py-2 rounded-lg text-xs font-bold ${speedUnit === u ? "bg-red-500 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{u}</button>)}
+            </div>
+          </div>
+          {mode === "speed" ? <InputField label="Engine RPM" value={rpm} onChange={setRpm} type="number" />
+            : <InputField label={`Speed (${speedUnit === "kmh" ? "km/h" : "mph"})`} value={speed} onChange={setSpeed} type="number" />}
+          <div>
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Gear Preset</label>
+            <div className="flex gap-1.5 flex-wrap">
+              {gearPresets.map(g => <button key={g.l} onClick={() => setGearRatio(g.r)} className={`px-2.5 py-1.5 rounded-lg text-xs font-bold ${gearRatio === g.r ? "bg-red-500 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{g.l}</button>)}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <InputField label="Gear Ratio" value={gearRatio} onChange={setGearRatio} type="number" />
+            <InputField label="Final Drive" value={finalDrive} onChange={setFinalDrive} type="number" />
+          </div>
+          <InputField label="Tyre Diameter (inches)" value={tyreDiam} onChange={setTyreDiam} type="number" />
+        </InputPanel>
+      }
+      results={
+        <ResultPanel label={mode === "speed" ? "Vehicle Speed" : "Engine RPM"}
+          primary={`${fmt(result, 1)} ${mode === "speed" ? (speedUnit === "kmh" ? "km/h" : "mph") : "RPM"}`}
+          summaries={<>
+            <SummaryCard label="Gear Ratio" value={`${gearRatio}:1`} />
+            <SummaryCard label="Final Drive" value={`${finalDrive}:1`} />
+          </>}
+        >
+          <BreakdownRow label="Tyre Circumference" value={`${fmt(circ, 3)} m`} dot="bg-blue-400" />
+          <BreakdownRow label="Gear Ratio" value={`${gearRatio}:1`} dot="bg-green-500" />
+          <BreakdownRow label="Final Drive" value={`${finalDrive}:1`} dot="bg-purple-400" />
+          {mode === "speed"
+            ? <BreakdownRow label="Input RPM" value={`${rpmN.toLocaleString()}`} dot="bg-amber-400" />
+            : <BreakdownRow label={`Input Speed`} value={`${speed} ${speedUnit === "kmh" ? "km/h" : "mph"}`} dot="bg-amber-400" />}
+          <BreakdownRow label={mode === "speed" ? "Speed" : "RPM"} value={`${fmt(result, 1)}`} bold />
+        </ResultPanel>
+      }
+    />
+  );
+}
+
+function GearRatio() {
+  const [driving, setDriving] = useState("15"); const [driven, setDriven] = useState("45");
+  const [inputRPM, setInputRPM] = useState("3000"); const [mode, setMode] = useState("simple");
+  const ratio = (parseInt(driven)||1) / (parseInt(driving)||1);
+  const inR = parseFloat(inputRPM)||3000; const outR = inR / ratio;
+  const gears = [{ g:"1st",r:3.5 },{ g:"2nd",r:2.0 },{ g:"3rd",r:1.3 },{ g:"4th",r:1.0 },{ g:"5th",r:0.8 },{ g:"6th",r:0.65 }];
+
+  return (
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Gear Parameters" icon={Settings} iconColor="bg-purple-500">
+          <ModeSelector modes={[{ id:"simple", label:"Simple Ratio" }, { id:"transmission", label:"Transmission" }]} active={mode} onChange={setMode} />
+          {mode === "simple" ? (
+            <>
+              <InputField label="Driving Gear Teeth" value={driving} onChange={setDriving} type="number" />
+              <InputField label="Driven Gear Teeth" value={driven} onChange={setDriven} type="number" />
+              <InputField label="Input RPM" value={inputRPM} onChange={setInputRPM} type="number" />
+            </>
+          ) : (
+            <InputField label="Engine RPM" value={inputRPM} onChange={setInputRPM} type="number" />
+          )}
+        </InputPanel>
+      }
+      results={
+        mode === "simple" ? (
+          <ResultPanel label="Gear Ratio" primary={`${fmt(ratio, 3)}:1`}
+            summaries={<>
+              <SummaryCard label="Output RPM" value={`${fmt(outR, 0)}`} accent="text-purple-500" />
+              <SummaryCard label="Torque ×" value={`${fmt(ratio, 2)}×`} />
+            </>}
+          >
+            <BreakdownRow label="Driving Teeth" value={driving} dot="bg-purple-400" />
+            <BreakdownRow label="Driven Teeth" value={driven} dot="bg-blue-400" />
+            <BreakdownRow label="Gear Ratio" value={`${fmt(ratio, 3)}:1`} dot="bg-green-500" bold />
+            <BreakdownRow label="Output RPM" value={`${fmt(outR, 0)}`} dot="bg-amber-400" />
+            <BreakdownRow label="Type" value={ratio > 1 ? "Speed ↓ Torque ↑" : "Speed ↑ Torque ↓"} />
+          </ResultPanel>
+        ) : (
+          <ResultPanel label="Transmission Output RPMs" primary={`${fmt(inR, 0)} RPM`} primarySub="input">
+            {gears.map(g => (
+              <BreakdownRow key={g.g} label={`${g.g} (${g.r}:1)`} value={`${fmt(inR/g.r, 0)} RPM out`} dot="bg-purple-400" />
+            ))}
+          </ResultPanel>
+        )
+      }
+    />
+  );
+}
+
+function EVRange() {
+  const [currency, setCurrency] = useState("INR");
+  const [mode, setMode] = useState("range");
+  const [capacity, setCapacity] = useState("75");
+  const [charge, setCharge] = useState("80"); const [efficiency, setEfficiency] = useState("15");
+  const [driveMode, setDriveMode] = useState("mixed"); const [temp, setTemp] = useState("25");
+  const [elRate, setElRate] = useState("8");
+
+  const effByMode: Record<string, number> = { city:12, highway:18, mixed:15 };
+  const tempFactor = (t: number) => t < 0 ? 0.65 : t < 10 ? 0.8 : t > 35 ? 0.9 : 1.0;
+  const cap = parseFloat(capacity)||75; const chargeN = parseFloat(charge)||100;
+  const eff = parseFloat(efficiency)||effByMode[driveMode]; const tempN = parseFloat(temp)||25;
+  const usable = cap * (chargeN/100);
+  const tf = tempFactor(tempN); const range = usable / (eff/100) * tf;
+  const fullChargeCost = cap * (parseFloat(elRate)||0);
+  const costPer100 = eff * (parseFloat(elRate)||0) / 100;
+
+  return (
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="EV Parameters" icon={Zap} iconColor="bg-green-500" currency={currency} currencies={CURRENCIES} onCurrencyChange={setCurrency}>
+          <ModeSelector modes={[{ id:"range", label:"Estimate Range" }, { id:"cost", label:"Charging Cost" }]} active={mode} onChange={setMode} />
+          <InputField label="Battery Capacity (kWh)" value={capacity} onChange={setCapacity} type="number" />
+          <InputField label="Current Charge (%)" value={charge} onChange={setCharge} type="number" suffix="%" />
+          <div>
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Driving Mode</label>
+            <div className="flex gap-1.5">
+              {Object.keys(effByMode).map(m => (
+                <button key={m} onClick={() => { setDriveMode(m); setEfficiency(String(effByMode[m])); }} data-testid={`drive-${m}`}
+                  className={`flex-1 py-2 rounded-lg text-xs font-bold capitalize ${driveMode === m ? "bg-green-500 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{m}</button>
+              ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <InputField label="Usage (kWh/100km)" value={efficiency} onChange={setEfficiency} type="number" />
+            <InputField label="Temperature (°C)" value={temp} onChange={setTemp} type="number" />
+          </div>
+          {mode === "cost" && <InputField label={`Electricity Rate (${cs(currency)}/kWh)`} value={elRate} onChange={setElRate} type="number" prefix={cs(currency)} />}
+        </InputPanel>
+      }
+      results={
+        <ResultPanel label="Estimated Range"
+          primary={`${fmt(range, 0)} km`}
+          primarySub={`${fmt(range*0.621371, 0)} mi`}
+          summaries={<>
+            <SummaryCard label="Usable Energy" value={`${fmt(usable, 1)} kWh`} accent="text-green-500" />
+            {mode === "cost" ? <SummaryCard label="Full Charge Cost" value={`${cs(currency)}${fmt(fullChargeCost)}`} /> : <SummaryCard label="Temp Factor" value={`${fmt(tf*100, 0)}%`} />}
+          </>}
+          tip={`Temperature (${tempN}°C) affects range. Below 0°C you lose ~35% range.`}
+        >
+          <BreakdownRow label="Usable Energy" value={`${fmt(usable, 1)} kWh`} dot="bg-green-500" />
+          <BreakdownRow label="Temperature Factor" value={`${fmt(tf*100, 0)}%`} dot="bg-blue-400" />
+          <BreakdownRow label="Range (km)" value={`${fmt(range, 0)} km`} dot="bg-emerald-400" bold />
+          <BreakdownRow label="Range (miles)" value={`${fmt(range*0.621371, 0)} mi`} dot="bg-purple-400" />
+          {mode === "cost" && (
+            <>
+              <BreakdownRow label="Full Charge Cost" value={`${cs(currency)}${fmt(fullChargeCost)}`} dot="bg-amber-400" bold />
+              <BreakdownRow label={`Cost per 100km`} value={`${cs(currency)}${fmt(costPer100, 1)}`} />
+            </>
+          )}
+        </ResultPanel>
+      }
+    />
+  );
+}
+
+function Charging() {
+  const [currency, setCurrency] = useState("INR");
+  const [chargerType, setChargerType] = useState("level2_home");
+  const [capacity, setCapacity] = useState("75");
+  const [currentCharge, setCurrentCharge] = useState("20"); const [targetCharge, setTargetCharge] = useState("80");
+  const [elRate, setElRate] = useState("8"); const [customPower, setCustomPower] = useState("11");
+
+  const chargerPresets: Record<string, { power:number; label:string }> = {
+    "2pin_home":{ power:1.8, label:"2-Pin Home (1.8kW)" },
+    "level2_home":{ power:7.2, label:"Level 2 AC (7.2kW)" },
+    "level2_public":{ power:22, label:"Public AC (22kW)" },
+    "dc_fast_50":{ power:50, label:"DC Fast (50kW)" },
+    "dc_fast_150":{ power:150, label:"DC Fast (150kW)" },
+    "dc_ultra":{ power:350, label:"Ultra Fast (350kW)" },
+    custom:{ power:parseFloat(customPower)||11, label:"Custom" },
+  };
+  const pwr = chargerPresets[chargerType].power;
+  const cap = parseFloat(capacity)||75;
+  const cur = parseFloat(currentCharge)||0; const tgt = parseFloat(targetCharge)||100;
+  const energy = cap * ((tgt-cur)/100);
+  const timeHrs = energy/pwr;
+  const hrs = Math.floor(timeHrs); const mins = Math.round((timeHrs-hrs)*60);
+  const cost = energy * (parseFloat(elRate)||0);
+
+  return (
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Charging Parameters" icon={Clock} iconColor="bg-blue-500" currency={currency} currencies={CURRENCIES} onCurrencyChange={setCurrency}>
+          <div>
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Charger Type</label>
+            <select value={chargerType} onChange={e => setChargerType(e.target.value)} className="w-full bg-muted/30 border border-border rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none">
+              {Object.entries(chargerPresets).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
+            </select>
+          </div>
+          {chargerType === "custom" && <InputField label="Charger Power (kW)" value={customPower} onChange={setCustomPower} type="number" />}
+          <InputField label="Battery Capacity (kWh)" value={capacity} onChange={setCapacity} type="number" />
+          <div className="grid grid-cols-2 gap-3">
+            <InputField label="Current Charge (%)" value={currentCharge} onChange={setCurrentCharge} type="number" suffix="%" />
+            <InputField label="Target Charge (%)" value={targetCharge} onChange={setTargetCharge} type="number" suffix="%" />
+          </div>
+          <InputField label={`Electricity Rate (${cs(currency)}/kWh)`} value={elRate} onChange={setElRate} type="number" prefix={cs(currency)} />
+        </InputPanel>
+      }
+      results={
+        <ResultPanel label="Charging Time"
+          primary={`${hrs}h ${mins}m`}
+          summaries={<>
+            <SummaryCard label="Energy to Add" value={`${fmt(energy, 1)} kWh`} accent="text-blue-500" />
+            <SummaryCard label="Charging Cost" value={`${cs(currency)}${fmt(cost, 1)}`} />
+          </>}
+          tip="Charging speed slows above 80% to protect battery. Plan DC fast charging up to 80% for best speed."
+        >
+          <BreakdownRow label="Charger Power" value={`${pwr} kW`} dot="bg-blue-400" />
+          <BreakdownRow label="Energy to Add" value={`${fmt(energy, 1)} kWh`} dot="bg-green-500" />
+          <BreakdownRow label="Charging Time" value={`${hrs}h ${mins}m`} dot="bg-purple-400" bold />
+          <BreakdownRow label="Charging Cost" value={`${cs(currency)}${fmt(cost, 1)}`} dot="bg-amber-400" bold />
+        </ResultPanel>
+      }
+    />
+  );
+}
+
+function Toll() {
+  const [currency, setCurrency] = useState("INR");
+  const [mode, setMode] = useState("distance");
+  const [distance, setDistance] = useState("200"); const [distUnit, setDistUnit] = useState("km");
+  const [ratePerKm, setRatePerKm] = useState("1.5"); const [vehicleType, setVehicleType] = useState("car");
+  const [numTolls, setNumTolls] = useState("5"); const [ratePerToll, setRatePerToll] = useState("60");
+
+  const muls: Record<string, { mul:number; label:string }> = {
+    two_wheeler:{ mul:0.5, label:"2-Wheeler" }, car:{ mul:1, label:"Car/Jeep" },
+    lcv:{ mul:1.5, label:"LCV" }, bus:{ mul:2.5, label:"Bus/Truck" }, hcv:{ mul:3.5, label:"HCV" },
+  };
+  const distKm = distUnit === "km" ? parseFloat(distance)||0 : (parseFloat(distance)||0)*1.60934;
+  const mul = muls[vehicleType].mul;
+  const total = mode === "distance" ? distKm * (parseFloat(ratePerKm)||0) * mul : (parseInt(numTolls)||0) * (parseFloat(ratePerToll)||0) * mul;
+
+  return (
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Toll Parameters" icon={DollarSign} iconColor="bg-amber-500" currency={currency} currencies={CURRENCIES} onCurrencyChange={setCurrency}>
+          <ModeSelector modes={[{ id:"distance", label:"By Distance" }, { id:"manual", label:"Manual Tolls" }]} active={mode} onChange={setMode} />
+          <div>
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Vehicle Type</label>
+            <div className="flex flex-wrap gap-1.5">
+              {Object.entries(muls).map(([k,v]) => (
+                <button key={k} onClick={() => setVehicleType(k)} className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${vehicleType === k ? "bg-amber-500 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{v.label}</button>
+              ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <InputField label="Distance" value={distance} onChange={setDistance} type="number" />
+            <div>
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Unit</label>
+              <div className="flex gap-1.5">
+                {["km","miles"].map(u => <button key={u} onClick={() => setDistUnit(u)} className={`flex-1 py-2.5 rounded-xl text-xs font-bold ${distUnit === u ? "bg-amber-500 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{u}</button>)}
+              </div>
+            </div>
+          </div>
+          {mode === "distance" ? <InputField label={`Toll Rate (${cs(currency)}/km)`} value={ratePerKm} onChange={setRatePerKm} type="number" /> :
+            <div className="grid grid-cols-2 gap-3">
+              <InputField label="Number of Tolls" value={numTolls} onChange={setNumTolls} type="number" />
+              <InputField label={`Rate per Toll`} value={ratePerToll} onChange={setRatePerToll} type="number" prefix={cs(currency)} />
+            </div>
+          }
+        </InputPanel>
+      }
+      results={
+        <ResultPanel label="Estimated Toll Cost"
+          primary={`${cs(currency)}${fmt(total)}`}
+          summaries={<>
+            <SummaryCard label="Distance (km)" value={`${fmt(distKm)} km`} />
+            <SummaryCard label="Vehicle Multiplier" value={`${mul}×`} accent="text-amber-500" />
+          </>}
+        >
+          <BreakdownRow label="Distance" value={`${fmt(distKm)} km / ${fmt(distKm/1.60934, 0)} mi`} dot="bg-blue-400" />
+          <BreakdownRow label="Vehicle Type" value={muls[vehicleType].label} dot="bg-amber-400" />
+          <BreakdownRow label="Multiplier" value={`${mul}×`} dot="bg-purple-400" />
+          {mode === "distance" && <BreakdownRow label="Rate per km" value={`${cs(currency)}${ratePerKm}`} dot="bg-green-500" />}
+          {mode === "manual" && <BreakdownRow label="Toll Booths" value={`${numTolls} × ${cs(currency)}${ratePerToll}`} dot="bg-green-500" />}
+          <BreakdownRow label="Total Toll" value={`${cs(currency)}${fmt(total)}`} bold />
+        </ResultPanel>
+      }
+    />
+  );
+}
+
+function Depreciation() {
+  const [currency, setCurrency] = useState("INR");
+  const [mode, setMode] = useState("reducing");
+  const [purchasePrice, setPurchasePrice] = useState("1200000");
+  const [age, setAge] = useState("3"); const [deprRate, setDeprRate] = useState("15");
+  const [residual, setResidual] = useState("200000"); const [usefulLife, setUsefulLife] = useState("10");
+
+  const price = parseFloat(purchasePrice)||0; const years = parseInt(age)||0;
+  const rate = parseFloat(deprRate)||15;
+  const resid = parseFloat(residual)||0; const life = parseInt(usefulLife)||10;
+  const reducingVal = price * Math.pow(1-rate/100, years);
+  const slDepr = life > 0 ? (price-resid)/life : 0;
+  const slVal = Math.max(resid, price - slDepr*years);
+  const curVal = mode === "reducing" ? reducingVal : slVal;
+  const lost = price - curVal; const pctLost = price > 0 ? (lost/price)*100 : 0;
+  const yearByYear = Array.from({ length: Math.min(years+1, 6) }, (_, i) => ({
+    y: i+1,
+    v: mode === "reducing" ? price*Math.pow(1-rate/100, i+1) : Math.max(resid, price-slDepr*(i+1)),
+  }));
+
+  return (
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Vehicle Details" icon={TrendingDown} iconColor="bg-red-500" currency={currency} currencies={CURRENCIES} onCurrencyChange={setCurrency}>
+          <ModeSelector modes={[{ id:"reducing", label:"Reducing Balance" }, { id:"straight", label:"Straight Line" }]} active={mode} onChange={setMode} />
+          <InputField label="Purchase Price" value={purchasePrice} onChange={setPurchasePrice} type="number" prefix={cs(currency)} />
+          <InputField label="Current Age (years)" value={age} onChange={setAge} type="number" />
+          {mode === "reducing" ? <InputField label="Annual Depreciation Rate (%)" value={deprRate} onChange={setDeprRate} type="number" suffix="%" /> :
+            <div className="grid grid-cols-2 gap-3">
+              <InputField label={`Residual Value`} value={residual} onChange={setResidual} type="number" />
+              <InputField label="Useful Life (yrs)" value={usefulLife} onChange={setUsefulLife} type="number" />
+            </div>
+          }
+        </InputPanel>
+      }
+      results={
+        <ResultPanel label="Current Market Value"
+          primary={`${cs(currency)}${fmt(curVal, 0)}`}
+          summaries={<>
+            <SummaryCard label="Value Lost" value={`${cs(currency)}${fmt(lost, 0)}`} accent="text-red-500" />
+            <SummaryCard label="Lost %" value={`${fmt(pctLost, 1)}%`} />
+          </>}
+          tip={`${mode === "reducing" ? `Reducing balance: ${deprRate}% depreciation each year.` : `Straight line: ${cs(currency)}${fmt(slDepr, 0)}/year.`}`}
+        >
+          <BreakdownRow label="Purchase Price" value={`${cs(currency)}${fmt(price, 0)}`} dot="bg-blue-400" />
+          <BreakdownRow label="After Depreciation" value={`${cs(currency)}${fmt(curVal, 0)}`} dot="bg-green-500" bold />
+          <BreakdownRow label="Total Lost" value={`${cs(currency)}${fmt(lost, 0)}`} dot="bg-red-400" />
+          <BreakdownRow label="Lost %" value={`${fmt(pctLost, 1)}%`} dot="bg-purple-400" />
+          {yearByYear.map(({ y, v }) => <BreakdownRow key={y} label={`Year ${y}`} value={`${cs(currency)}${fmt(v, 0)}`} />)}
+        </ResultPanel>
+      }
+    />
+  );
+}
+
+function Insurance() {
+  const [currency, setCurrency] = useState("INR");
+  const [mode, setMode] = useState("premium");
+  const [carValue, setCarValue] = useState("1200000");
+  const [driverAge, setDriverAge] = useState("30"); const [ncb, setNcb] = useState("3");
+  const [coverType, setCoverType] = useState("comprehensive"); const [cc, setCC] = useState("1500");
+  const [addons, setAddons] = useState<string[]>([]);
+
+  const toggleAddon = (a: string) => setAddons(prev => prev.includes(a) ? prev.filter(x => x !== a) : [...prev, a]);
+  const addonCosts: Record<string, number> = { "Zero Dep":0.008, "Engine Protect":0.005, "RTI":0.012, "Roadside Assist":500, "NCB Protect":0.006 };
+  const value = parseFloat(carValue)||0; const age = parseInt(driverAge)||30; const ncbN = Math.min(parseInt(ncb)||0, 5);
+  const ccN = parseInt(cc)||1500;
+  const baseRate = coverType === "comprehensive" ? (ccN <= 1000 ? 0.032 : ccN <= 1500 ? 0.035 : 0.04) : 0.02;
+  const ageMul = age < 25 ? 1.5 : age > 65 ? 1.3 : 1;
+  const ncbDiscount = [0, 0.2, 0.25, 0.35, 0.45, 0.5][ncbN];
+  const basePremium = value * baseRate * ageMul;
+  const discountAmt = basePremium * ncbDiscount;
+  const addonTotal = addons.reduce((sum, a) => sum + (addonCosts[a] < 1 ? value*addonCosts[a] : addonCosts[a]), 0);
+  const finalPremium = basePremium - discountAmt + addonTotal;
+  const ncbTiers = [{ y:0, d:0 },{ y:1, d:20 },{ y:2, d:25 },{ y:3, d:35 },{ y:4, d:45 },{ y:5, d:50 }];
+
+  return (
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Vehicle & Policy Details" icon={Shield} iconColor="bg-blue-500" currency={currency} currencies={CURRENCIES} onCurrencyChange={setCurrency}>
+          <ModeSelector modes={[{ id:"premium", label:"Premium Calc" }, { id:"ncb", label:"NCB Table" }]} active={mode} onChange={setMode} />
+          <InputField label="Vehicle Value / IDV" value={carValue} onChange={setCarValue} type="number" prefix={cs(currency)} />
+          <div className="grid grid-cols-2 gap-3">
+            <InputField label="Engine (cc)" value={cc} onChange={setCC} type="number" />
+            <InputField label="Driver Age" value={driverAge} onChange={setDriverAge} type="number" />
+          </div>
+          <InputField label="Claim-Free Years (NCB)" value={ncb} onChange={setNcb} type="number" />
+          <div>
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Coverage</label>
+            <div className="flex gap-1.5">
+              {[{ k:"comprehensive", l:"Comprehensive" },{ k:"thirdparty", l:"Third Party" }].map(c => (
+                <button key={c.k} onClick={() => setCoverType(c.k)} className={`flex-1 py-2 rounded-lg text-xs font-bold ${coverType === c.k ? "bg-blue-500 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{c.l}</button>
+              ))}
+            </div>
+          </div>
+          {mode === "premium" && (
+            <div>
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Add-Ons</label>
+              <div className="flex flex-wrap gap-1.5">
+                {Object.keys(addonCosts).map(a => (
+                  <button key={a} onClick={() => toggleAddon(a)} className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold ${addons.includes(a) ? "bg-blue-500 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{a}</button>
+                ))}
+              </div>
+            </div>
+          )}
+        </InputPanel>
+      }
+      results={
+        mode === "premium" ? (
+          <ResultPanel label="Annual Premium"
+            primary={`${cs(currency)}${fmt(finalPremium, 0)}`}
+            summaries={<>
+              <SummaryCard label="NCB Discount" value={`${ncbDiscount*100}%`} accent="text-green-500" />
+              <SummaryCard label="Monthly" value={`${cs(currency)}${fmt(finalPremium/12, 0)}`} />
+            </>}
+            tip="NCB (No Claim Bonus) gives up to 50% discount for 5 consecutive claim-free years."
+          >
+            <BreakdownRow label="Base Premium" value={`${cs(currency)}${fmt(basePremium, 0)}`} dot="bg-blue-400" />
+            <BreakdownRow label={`NCB Discount (${ncbDiscount*100}%)`} value={`-${cs(currency)}${fmt(discountAmt, 0)}`} dot="bg-green-500" />
+            {addons.length > 0 && <BreakdownRow label="Add-Ons" value={`+${cs(currency)}${fmt(addonTotal, 0)}`} dot="bg-amber-400" />}
+            <BreakdownRow label="Annual Premium" value={`${cs(currency)}${fmt(finalPremium, 0)}`} bold />
+            <BreakdownRow label="Monthly (approx)" value={`${cs(currency)}${fmt(finalPremium/12, 0)}`} />
+          </ResultPanel>
+        ) : (
+          <ResultPanel label="NCB Discount Table" primary={`${ncbTiers[ncbN].d}%`} primarySub="your NCB">
+            {ncbTiers.map(t => (
+              <BreakdownRow key={t.y} label={`${t.y} claim-free year${t.y !== 1 ? "s" : ""}`} value={`${t.d}%`} dot={t.y === ncbN ? "bg-green-500" : "bg-muted"} bold={t.y === ncbN} />
+            ))}
+          </ResultPanel>
+        )
+      }
+    />
   );
 }
