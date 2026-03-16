@@ -1,370 +1,163 @@
 import { useState } from "react";
-import { Heart, Scale, Utensils, Activity, Moon, Coffee, Dumbbell, Wind } from "lucide-react";
+import { Battery, Sun, Droplets, Cloud, ShoppingCart, Wifi, Smartphone, Flame, Wind } from "lucide-react";
 import { DesktopToolGrid, InputPanel, ResultPanel, SummaryCard, BreakdownRow, InputField, ModeSelector } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
 
-type ToolType = "bmi" | "bmr" | "calories" | "water" | "sleep" | "caffeine" | "bodyFat" | "heartRate" | "breath";
+type ToolType = "gas" | "ac" | "inverter" | "solar" | "tank" | "rainwater" | "expense" | "data" | "battery";
 
 const CURRENCIES = [
   { code: "INR", symbol: "₹" }, { code: "USD", symbol: "$" },
   { code: "EUR", symbol: "€" }, { code: "GBP", symbol: "£" },
-  { code: "AUD", symbol: "A$" }, { code: "CAD", symbol: "C$" },
-  { code: "AED", symbol: "د.إ" }, { code: "SGD", symbol: "S$" },
-  { code: "JPY", symbol: "¥" }, { code: "CHF", symbol: "CHF" },
+  { code: "JPY", symbol: "¥" }, { code: "AUD", symbol: "A$" },
+  { code: "CAD", symbol: "C$" }, { code: "AED", symbol: "د.إ" },
+  { code: "SGD", symbol: "S$" }, { code: "CHF", symbol: "CHF" },
 ];
 const cs = (code: string) => CURRENCIES.find(c => c.code === code)?.symbol || "₹";
 const fmt = (n: number, d = 2) => isFinite(n) && !isNaN(n) ? parseFloat(n.toFixed(d)).toLocaleString() : "—";
 
 export default function LifestyleTools() {
-  const [activeTool, setActiveTool] = useState<ToolType>("bmi");
+  const [activeTool, setActiveTool] = useState<ToolType>("gas");
   const tools = [
-    { id: "bmi", label: "BMI", icon: Scale },
-    { id: "bmr", label: "BMR", icon: Activity },
-    { id: "calories", label: "Calories", icon: Utensils },
-    { id: "water", label: "Water", icon: Heart },
-    { id: "sleep", label: "Sleep", icon: Moon },
-    { id: "caffeine", label: "Caffeine", icon: Coffee },
-    { id: "bodyFat", label: "Body Fat", icon: Dumbbell },
-    { id: "heartRate", label: "Heart Rate", icon: Heart },
-    { id: "breath", label: "Breathing", icon: Wind },
+    { id: "gas", label: "Gas Usage", icon: Flame },
+    { id: "ac", label: "AC Power", icon: Wind },
+    { id: "inverter", label: "Inverter", icon: Battery },
+    { id: "solar", label: "Solar", icon: Sun },
+    { id: "tank", label: "Tank Vol", icon: Droplets },
+    { id: "rainwater", label: "Rainwater", icon: Cloud },
+    { id: "expense", label: "Expense", icon: ShoppingCart },
+    { id: "data", label: "Data Usage", icon: Wifi },
+    { id: "battery", label: "Battery", icon: Smartphone },
   ];
   return (
-    <PageWrapper title="Lifestyle Tools" subtitle="Health, wellness and fitness calculators" accentColor="bg-rose-500" tools={tools} activeTool={activeTool} onToolChange={id => setActiveTool(id as ToolType)}>
-      {activeTool === "bmi" && <BMI />}
-      {activeTool === "bmr" && <BMR />}
-      {activeTool === "calories" && <CalorieBurn />}
-      {activeTool === "water" && <WaterIntake />}
-      {activeTool === "sleep" && <SleepCalc />}
-      {activeTool === "caffeine" && <Caffeine />}
-      {activeTool === "bodyFat" && <BodyFat />}
-      {activeTool === "heartRate" && <HeartRate />}
-      {activeTool === "breath" && <Breath />}
+    <PageWrapper title="Home & Lifestyle" subtitle="Utility and home calculators" accentColor="bg-lime-500" tools={tools} activeTool={activeTool} onToolChange={id => setActiveTool(id as ToolType)}>
+      {activeTool === "gas" && <GasUsageEstimator />}
+      {activeTool === "ac" && <ACPowerConsumption />}
+      {activeTool === "inverter" && <InverterCalculator />}
+      {activeTool === "solar" && <SolarPanelCalculator />}
+      {activeTool === "tank" && <WaterTankVolume />}
+      {activeTool === "rainwater" && <RainwaterHarvest />}
+      {activeTool === "expense" && <ExpenseSplitter />}
+      {activeTool === "data" && <DataUsageEstimator />}
+      {activeTool === "battery" && <BatteryHealthEstimator />}
     </PageWrapper>
   );
 }
 
-function BMI() {
-  const [mode, setMode] = useState("metric");
-  const [weight, setWeight] = useState("70"); const [height, setHeight] = useState("175");
-  const [weightLbs, setWeightLbs] = useState("154"); const [heightFt, setHeightFt] = useState("5");
-  const [heightIn, setHeightIn] = useState("9"); const [targetBMI, setTargetBMI] = useState("22");
+function GasUsageEstimator() {
+  const [currency, setCurrency] = useState("INR");
+  const [mode, setMode] = useState("lpg");
+  const [cylinderSize, setCylinderSize] = useState("14.2");
+  const [dailyUsage, setDailyUsage] = useState("0.5");
+  const [gasPrice, setGasPrice] = useState("950");
+  const [gasUnit, setGasUnit] = useState("kg");
+  const [cngPricePerKg, setCngPricePerKg] = useState("85");
+  const [cngMileage, setCngMileage] = useState("25");
+  const [pngRate, setPngRate] = useState("55");
+  const [pngUsage, setPngUsage] = useState("30");
 
-  const wKg = mode === "metric" ? parseFloat(weight)||0 : (parseFloat(weightLbs)||0)*0.453592;
-  const hM = mode === "metric" ? (parseFloat(height)||0)/100 : ((parseFloat(heightFt)||0)*12+(parseFloat(heightIn)||0))*0.0254;
-  const bmi = hM > 0 ? wKg/(hM*hM) : 0;
-  const category = bmi < 18.5 ? "Underweight" : bmi < 25 ? "Normal" : bmi < 30 ? "Overweight" : "Obese";
-  const catColor = bmi < 18.5 ? "text-blue-400" : bmi < 25 ? "text-green-500" : bmi < 30 ? "text-amber-500" : "text-red-500";
-  const catDot = bmi < 18.5 ? "bg-blue-400" : bmi < 25 ? "bg-green-500" : bmi < 30 ? "bg-amber-500" : "bg-red-500";
-  const tBMI = parseFloat(targetBMI)||22;
-  const idealKg = tBMI * hM * hM;
-  const weightChangeKg = idealKg - wKg;
+  const cylinderSizes = ["5", "12", "14.2", "19", "22", "37", "47.5"];
+  const size = parseFloat(cylinderSize) || 14.2;
+  const daily = parseFloat(dailyUsage) || 0.5;
+  const price = parseFloat(gasPrice) || 950;
+  const daysRemaining = daily > 0 ? size / daily : 0;
+  const monthlyUsage = daily * 30;
+  const cylindersPerMonth = monthlyUsage / size;
+  const monthlyCost = cylindersPerMonth * price;
+
+  const cngPrice = parseFloat(cngPricePerKg) || 85;
+  const cngMileageNum = parseFloat(cngMileage) || 25;
+  const cngPerKm = cngMileageNum > 0 ? 1 / cngMileageNum : 0;
+  const cngCostPer100 = cngPerKm * 100 * cngPrice;
+  const cngMonthly = cngPerKm * parseFloat(dailyUsage || "0") * cngPrice;
+
+  const pngRateNum = parseFloat(pngRate) || 55;
+  const pngUsageNum = parseFloat(pngUsage) || 30;
+  const pngMonthly = pngRateNum * pngUsageNum;
 
   return (
     <DesktopToolGrid
       inputs={
-        <InputPanel title="Body Measurements" icon={Scale} iconColor="bg-rose-500">
-          <ModeSelector modes={[{ id:"metric", label:"Metric (kg/cm)" }, { id:"imperial", label:"Imperial (lbs/ft)" }]} active={mode} onChange={setMode} />
-          {mode === "metric" ? (
-            <div className="grid grid-cols-2 gap-3">
-              <InputField label="Weight (kg)" value={weight} onChange={setWeight} type="number" />
-              <InputField label="Height (cm)" value={height} onChange={setHeight} type="number" />
-            </div>
-          ) : (
+        <InputPanel title="Gas Parameters" icon={Flame} iconColor="bg-orange-500" currency={currency} currencies={CURRENCIES} onCurrencyChange={setCurrency}>
+          <ModeSelector modes={[{ id: "lpg", label: "LPG Cylinder" }, { id: "cng", label: "CNG Vehicle" }, { id: "png", label: "PNG (Piped)" }]} active={mode} onChange={setMode} />
+          {mode === "lpg" && (
             <>
-              <InputField label="Weight (lbs)" value={weightLbs} onChange={setWeightLbs} type="number" />
-              <div className="grid grid-cols-2 gap-3">
-                <InputField label="Height (ft)" value={heightFt} onChange={setHeightFt} type="number" />
-                <InputField label="Height (in)" value={heightIn} onChange={setHeightIn} type="number" />
+              <div>
+                <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Cylinder Size (kg)</label>
+                <div className="flex gap-1.5 flex-wrap">
+                  {cylinderSizes.map(s => (
+                    <button key={s} onClick={() => setCylinderSize(s)} className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${cylinderSize === s ? "bg-orange-500 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{s}kg</button>
+                  ))}
+                </div>
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <InputField label="Daily Usage" value={dailyUsage} onChange={setDailyUsage} type="number" />
+                <div>
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Unit</label>
+                  <div className="flex gap-1.5">
+                    {["kg", "lbs"].map(u => <button key={u} onClick={() => setGasUnit(u)} className={`flex-1 py-2.5 rounded-xl text-xs font-bold ${gasUnit === u ? "bg-orange-500 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{u}/day</button>)}
+                  </div>
+                </div>
+              </div>
+              <InputField label={`Price per Cylinder (${cs(currency)})`} value={gasPrice} onChange={setGasPrice} type="number" prefix={cs(currency)} />
             </>
           )}
-          <InputField label="Target BMI" value={targetBMI} onChange={setTargetBMI} type="number" />
-        </InputPanel>
-      }
-      results={
-        <ResultPanel label="Your BMI" primary={fmt(bmi, 1)}
-          summaries={<>
-            <SummaryCard label="Category" value={category} accent={catColor} />
-            <SummaryCard label="Ideal Weight" value={`${fmt(idealKg, 1)} kg`} />
-          </>}
-          tip="BMI ranges: Underweight < 18.5 | Normal 18.5–24.9 | Overweight 25–29.9 | Obese ≥ 30"
-        >
-          <BreakdownRow label="BMI" value={fmt(bmi, 1)} dot={catDot} bold />
-          <BreakdownRow label="Category" value={category} dot={catDot} />
-          <BreakdownRow label="Weight" value={`${fmt(wKg, 1)} kg / ${fmt(wKg*2.20462, 1)} lbs`} dot="bg-blue-400" />
-          <BreakdownRow label="Height" value={`${fmt(hM*100, 1)} cm / ${fmt(hM*3.28084, 2)} ft`} dot="bg-purple-400" />
-          <BreakdownRow label={`For BMI ${tBMI}`} value={`${fmt(idealKg, 1)} kg / ${fmt(idealKg*2.20462, 1)} lbs`} />
-          <BreakdownRow label="Weight to change" value={`${weightChangeKg >= 0 ? "+" : ""}${fmt(weightChangeKg, 1)} kg`} bold />
-        </ResultPanel>
-      }
-    />
-  );
-}
-
-function BMR() {
-  const [gender, setGender] = useState("male"); const [unit, setUnit] = useState("metric");
-  const [weight, setWeight] = useState("70"); const [height, setHeight] = useState("175");
-  const [age, setAge] = useState("30"); const [activityLevel, setActivityLevel] = useState("moderate");
-
-  const wKg = unit === "metric" ? parseFloat(weight)||0 : (parseFloat(weight)||0)*0.453592;
-  const hCm = unit === "metric" ? parseFloat(height)||0 : (parseFloat(height)||0)*2.54;
-  const ageN = parseFloat(age)||30;
-  const bmr = gender === "male" ? 10*wKg + 6.25*hCm - 5*ageN + 5 : 10*wKg + 6.25*hCm - 5*ageN - 161;
-  const actMuls: Record<string, { mul:number; label:string }> = {
-    sedentary:{ mul:1.2, label:"Sedentary (desk job)" }, light:{ mul:1.375, label:"Light (1-3 days/wk)" },
-    moderate:{ mul:1.55, label:"Moderate (3-5 days/wk)" }, active:{ mul:1.725, label:"Active (6-7 days/wk)" },
-    very_active:{ mul:1.9, label:"Very Active (2× day)" },
-  };
-  const tdee = bmr * (actMuls[activityLevel]?.mul || 1.55);
-
-  return (
-    <DesktopToolGrid
-      inputs={
-        <InputPanel title="Physical Profile" icon={Activity} iconColor="bg-orange-500">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Gender</label>
-              <div className="flex gap-1.5">
-                {["male","female"].map(g => <button key={g} onClick={() => setGender(g)} className={`flex-1 py-2 rounded-lg text-xs font-bold capitalize ${gender === g ? "bg-orange-500 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{g}</button>)}
-              </div>
-            </div>
-            <div>
-              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Unit</label>
-              <div className="flex gap-1.5">
-                {[{ k:"metric", l:"kg/cm" },{ k:"imperial", l:"lbs/in" }].map(u => <button key={u.k} onClick={() => setUnit(u.k)} className={`flex-1 py-2 rounded-lg text-xs font-bold ${unit === u.k ? "bg-orange-500 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{u.l}</button>)}
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            <InputField label={`Weight (${unit === "metric" ? "kg" : "lbs"})`} value={weight} onChange={setWeight} type="number" />
-            <InputField label={`Height (${unit === "metric" ? "cm" : "in"})`} value={height} onChange={setHeight} type="number" />
-            <InputField label="Age" value={age} onChange={setAge} type="number" />
-          </div>
-          <div>
-            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Activity Level</label>
-            <select value={activityLevel} onChange={e => setActivityLevel(e.target.value)} className="w-full bg-muted/30 border border-border rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none">
-              {Object.entries(actMuls).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
-            </select>
-          </div>
-        </InputPanel>
-      }
-      results={
-        <ResultPanel label="Basal Metabolic Rate" primary={`${fmt(bmr, 0)} kcal`} primarySub="/day"
-          summaries={<>
-            <SummaryCard label="TDEE" value={`${fmt(tdee, 0)} kcal`} accent="text-orange-500" />
-            <SummaryCard label="Per week" value={`${fmt(tdee*7, 0)} kcal`} />
-          </>}
-          tip="To lose weight: eat ~500 kcal below TDEE. To gain: eat ~300–500 kcal above TDEE."
-        >
-          <BreakdownRow label="BMR (Mifflin-St Jeor)" value={`${fmt(bmr, 0)} kcal/day`} dot="bg-orange-400" bold />
-          <BreakdownRow label="TDEE" value={`${fmt(tdee, 0)} kcal/day`} dot="bg-green-500" bold />
-          <BreakdownRow label="Weight Loss (–500)" value={`${fmt(tdee-500, 0)} kcal/day`} dot="bg-blue-400" />
-          <BreakdownRow label="Weight Gain (+400)" value={`${fmt(tdee+400, 0)} kcal/day`} dot="bg-amber-400" />
-          <BreakdownRow label="Carbs (50%)" value={`${fmt(tdee*0.5/4, 0)} g/day`} />
-          <BreakdownRow label="Protein (25%)" value={`${fmt(tdee*0.25/4, 0)} g/day`} />
-          <BreakdownRow label="Fat (25%)" value={`${fmt(tdee*0.25/9, 0)} g/day`} />
-        </ResultPanel>
-      }
-    />
-  );
-}
-
-function CalorieBurn() {
-  const [weight, setWeight] = useState("70");
-  const [activity, setActivity] = useState("running");
-  const [duration, setDuration] = useState("30"); const [intensity, setIntensity] = useState("moderate");
-
-  const mets: Record<string, { low:number; moderate:number; high:number; label:string }> = {
-    running:{ low:8, moderate:11.5, high:16, label:"🏃 Running" },
-    cycling:{ low:4, moderate:8, high:12, label:"🚴 Cycling" },
-    swimming:{ low:5, moderate:7, high:10, label:"🏊 Swimming" },
-    walking:{ low:2.5, moderate:3.5, high:5, label:"🚶 Walking" },
-    yoga:{ low:2, moderate:3, high:4, label:"🧘 Yoga" },
-    hiit:{ low:7, moderate:10, high:14, label:"🔥 HIIT" },
-    weights:{ low:3, moderate:5, high:6, label:"🏋️ Weights" },
-    basketball:{ low:6, moderate:8, high:10, label:"🏀 Basketball" },
-    dancing:{ low:3, moderate:5, high:7.5, label:"💃 Dancing" },
-    rowing:{ low:4.5, moderate:7, high:10, label:"🚣 Rowing" },
-  };
-  const wKg = parseFloat(weight)||70; const dur = parseFloat(duration)||30;
-  const met = (mets[activity] as any)?.[intensity] || 7;
-  const kcal = (met * wKg * dur) / 60;
-
-  return (
-    <DesktopToolGrid
-      inputs={
-        <InputPanel title="Activity Details" icon={Utensils} iconColor="bg-green-500">
-          <InputField label="Body Weight (kg)" value={weight} onChange={setWeight} type="number" />
-          <div>
-            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Activity</label>
-            <div className="flex flex-wrap gap-1.5">
-              {Object.entries(mets).map(([k,v]) => (
-                <button key={k} onClick={() => setActivity(k)} className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold ${activity === k ? "bg-green-500 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{v.label}</button>
-              ))}
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <InputField label="Duration (min)" value={duration} onChange={setDuration} type="number" />
-            <div>
-              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Intensity</label>
-              <div className="flex flex-col gap-1">
-                {["low","moderate","high"].map(i => <button key={i} onClick={() => setIntensity(i)} className={`w-full py-1.5 rounded-lg text-xs font-bold capitalize ${intensity === i ? "bg-green-500 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{i}</button>)}
-              </div>
-            </div>
-          </div>
-        </InputPanel>
-      }
-      results={
-        <ResultPanel label="Calories Burned" primary={`${fmt(kcal, 0)} kcal`}
-          summaries={<>
-            <SummaryCard label="Per Minute" value={`${fmt(kcal/(dur||1), 1)} kcal`} accent="text-green-500" />
-            <SummaryCard label="MET Value" value={`${met}`} />
-          </>}
-          tip={`To burn 1 kg of fat you need ~7700 kcal deficit. At ${fmt(kcal, 0)} kcal/session that's ~${fmt(7700/kcal, 1)} sessions.`}
-        >
-          <BreakdownRow label="MET Value" value={`${met}`} dot="bg-blue-400" />
-          <BreakdownRow label="Duration" value={`${duration} min`} dot="bg-purple-400" />
-          <BreakdownRow label="Calories Burned" value={`${fmt(kcal, 0)} kcal`} dot="bg-green-500" bold />
-          <BreakdownRow label="Per minute" value={`${fmt(kcal/(dur||1), 2)} kcal/min`} dot="bg-amber-400" />
-          <BreakdownRow label="Sessions for 1kg fat" value={`${fmt(7700/kcal, 1)} sessions`} />
-        </ResultPanel>
-      }
-    />
-  );
-}
-
-function WaterIntake() {
-  const [weight, setWeight] = useState("70"); const [weightUnit, setWeightUnit] = useState("kg");
-  const [activity, setActivity] = useState("moderate"); const [climate, setClimate] = useState("temperate");
-  const [currency, setCurrency] = useState("INR");
-  const [waterPrice, setWaterPrice] = useState("20"); const [bottleSize, setBottleSize] = useState("1");
-
-  const wKg = weightUnit === "kg" ? parseFloat(weight)||70 : (parseFloat(weight)||0)*0.453592;
-  const baseL = wKg * 0.033;
-  const actAdd: Record<string, number> = { low:0, moderate:0.5, high:1.0, very_high:1.5 };
-  const climAdd: Record<string, number> = { cool:0, temperate:0, warm:0.25, hot:0.5, very_hot:0.75 };
-  const totalL = baseL + (actAdd[activity]||0) + (climAdd[climate]||0);
-  const bottles = totalL / (parseFloat(bottleSize)||1);
-  const glasses = totalL / 0.25;
-  const dailyCost = bottles * (parseFloat(waterPrice)||0);
-
-  return (
-    <DesktopToolGrid
-      inputs={
-        <InputPanel title="Hydration Profile" icon={Heart} iconColor="bg-cyan-500" currency={currency} currencies={CURRENCIES} onCurrencyChange={setCurrency}>
-          <div className="grid grid-cols-2 gap-3">
-            <InputField label="Body Weight" value={weight} onChange={setWeight} type="number" />
-            <div>
-              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Unit</label>
-              <div className="flex gap-1.5">
-                {["kg","lbs"].map(u => <button key={u} onClick={() => setWeightUnit(u)} className={`flex-1 py-2.5 rounded-xl text-xs font-bold ${weightUnit === u ? "bg-cyan-500 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{u}</button>)}
-              </div>
-            </div>
-          </div>
-          <div>
-            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Activity Level</label>
-            <div className="flex flex-wrap gap-1.5">
-              {Object.keys(actAdd).map(a => <button key={a} onClick={() => setActivity(a)} className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize ${activity === a ? "bg-cyan-500 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{a.replace("_"," ")}</button>)}
-            </div>
-          </div>
-          <div>
-            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Climate</label>
-            <div className="flex flex-wrap gap-1.5">
-              {Object.keys(climAdd).map(c => <button key={c} onClick={() => setClimate(c)} className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold capitalize ${climate === c ? "bg-cyan-500 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{c.replace("_"," ")}</button>)}
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <InputField label="Bottle Size (L)" value={bottleSize} onChange={setBottleSize} type="number" />
-            <InputField label="Bottle Price" value={waterPrice} onChange={setWaterPrice} type="number" prefix={cs(currency)} />
-          </div>
-        </InputPanel>
-      }
-      results={
-        <ResultPanel label="Daily Water Intake" primary={`${fmt(totalL, 2)} L`}
-          summaries={<>
-            <SummaryCard label="Glasses (250ml)" value={`${Math.ceil(glasses)}`} accent="text-cyan-500" />
-            <SummaryCard label="Bottles Needed" value={`${fmt(bottles, 1)}`} />
-          </>}
-          tip="Drink water regularly throughout the day. Thirst is a late signal of dehydration."
-        >
-          <BreakdownRow label="Base Need" value={`${fmt(baseL, 2)} L`} dot="bg-cyan-400" />
-          <BreakdownRow label="Activity Extra" value={`+${fmt(actAdd[activity]||0, 1)} L`} dot="bg-green-500" />
-          <BreakdownRow label="Climate Extra" value={`+${fmt(climAdd[climate]||0, 2)} L`} dot="bg-amber-400" />
-          <BreakdownRow label="Total Needed" value={`${fmt(totalL, 2)} L`} dot="bg-blue-400" bold />
-          <BreakdownRow label={`${bottleSize}L Bottles`} value={`${fmt(bottles, 1)}`} />
-          <BreakdownRow label="Daily Cost" value={`${cs(currency)}${fmt(dailyCost, 1)}`} />
-          <BreakdownRow label="Monthly Cost" value={`${cs(currency)}${fmt(dailyCost*30, 1)}`} />
-        </ResultPanel>
-      }
-    />
-  );
-}
-
-function SleepCalc() {
-  const [mode, setMode] = useState("wake");
-  const [wakeTime, setWakeTime] = useState("06:30"); const [bedTime, setBedTime] = useState("22:30");
-  const [targetCycles, setTargetCycles] = useState("5"); const [age, setAge] = useState("30");
-
-  const toMins = (t: string) => { const [h, m] = t.split(":").map(Number); return h*60+(m||0); };
-  const addMins = (t: string, m: number) => {
-    let total = (toMins(t)+m) % 1440; if (total < 0) total += 1440;
-    return `${String(Math.floor(total/60)).padStart(2,"0")}:${String(total%60).padStart(2,"0")}`;
-  };
-  const ageN = parseInt(age)||30;
-  const ageGroup = ageN < 18 ? "teen" : ageN < 26 ? "young" : ageN < 65 ? "adult" : "senior";
-  const ageRec: Record<string, number> = { teen:9, young:8, adult:7.5, senior:7.5 };
-
-  const cycleTimes = Array.from({ length: 6 }, (_, i) => {
-    const mins = (i+1)*90 + 14;
-    return mode === "wake" ? addMins(wakeTime, -mins) : addMins(bedTime, mins);
-  });
-  let sleepHrs = 0;
-  if (mode === "analyze") {
-    let diff = toMins(wakeTime) - toMins(bedTime); if (diff < 0) diff += 1440; sleepHrs = diff/60;
-  }
-  const cycles = Math.round(sleepHrs/1.5);
-
-  return (
-    <DesktopToolGrid
-      inputs={
-        <InputPanel title="Sleep Parameters" icon={Moon} iconColor="bg-indigo-500">
-          <ModeSelector modes={[{ id:"wake", label:"By Wake Time" }, { id:"bed", label:"By Bedtime" }, { id:"analyze", label:"Analyze" }]} active={mode} onChange={setMode} />
-          <InputField label="Age" value={age} onChange={setAge} type="number" />
-          {mode === "wake" && <InputField label="Wake Up Time" value={wakeTime} onChange={setWakeTime} type="time" />}
-          {mode === "bed" && <InputField label="Bedtime" value={bedTime} onChange={setBedTime} type="time" />}
-          {mode === "analyze" && (
-            <div className="grid grid-cols-2 gap-3">
-              <InputField label="Bedtime" value={bedTime} onChange={setBedTime} type="time" />
-              <InputField label="Wake Time" value={wakeTime} onChange={setWakeTime} type="time" />
-            </div>
+          {mode === "cng" && (
+            <>
+              <InputField label={`CNG Price (${cs(currency)}/kg)`} value={cngPricePerKg} onChange={setCngPricePerKg} type="number" prefix={cs(currency)} />
+              <InputField label="Mileage (km/kg)" value={cngMileage} onChange={setCngMileage} type="number" />
+              <InputField label="Monthly Distance (km)" value={dailyUsage} onChange={setDailyUsage} type="number" />
+            </>
           )}
-          {mode !== "analyze" && <InputField label="Target Cycles (1.5hr each)" value={targetCycles} onChange={setTargetCycles} type="number" />}
+          {mode === "png" && (
+            <>
+              <InputField label={`PNG Rate (${cs(currency)}/SCM)`} value={pngRate} onChange={setPngRate} type="number" prefix={cs(currency)} />
+              <InputField label="Monthly Usage (SCM)" value={pngUsage} onChange={setPngUsage} type="number" />
+            </>
+          )}
         </InputPanel>
       }
       results={
-        mode === "analyze" ? (
-          <ResultPanel label="Sleep Duration" primary={`${fmt(sleepHrs, 1)} hrs`} primarySub={`${cycles} cycles`}
+        mode === "lpg" ? (
+          <ResultPanel label="Days per Cylinder" primary={`${fmt(daysRemaining, 0)} days`}
             summaries={<>
-              <SummaryCard label="Recommended" value={`${ageRec[ageGroup]} hrs`} accent="text-indigo-500" />
-              <SummaryCard label="Quality" value={sleepHrs >= ageRec[ageGroup] ? "✅ Good" : "⚠️ Low"} />
+              <SummaryCard label="Monthly Cost" value={`${cs(currency)}${fmt(monthlyCost, 0)}`} accent="text-orange-500" />
+              <SummaryCard label="Cylinders/Month" value={`${fmt(cylindersPerMonth, 2)}`} />
+            </>}
+            tip="A 14.2 kg LPG cylinder lasts ~30–45 days for a family of 4 using it only for cooking."
+          >
+            <BreakdownRow label="Cylinder Size" value={`${cylinderSize} kg`} dot="bg-orange-400" />
+            <BreakdownRow label="Daily Usage" value={`${dailyUsage} ${gasUnit}`} dot="bg-blue-400" />
+            <BreakdownRow label="Days per Cylinder" value={`${fmt(daysRemaining, 0)} days`} dot="bg-green-500" bold />
+            <BreakdownRow label="Monthly Usage" value={`${fmt(monthlyUsage, 2)} kg`} dot="bg-purple-400" />
+            <BreakdownRow label="Cylinders/Month" value={`${fmt(cylindersPerMonth, 2)}`} />
+            <BreakdownRow label="Monthly Cost" value={`${cs(currency)}${fmt(monthlyCost, 0)}`} bold />
+            <BreakdownRow label="Annual Cost" value={`${cs(currency)}${fmt(monthlyCost * 12, 0)}`} />
+          </ResultPanel>
+        ) : mode === "cng" ? (
+          <ResultPanel label="CNG Cost/100km" primary={`${cs(currency)}${fmt(cngCostPer100, 0)}`}
+            summaries={<>
+              <SummaryCard label="Monthly Cost" value={`${cs(currency)}${fmt(cngMonthly, 0)}`} accent="text-orange-500" />
+              <SummaryCard label="CNG per 100km" value={`${fmt(cngPerKm * 100, 2)} kg`} />
             </>}
           >
-            <BreakdownRow label="Bedtime" value={bedTime} dot="bg-indigo-400" />
-            <BreakdownRow label="Wake Time" value={wakeTime} dot="bg-blue-400" />
-            <BreakdownRow label="Total Sleep" value={`${fmt(sleepHrs, 1)} hrs`} dot="bg-green-500" bold />
-            <BreakdownRow label="Complete Cycles" value={`${cycles}`} dot="bg-purple-400" />
-            <BreakdownRow label="Recommended" value={`${ageRec[ageGroup]} hrs`} />
+            <BreakdownRow label="Price/kg" value={`${cs(currency)}${cngPrice}`} dot="bg-orange-400" />
+            <BreakdownRow label="Mileage" value={`${cngMileage} km/kg`} dot="bg-blue-400" />
+            <BreakdownRow label="CNG per 100 km" value={`${fmt(cngPerKm * 100, 2)} kg`} dot="bg-purple-400" />
+            <BreakdownRow label="Cost per 100 km" value={`${cs(currency)}${fmt(cngCostPer100, 0)}`} dot="bg-green-500" bold />
+            <BreakdownRow label="Monthly Cost" value={`${cs(currency)}${fmt(cngMonthly, 0)}`} bold />
+            <BreakdownRow label="Annual Cost" value={`${cs(currency)}${fmt(cngMonthly * 12, 0)}`} />
           </ResultPanel>
         ) : (
-          <ResultPanel label={mode === "wake" ? "Ideal Bedtimes" : "Wake Up Times"}
-            primary={cycleTimes[Math.max(0,(parseInt(targetCycles)||5)-1)] || cycleTimes[4]}
-            primarySub={`for ${targetCycles} cycles`}
+          <ResultPanel label="Monthly PNG Bill" primary={`${cs(currency)}${fmt(pngMonthly, 0)}`}
+            summaries={<>
+              <SummaryCard label="Annual Cost" value={`${cs(currency)}${fmt(pngMonthly * 12, 0)}`} accent="text-orange-500" />
+              <SummaryCard label="Rate/SCM" value={`${cs(currency)}${pngRate}`} />
+            </>}
           >
-            {cycleTimes.map((t, i) => (
-              <BreakdownRow key={i} label={`${i+1} cycles — ${((i+1)*1.5).toFixed(1)} hrs`} value={t}
-                dot={i+1 === parseInt(targetCycles) ? "bg-indigo-500" : "bg-muted"} bold={i+1 === parseInt(targetCycles)} />
-            ))}
-            <BreakdownRow label="Recommended" value={`${ageRec[ageGroup]} hrs`} />
+            <BreakdownRow label="PNG Rate" value={`${cs(currency)}${pngRate}/SCM`} dot="bg-orange-400" />
+            <BreakdownRow label="Monthly Usage" value={`${pngUsage} SCM`} dot="bg-blue-400" />
+            <BreakdownRow label="Monthly Bill" value={`${cs(currency)}${fmt(pngMonthly, 0)}`} dot="bg-green-500" bold />
+            <BreakdownRow label="Annual Bill" value={`${cs(currency)}${fmt(pngMonthly * 12, 0)}`} bold />
           </ResultPanel>
         )
       }
@@ -372,66 +165,171 @@ function SleepCalc() {
   );
 }
 
-function Caffeine() {
-  const [weight, setWeight] = useState("70"); const [mode, setMode] = useState("limit");
-  const [drinks, setDrinks] = useState<Record<string, number>>({ espresso:0, coffee:1, tea:0, cola:0, energyDrink:0 });
-  const [sensitivity, setSensitivity] = useState("moderate");
+function ACPowerConsumption() {
+  const [currency, setCurrency] = useState("INR");
+  const [mode, setMode] = useState("unit");
+  const [tons, setTons] = useState("1.5");
+  const [starRating, setStarRating] = useState("3");
+  const [acType, setAcType] = useState("inverter");
+  const [hoursPerDay, setHoursPerDay] = useState("8");
+  const [daysPerMonth, setDaysPerMonth] = useState("30");
+  const [ratePerUnit, setRatePerUnit] = useState("8");
+  const [numACs, setNumACs] = useState("1");
 
-  const caffMg: Record<string, { mg:number; label:string }> = {
-    espresso:{ mg:64, label:"☕ Espresso" }, coffee:{ mg:95, label:"☕ Coffee" },
-    tea:{ mg:47, label:"🍵 Tea" }, cola:{ mg:34, label:"🥤 Cola" }, energyDrink:{ mg:80, label:"⚡ Energy Drink" },
-  };
-  const limits: Record<string, number> = { low:200, moderate:400, high:600 };
-  const totalMg = Object.entries(drinks).reduce((sum, [k,v]) => sum + v*(caffMg[k]?.mg||0), 0);
-  const limit = limits[sensitivity]; const remaining = Math.max(0, limit - totalMg);
-  const adj = (key: string, d: number) => setDrinks(prev => ({ ...prev, [key]: Math.max(0, (prev[key]||0)+d) }));
+  const t = parseFloat(tons) || 1.5;
+  const star = parseInt(starRating) || 3;
+  const eff = acType === "inverter" ? 0.85 + star * 0.03 : 0.7 + star * 0.02;
+  const kw = (t * 3.517) / eff;
+  const tonToBTU = t * 12000;
+  const tonToKW = t * 3.517;
+  const dailyKwh = kw * (parseFloat(hoursPerDay) || 8);
+  const monthlyKwh = dailyKwh * (parseFloat(daysPerMonth) || 30) * (parseInt(numACs) || 1);
+  const monthlyCost = monthlyKwh * (parseFloat(ratePerUnit) || 8);
+
+  const roomGuide = [
+    { area: "Up to 10 sqm (110 sqft)", size: "0.8 Ton" },
+    { area: "10–15 sqm (150 sqft)", size: "1.0 Ton" },
+    { area: "15–20 sqm (215 sqft)", size: "1.5 Ton" },
+    { area: "20–30 sqm (320 sqft)", size: "2.0 Ton" },
+    { area: "30–45 sqm (485 sqft)", size: "2.5 Ton" },
+    { area: "45+ sqm", size: "3+ Ton" },
+  ];
 
   return (
     <DesktopToolGrid
       inputs={
-        <InputPanel title="Caffeine Intake" icon={Coffee} iconColor="bg-amber-600">
-          <ModeSelector modes={[{ id:"limit", label:"Daily Limit" }, { id:"timing", label:"Safe Timing" }]} active={mode} onChange={setMode} />
-          <InputField label="Body Weight (kg)" value={weight} onChange={setWeight} type="number" />
-          <div>
-            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Sensitivity</label>
-            <div className="flex gap-1.5">
-              {["low","moderate","high"].map(s => <button key={s} onClick={() => setSensitivity(s)} className={`flex-1 py-2 rounded-lg text-xs font-bold capitalize ${sensitivity === s ? "bg-amber-600 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{s}</button>)}
+        <InputPanel title="AC Parameters" icon={Wind} iconColor="bg-blue-500" currency={currency} currencies={CURRENCIES} onCurrencyChange={setCurrency}>
+          <ModeSelector modes={[{ id: "unit", label: "Monthly Bill" }, { id: "size", label: "Room Guide" }]} active={mode} onChange={setMode} />
+          <div className="grid grid-cols-2 gap-3">
+            <InputField label="Capacity (Tons)" value={tons} onChange={setTons} type="number" />
+            <div>
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">AC Type</label>
+              <select value={acType} onChange={e => setAcType(e.target.value)} className="w-full bg-muted/30 border border-border rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none">
+                {["inverter", "non-inverter", "window"].map(t => <option key={t} value={t} className="capitalize">{t}</option>)}
+              </select>
             </div>
           </div>
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide block">Today's Drinks</label>
-            {Object.entries(caffMg).map(([k,v]) => (
-              <div key={k} className="flex items-center justify-between px-3 py-2 bg-muted/20 rounded-xl">
-                <div><p className="text-sm font-medium text-foreground">{v.label}</p><p className="text-xs text-muted-foreground">{v.mg}mg each</p></div>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => adj(k, -1)} className="w-7 h-7 rounded-full bg-muted text-foreground font-bold text-sm flex items-center justify-center">−</button>
-                  <span className="w-5 text-center text-sm font-bold">{drinks[k]}</span>
-                  <button onClick={() => adj(k, 1)} className="w-7 h-7 rounded-full bg-primary/20 text-primary font-bold text-sm flex items-center justify-center">+</button>
-                </div>
-              </div>
-            ))}
+          <div>
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Star Rating (BEE)</label>
+            <div className="flex gap-1.5">
+              {["1", "2", "3", "4", "5"].map(s => (
+                <button key={s} onClick={() => setStarRating(s)} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${starRating === s ? "bg-blue-500 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{s}★</button>
+              ))}
+            </div>
           </div>
+          {mode === "unit" && (
+            <>
+              <div className="grid grid-cols-3 gap-2">
+                <InputField label="Hours/Day" value={hoursPerDay} onChange={setHoursPerDay} type="number" />
+                <InputField label="Days/Month" value={daysPerMonth} onChange={setDaysPerMonth} type="number" />
+                <InputField label="No. of ACs" value={numACs} onChange={setNumACs} type="number" />
+              </div>
+              <InputField label={`Rate per Unit (${cs(currency)}/kWh)`} value={ratePerUnit} onChange={setRatePerUnit} type="number" prefix={cs(currency)} />
+            </>
+          )}
         </InputPanel>
       }
       results={
-        <ResultPanel label="Total Caffeine" primary={`${totalMg} mg`}
+        mode === "unit" ? (
+          <ResultPanel label="Monthly Bill" primary={`${cs(currency)}${fmt(monthlyCost, 0)}`}
+            summaries={<>
+              <SummaryCard label="Monthly Units" value={`${fmt(monthlyKwh, 0)} kWh`} accent="text-blue-500" />
+              <SummaryCard label="Annual Bill" value={`${cs(currency)}${fmt(monthlyCost * 12, 0)}`} />
+            </>}
+            tip={`Inverter ACs save 30–40% over non-inverter. A ${star}★ ${t}T AC draws ~${fmt(kw, 2)} kW.`}
+          >
+            <BreakdownRow label="Power Draw" value={`${fmt(kw * 1000, 0)} W = ${fmt(kw, 3)} kW`} dot="bg-blue-400" />
+            <BreakdownRow label="Daily Usage" value={`${fmt(dailyKwh, 2)} kWh`} dot="bg-purple-400" />
+            <BreakdownRow label="Monthly Units" value={`${fmt(monthlyKwh, 0)} kWh`} dot="bg-amber-400" bold />
+            <BreakdownRow label="Monthly Bill" value={`${cs(currency)}${fmt(monthlyCost, 0)}`} dot="bg-green-500" bold />
+            <BreakdownRow label="Annual Bill" value={`${cs(currency)}${fmt(monthlyCost * 12, 0)}`} />
+          </ResultPanel>
+        ) : (
+          <ResultPanel label="Your AC" primary={`${t}T = ${fmt(tonToBTU, 0)} BTU`} primarySub={`${fmt(tonToKW, 2)} kW`}
+            summaries={<>
+              <SummaryCard label="Watts" value={`${fmt(tonToKW * 1000, 0)} W`} accent="text-blue-500" />
+              <SummaryCard label="BTU" value={`${fmt(tonToBTU, 0)}`} />
+            </>}
+          >
+            {roomGuide.map((r, i) => (
+              <BreakdownRow key={i} label={r.area} value={r.size} dot="bg-blue-400" />
+            ))}
+          </ResultPanel>
+        )
+      }
+    />
+  );
+}
+
+function InverterCalculator() {
+  const [mode, setMode] = useState("backup");
+  const [numBatteries, setNumBatteries] = useState("1");
+  const [batteryAh, setBatteryAh] = useState("150");
+  const [batteryVolt, setBatteryVolt] = useState("12");
+  const [loadWatts, setLoadWatts] = useState("300");
+  const [depth, setDepth] = useState("80");
+  const [chargeHours, setChargeHours] = useState("8");
+  const [inverterEff, setInverterEff] = useState("85");
+
+  const nb = parseInt(numBatteries) || 1;
+  const ah = parseFloat(batteryAh) || 150;
+  const v = parseFloat(batteryVolt) || 12;
+  const load = parseFloat(loadWatts) || 300;
+  const dod = parseFloat(depth) || 80;
+  const eff = parseFloat(inverterEff) || 85;
+
+  const totalWh = nb * ah * v;
+  const usableWh = totalWh * (dod / 100) * (eff / 100);
+  const backupHours = load > 0 ? usableWh / load : 0;
+  const chargingCurrent = totalWh / (parseFloat(chargeHours) || 8) / v;
+  const inverterVA = load / (eff / 100);
+
+  return (
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Inverter / Battery" icon={Battery} iconColor="bg-yellow-500">
+          <ModeSelector modes={[{ id: "backup", label: "Backup Time" }, { id: "size", label: "Inverter Sizing" }]} active={mode} onChange={setMode} />
+          <div>
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Batteries in Parallel</label>
+            <div className="flex gap-1.5">
+              {["1", "2", "3", "4"].map(n => (
+                <button key={n} onClick={() => setNumBatteries(n)} className={`flex-1 py-2.5 rounded-xl text-sm font-bold ${numBatteries === n ? "bg-yellow-500 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{n}×</button>
+              ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <InputField label="Battery (Ah)" value={batteryAh} onChange={setBatteryAh} type="number" />
+            <div>
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Voltage</label>
+              <select value={batteryVolt} onChange={e => setBatteryVolt(e.target.value)} className="w-full bg-muted/30 border border-border rounded-xl px-3 py-2.5 text-sm text-foreground focus:outline-none">
+                {["6", "12", "24", "48"].map(vv => <option key={vv} value={vv}>{vv}V</option>)}
+              </select>
+            </div>
+          </div>
+          <InputField label="Load (Watts)" value={loadWatts} onChange={setLoadWatts} type="number" />
+          <div className="grid grid-cols-2 gap-3">
+            <InputField label="Depth of Discharge (%)" value={depth} onChange={setDepth} type="number" />
+            <InputField label="Inverter Efficiency (%)" value={inverterEff} onChange={setInverterEff} type="number" />
+          </div>
+          {mode === "size" && <InputField label="Charging Time (hrs)" value={chargeHours} onChange={setChargeHours} type="number" />}
+        </InputPanel>
+      }
+      results={
+        <ResultPanel label="Backup Time" primary={`${fmt(backupHours, 1)} hrs`} primarySub={`${fmt(backupHours * 60, 0)} min`}
           summaries={<>
-            <SummaryCard label="Daily Limit" value={`${limit} mg`} />
-            <SummaryCard label="Status" value={totalMg <= limit ? "✅ Safe" : "⚠️ Over"} accent={totalMg <= limit ? "text-green-500" : "text-red-500"} />
+            <SummaryCard label="Usable Wh" value={`${fmt(usableWh, 0)} Wh`} accent="text-yellow-500" />
+            <SummaryCard label="Total Wh" value={`${fmt(totalWh, 0)} Wh`} />
           </>}
-          tip="Caffeine half-life ~5 hours. A 3pm coffee still has ~50% caffeine at 8pm."
+          tip="Tip: Inverter efficiency of 85–90% is typical. Lead-acid batteries use 80% DoD max to preserve life."
         >
-          {Object.entries(drinks).filter(([,v]) => v > 0).map(([k,v]) => (
-            <BreakdownRow key={k} label={`${v}× ${caffMg[k]?.label}`} value={`${v*(caffMg[k]?.mg||0)} mg`} dot="bg-amber-400" />
-          ))}
-          <BreakdownRow label="Total Intake" value={`${totalMg} mg`} dot={totalMg <= limit ? "bg-green-500" : "bg-red-500"} bold />
-          <BreakdownRow label={`Limit (${sensitivity})`} value={`${limit} mg`} dot="bg-blue-400" />
-          <BreakdownRow label="Remaining Safe" value={`${remaining} mg`} bold />
-          {mode === "timing" && (
+          <BreakdownRow label={`Battery (${nb}×${ah}Ah×${v}V)`} value={`${fmt(totalWh, 0)} Wh total`} dot="bg-yellow-400" />
+          <BreakdownRow label="Usable Capacity" value={`${fmt(usableWh, 0)} Wh`} dot="bg-green-500" />
+          <BreakdownRow label="Load" value={`${load} W`} dot="bg-blue-400" />
+          <BreakdownRow label="Backup Time" value={`${fmt(backupHours, 1)} hrs`} dot="bg-amber-400" bold />
+          {mode === "size" && (
             <>
-              <BreakdownRow label="50% gone after" value="+5 hrs" dot="bg-purple-400" />
-              <BreakdownRow label="75% gone after" value="+10 hrs" dot="bg-purple-300" />
-              <BreakdownRow label="Best cutoff (10pm sleep)" value="Before 2pm" />
+              <BreakdownRow label="Required Inverter" value={`${fmt(inverterVA, 0)} VA`} dot="bg-purple-400" bold />
+              <BreakdownRow label="Charging Current" value={`${fmt(chargingCurrent, 1)} A`} />
             </>
           )}
         </ResultPanel>
@@ -440,166 +338,451 @@ function Caffeine() {
   );
 }
 
-function BodyFat() {
-  const [gender, setGender] = useState("male");
-  const [weight, setWeight] = useState("80"); const [height, setHeight] = useState("175");
-  const [neck, setNeck] = useState("37"); const [waist, setWaist] = useState("85"); const [hip, setHip] = useState("95");
+function SolarPanelCalculator() {
+  const [currency, setCurrency] = useState("INR");
+  const [mode, setMode] = useState("size");
+  const [dailyUsage, setDailyUsage] = useState("10");
+  const [sunHours, setSunHours] = useState("5");
+  const [panelWatts, setPanelWatts] = useState("400");
+  const [ratePerUnit, setRatePerUnit] = useState("8");
+  const [systemCost, setSystemCost] = useState("150000");
 
-  const wKg = parseFloat(weight)||80; const hCm = parseFloat(height)||175;
-  const neckCm = parseFloat(neck)||37; const waistCm = parseFloat(waist)||85; const hipCm = parseFloat(hip)||95;
-  const navy = gender === "male"
-    ? 86.010*Math.log10(waistCm-neckCm) - 70.041*Math.log10(hCm) + 36.76
-    : 163.205*Math.log10(waistCm+hipCm-neckCm) - 97.684*Math.log10(hCm) - 78.387;
-  const bf = Math.max(0, navy); const fat = wKg*(bf/100); const ffm = wKg - fat;
-  const ideal = gender === "male" ? 17 : 24;
-  const idealFat = wKg*(ideal/100); const fatToLose = Math.max(0, fat - idealFat);
+  const usage = parseFloat(dailyUsage) || 10;
+  const hours = parseFloat(sunHours) || 5;
+  const panel = parseFloat(panelWatts) || 400;
+  const rate = parseFloat(ratePerUnit) || 8;
+  const cost = parseFloat(systemCost) || 150000;
 
-  const catLabel = () => {
-    if (gender === "male") return bf < 6 ? "Essential" : bf < 14 ? "Athlete" : bf < 18 ? "Fitness" : bf < 25 ? "Average" : "Obese";
-    return bf < 14 ? "Essential" : bf < 21 ? "Athlete" : bf < 25 ? "Fitness" : bf < 32 ? "Average" : "Obese";
+  const systemSizeKW = usage / hours;
+  const panelsNeeded = Math.ceil((systemSizeKW * 1000) / panel);
+  const yearlyGen = systemSizeKW * hours * 365;
+  const annualSavings = yearlyGen * rate;
+  const paybackYears = annualSavings > 0 ? cost / annualSavings : 0;
+  const co2SavedKg = yearlyGen * 0.82;
+
+  const sunPresets: Record<string, string> = {
+    Mumbai: "5.5", Delhi: "5.3", Chennai: "5.8", Bangalore: "5.1",
+    London: "2.8", NYC: "4.2", Dubai: "5.9", Sydney: "5.2",
   };
 
   return (
     <DesktopToolGrid
       inputs={
-        <InputPanel title="Body Measurements" icon={Dumbbell} iconColor="bg-violet-500">
+        <InputPanel title="Solar Parameters" icon={Sun} iconColor="bg-amber-500" currency={currency} currencies={CURRENCIES} onCurrencyChange={setCurrency}>
+          <ModeSelector modes={[{ id: "size", label: "System Size" }, { id: "savings", label: "Savings & ROI" }]} active={mode} onChange={setMode} />
           <div>
-            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Gender</label>
-            <div className="flex gap-1.5">
-              {["male","female"].map(g => <button key={g} onClick={() => setGender(g)} className={`flex-1 py-2.5 rounded-xl text-xs font-bold capitalize ${gender === g ? "bg-violet-500 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{g}</button>)}
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">City Sun Hours Preset</label>
+            <div className="flex gap-1.5 flex-wrap">
+              {Object.entries(sunPresets).map(([city, h]) => (
+                <button key={city} onClick={() => setSunHours(h)} className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold ${sunHours === h ? "bg-amber-500 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{city}</button>
+              ))}
             </div>
           </div>
+          <InputField label="Daily Usage (kWh)" value={dailyUsage} onChange={setDailyUsage} type="number" />
           <div className="grid grid-cols-2 gap-3">
-            <InputField label="Weight (kg)" value={weight} onChange={setWeight} type="number" />
-            <InputField label="Height (cm)" value={height} onChange={setHeight} type="number" />
+            <InputField label="Peak Sun Hours/day" value={sunHours} onChange={setSunHours} type="number" />
+            <InputField label="Panel Wattage (W)" value={panelWatts} onChange={setPanelWatts} type="number" />
           </div>
-          <div className="grid grid-cols-3 gap-2">
-            <InputField label="Neck (cm)" value={neck} onChange={setNeck} type="number" />
-            <InputField label="Waist (cm)" value={waist} onChange={setWaist} type="number" />
-            {gender === "female" && <InputField label="Hip (cm)" value={hip} onChange={setHip} type="number" />}
-          </div>
-          <div className="text-xs text-muted-foreground p-3 bg-muted/20 rounded-xl">US Navy method — measure at navel (waist), widest point (hip), and below larynx (neck).</div>
-        </InputPanel>
-      }
-      results={
-        <ResultPanel label="Body Fat %" primary={`${fmt(bf, 1)}%`}
-          summaries={<>
-            <SummaryCard label="Category" value={catLabel()} accent={bf <= ideal ? "text-green-500" : "text-amber-500"} />
-            <SummaryCard label="Fat Mass" value={`${fmt(fat, 1)} kg`} />
-          </>}
-          tip="Ideal body fat: Men 14–17% | Women 21–24%. To lose 1 kg fat requires ~7700 kcal deficit."
-        >
-          <BreakdownRow label="Body Fat %" value={`${fmt(bf, 1)}%`} dot={bf <= ideal ? "bg-green-500" : "bg-amber-500"} bold />
-          <BreakdownRow label="Category" value={catLabel()} dot="bg-purple-400" />
-          <BreakdownRow label="Fat Mass" value={`${fmt(fat, 1)} kg`} dot="bg-red-400" />
-          <BreakdownRow label="Lean Mass" value={`${fmt(ffm, 1)} kg`} dot="bg-green-400" />
-          <BreakdownRow label="Ideal Fat %" value={`${ideal}%`} dot="bg-blue-400" />
-          <BreakdownRow label="Fat to Lose" value={`${fmt(fatToLose, 1)} kg`} bold />
-        </ResultPanel>
-      }
-    />
-  );
-}
-
-function HeartRate() {
-  const [age, setAge] = useState("30"); const [gender, setGender] = useState("male");
-  const [restingHR, setRestingHR] = useState("70"); const [mode, setMode] = useState("zones");
-
-  const ageN = parseFloat(age)||30; const rhr = parseFloat(restingHR)||70;
-  const maxHR = gender === "male" ? 220 - ageN : 226 - ageN;
-  const hrr = maxHR - rhr;
-  const zones = [
-    { z:"Zone 1 – Recovery", min:0.5, max:0.6, color:"bg-blue-400" },
-    { z:"Zone 2 – Fat Burn", min:0.6, max:0.7, color:"bg-green-500" },
-    { z:"Zone 3 – Aerobic", min:0.7, max:0.8, color:"bg-yellow-400" },
-    { z:"Zone 4 – Threshold", min:0.8, max:0.9, color:"bg-orange-500" },
-    { z:"Zone 5 – Max", min:0.9, max:1.0, color:"bg-red-500" },
-  ];
-
-  return (
-    <DesktopToolGrid
-      inputs={
-        <InputPanel title="Heart Rate Data" icon={Heart} iconColor="bg-red-500">
-          <ModeSelector modes={[{ id:"zones", label:"Training Zones" }, { id:"karvonen", label:"Karvonen" }]} active={mode} onChange={setMode} />
-          <div>
-            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Gender</label>
-            <div className="flex gap-1.5">
-              {["male","female"].map(g => <button key={g} onClick={() => setGender(g)} className={`flex-1 py-2.5 rounded-xl text-xs font-bold capitalize ${gender === g ? "bg-red-500 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{g}</button>)}
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <InputField label="Age" value={age} onChange={setAge} type="number" />
-            <InputField label="Resting HR (bpm)" value={restingHR} onChange={setRestingHR} type="number" />
-          </div>
-        </InputPanel>
-      }
-      results={
-        <ResultPanel label="Max Heart Rate" primary={`${maxHR} bpm`}
-          summaries={<>
-            <SummaryCard label="HRR" value={`${hrr} bpm`} accent="text-red-500" />
-            <SummaryCard label="Resting HR" value={`${restingHR} bpm`} />
-          </>}
-        >
-          <BreakdownRow label="Max HR (formula)" value={`${gender === "male" ? "220" : "226"} − ${ageN} = ${maxHR}`} dot="bg-red-400" bold />
-          <BreakdownRow label="HRR (Heart Rate Reserve)" value={`${hrr} bpm`} dot="bg-purple-400" />
-          {(mode === "zones" ? zones.map(z => (
-            <BreakdownRow key={z.z} label={z.z} value={`${Math.round(maxHR*z.min)}–${Math.round(maxHR*z.max)} bpm`} dot={z.color} />
-          )) : zones.map(z => (
-            <BreakdownRow key={z.z} label={z.z} value={`${Math.round(rhr+hrr*z.min)}–${Math.round(rhr+hrr*z.max)} bpm`} dot={z.color} />
-          )))}
-        </ResultPanel>
-      }
-    />
-  );
-}
-
-function Breath() {
-  const [age, setAge] = useState("30"); const [gender, setGender] = useState("male");
-  const [height, setHeight] = useState("175"); const [weight, setWeight] = useState("70");
-  const [mode, setMode] = useState("fev");
-
-  const ageN = parseFloat(age)||30; const hCm = parseFloat(height)||175; const wKg = parseFloat(weight)||70;
-  const hIn = hCm / 2.54;
-  const fvc = gender === "male" ? 0.0576*hIn - 0.0269*ageN - 4.34 : 0.0443*hIn - 0.026*ageN - 2.89;
-  const fev1 = gender === "male" ? 0.0666*hIn - 0.0292*ageN - 4.31 : 0.0342*hIn - 0.0255*ageN - 1.578;
-  const ratio = fvc > 0 ? fev1/fvc*100 : 0;
-  const rv = 0.0217*ageN + 0.0671*hIn - 3.477;
-  const bsa = Math.sqrt(hCm * wKg / 3600);
-
-  return (
-    <DesktopToolGrid
-      inputs={
-        <InputPanel title="Pulmonary Data" icon={Wind} iconColor="bg-sky-500">
-          <ModeSelector modes={[{ id:"fev", label:"FEV Analysis" }, { id:"lung", label:"Lung Volume" }]} active={mode} onChange={setMode} />
-          <div>
-            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Gender</label>
-            <div className="flex gap-1.5">
-              {["male","female"].map(g => <button key={g} onClick={() => setGender(g)} className={`flex-1 py-2.5 rounded-xl text-xs font-bold capitalize ${gender === g ? "bg-sky-500 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{g}</button>)}
-            </div>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            <InputField label="Age" value={age} onChange={setAge} type="number" />
-            <InputField label="Height (cm)" value={height} onChange={setHeight} type="number" />
-            <InputField label="Weight (kg)" value={weight} onChange={setWeight} type="number" />
-          </div>
-        </InputPanel>
-      }
-      results={
-        <ResultPanel label="Predicted FVC" primary={`${fmt(fvc, 2)} L`}
-          summaries={<>
-            <SummaryCard label="FEV1" value={`${fmt(fev1, 2)} L`} accent="text-sky-500" />
-            <SummaryCard label="FEV1/FVC" value={`${fmt(ratio, 1)}%`} />
-          </>}
-          tip="FEV1/FVC < 70% may indicate airway obstruction (COPD, asthma). Consult a doctor for diagnosis."
-        >
-          <BreakdownRow label="FVC (Forced Vital Cap)" value={`${fmt(fvc, 2)} L`} dot="bg-sky-400" bold />
-          <BreakdownRow label="FEV1 (1-sec forced)" value={`${fmt(fev1, 2)} L`} dot="bg-blue-400" bold />
-          <BreakdownRow label="FEV1/FVC Ratio" value={`${fmt(ratio, 1)}%`} dot={ratio >= 70 ? "bg-green-500" : "bg-amber-400"} />
-          {mode === "lung" && (
+          {mode === "savings" && (
             <>
-              <BreakdownRow label="BSA" value={`${fmt(bsa, 2)} m²`} dot="bg-purple-400" />
-              <BreakdownRow label="Residual Volume" value={`${fmt(rv, 2)} L`} dot="bg-amber-400" />
-              <BreakdownRow label="TLC (approx)" value={`${fmt(fvc+rv, 2)} L`} dot="bg-green-400" />
+              <InputField label={`Electricity Rate (${cs(currency)}/kWh)`} value={ratePerUnit} onChange={setRatePerUnit} type="number" prefix={cs(currency)} />
+              <InputField label={`System Cost (${cs(currency)})`} value={systemCost} onChange={setSystemCost} type="number" prefix={cs(currency)} />
+            </>
+          )}
+        </InputPanel>
+      }
+      results={
+        <ResultPanel label="System Size Needed" primary={`${fmt(systemSizeKW, 2)} kWp`}
+          summaries={<>
+            <SummaryCard label="Panels Needed" value={`${panelsNeeded} × ${panel}W`} accent="text-amber-500" />
+            <SummaryCard label="Annual Gen" value={`${fmt(yearlyGen, 0)} kWh`} />
+          </>}
+          tip={`Payback period is typically 4–7 years. CO₂ saved: ~${fmt(co2SavedKg, 0)} kg/year.`}
+        >
+          <BreakdownRow label="System Size" value={`${fmt(systemSizeKW, 2)} kWp`} dot="bg-amber-400" bold />
+          <BreakdownRow label="Panels Needed" value={`${panelsNeeded} × ${panel}W`} dot="bg-yellow-400" />
+          <BreakdownRow label="Annual Generation" value={`${fmt(yearlyGen, 0)} kWh`} dot="bg-green-500" />
+          <BreakdownRow label="CO₂ Saved" value={`${fmt(co2SavedKg, 0)} kg/year`} dot="bg-teal-400" />
+          {mode === "savings" && (
+            <>
+              <BreakdownRow label="Annual Savings" value={`${cs(currency)}${fmt(annualSavings, 0)}`} dot="bg-blue-400" bold />
+              <BreakdownRow label="Payback Period" value={`${fmt(paybackYears, 1)} years`} dot="bg-purple-400" bold />
+              <BreakdownRow label="25-yr Savings" value={`${cs(currency)}${fmt(annualSavings * 25 - cost, 0)}`} />
+            </>
+          )}
+        </ResultPanel>
+      }
+    />
+  );
+}
+
+function WaterTankVolume() {
+  const [currency, setCurrency] = useState("INR");
+  const [shape, setShape] = useState("rectangular");
+  const [unitSys, setUnitSys] = useState("metric");
+  const [length, setLength] = useState("2");
+  const [width, setWidth] = useState("1.5");
+  const [height, setHeight] = useState("1");
+  const [diameter, setDiameter] = useState("1.5");
+  const [waterRate, setWaterRate] = useState("5");
+
+  const l = parseFloat(length) || 2;
+  const w = parseFloat(width) || 1.5;
+  const h = parseFloat(height) || 1;
+  const d = parseFloat(diameter) || 1.5;
+
+  const volM3 = shape === "rectangular" ? l * w * h : Math.PI * (d / 2) ** 2 * h;
+  const volLiters = unitSys === "metric" ? volM3 * 1000 : volM3 * 28.3168;
+  const volGallons = volLiters * 0.264172;
+  const volKg = volLiters;
+  const rate = parseFloat(waterRate) || 5;
+  const costPerFill = (volLiters / 1000) * rate;
+  const familyDays = volLiters / 135;
+
+  return (
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Tank Dimensions" icon={Droplets} iconColor="bg-cyan-500" currency={currency} currencies={CURRENCIES} onCurrencyChange={setCurrency}>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Shape</label>
+              <div className="flex gap-1.5">
+                {[{ k: "rectangular", l: "Rect" }, { k: "cylindrical", l: "Cyl" }].map(s => (
+                  <button key={s.k} onClick={() => setShape(s.k)} className={`flex-1 py-2.5 rounded-xl text-xs font-bold ${shape === s.k ? "bg-cyan-500 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{s.l}</button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Unit System</label>
+              <div className="flex gap-1.5">
+                {[{ k: "metric", l: "m" }, { k: "imperial", l: "ft" }].map(u => (
+                  <button key={u.k} onClick={() => setUnitSys(u.k)} className={`flex-1 py-2.5 rounded-xl text-xs font-bold ${unitSys === u.k ? "bg-cyan-500 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{u.l}</button>
+                ))}
+              </div>
+            </div>
+          </div>
+          {shape === "rectangular" ? (
+            <div className="grid grid-cols-3 gap-2">
+              <InputField label={`Length (${unitSys === "metric" ? "m" : "ft"})`} value={length} onChange={setLength} type="number" />
+              <InputField label={`Width (${unitSys === "metric" ? "m" : "ft"})`} value={width} onChange={setWidth} type="number" />
+              <InputField label={`Height (${unitSys === "metric" ? "m" : "ft"})`} value={height} onChange={setHeight} type="number" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <InputField label={`Diameter (${unitSys === "metric" ? "m" : "ft"})`} value={diameter} onChange={setDiameter} type="number" />
+              <InputField label={`Height (${unitSys === "metric" ? "m" : "ft"})`} value={height} onChange={setHeight} type="number" />
+            </div>
+          )}
+          <InputField label={`Water Rate (${cs(currency)}/1000L)`} value={waterRate} onChange={setWaterRate} type="number" prefix={cs(currency)} />
+        </InputPanel>
+      }
+      results={
+        <ResultPanel label="Tank Volume" primary={`${fmt(volLiters, 0)} L`}
+          summaries={<>
+            <SummaryCard label="Gallons" value={`${fmt(volGallons, 0)}`} accent="text-cyan-500" />
+            <SummaryCard label="Fill Cost" value={`${cs(currency)}${fmt(costPerFill, 0)}`} />
+          </>}
+          tip={`Average family of 4 uses ~135L/day — this tank lasts ~${fmt(familyDays, 1)} days.`}
+        >
+          <BreakdownRow label="Volume (m³)" value={`${fmt(volM3, 3)} m³`} dot="bg-cyan-400" />
+          <BreakdownRow label="Volume (Litres)" value={`${fmt(volLiters, 0)} L`} dot="bg-blue-400" bold />
+          <BreakdownRow label="Volume (Gallons)" value={`${fmt(volGallons, 0)} gal`} dot="bg-purple-400" />
+          <BreakdownRow label="Weight (full)" value={`${fmt(volKg, 0)} kg`} dot="bg-amber-400" />
+          <BreakdownRow label="Cost per Fill" value={`${cs(currency)}${fmt(costPerFill, 0)}`} />
+          <BreakdownRow label="Family Days (4 pax)" value={`${fmt(familyDays, 1)} days`} bold />
+        </ResultPanel>
+      }
+    />
+  );
+}
+
+function RainwaterHarvest() {
+  const [currency, setCurrency] = useState("INR");
+  const [roofArea, setRoofArea] = useState("100");
+  const [areaUnit, setAreaUnit] = useState("sqm");
+  const [annualRainfall, setAnnualRainfall] = useState("800");
+  const [efficiency, setEfficiency] = useState("80");
+  const [waterRate, setWaterRate] = useState("5");
+
+  const areaSqm = areaUnit === "sqm" ? parseFloat(roofArea) || 100 : (parseFloat(roofArea) || 100) * 0.0929;
+  const rainfall = parseFloat(annualRainfall) || 800;
+  const eff = (parseFloat(efficiency) || 80) / 100;
+  const rate = parseFloat(waterRate) || 5;
+
+  const annualLiters = areaSqm * (rainfall / 1000) * eff * 1000;
+  const monthlyLiters = annualLiters / 12;
+  const annualSavings = (annualLiters / 1000) * rate;
+  const familyDays = annualLiters / (135 * 4);
+
+  const cityRainfall: Record<string, string> = {
+    Mumbai: "2400", Delhi: "800", Chennai: "1400", Bangalore: "970",
+    London: "600", NYC: "1170", Dubai: "75", Sydney: "1200",
+  };
+
+  return (
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Rainwater Harvesting" icon={Cloud} iconColor="bg-teal-500" currency={currency} currencies={CURRENCIES} onCurrencyChange={setCurrency}>
+          <div>
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">City Rainfall Preset (mm/year)</label>
+            <div className="flex gap-1.5 flex-wrap">
+              {Object.entries(cityRainfall).map(([city, mm]) => (
+                <button key={city} onClick={() => setAnnualRainfall(mm)} className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold ${annualRainfall === mm ? "bg-teal-500 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{city}</button>
+              ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <InputField label="Roof Area" value={roofArea} onChange={setRoofArea} type="number" />
+            <div>
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Unit</label>
+              <div className="flex gap-1.5">
+                {["sqm", "sqft"].map(u => <button key={u} onClick={() => setAreaUnit(u)} className={`flex-1 py-2.5 rounded-xl text-xs font-bold ${areaUnit === u ? "bg-teal-500 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{u}</button>)}
+              </div>
+            </div>
+          </div>
+          <InputField label="Annual Rainfall (mm)" value={annualRainfall} onChange={setAnnualRainfall} type="number" />
+          <div className="grid grid-cols-2 gap-3">
+            <InputField label="Efficiency (%)" value={efficiency} onChange={setEfficiency} type="number" />
+            <InputField label={`Water Rate (${cs(currency)}/1000L)`} value={waterRate} onChange={setWaterRate} type="number" prefix={cs(currency)} />
+          </div>
+        </InputPanel>
+      }
+      results={
+        <ResultPanel label="Annual Harvest" primary={`${fmt(annualLiters, 0)} L`}
+          summaries={<>
+            <SummaryCard label="Monthly" value={`${fmt(monthlyLiters, 0)} L`} accent="text-teal-500" />
+            <SummaryCard label="Annual Savings" value={`${cs(currency)}${fmt(annualSavings, 0)}`} />
+          </>}
+          tip="A 100m² roof in Mumbai (2400mm rainfall) can harvest ~192,000 L/year — enough for 1 family."
+        >
+          <BreakdownRow label="Roof Area" value={`${fmt(areaSqm, 1)} m²`} dot="bg-teal-400" />
+          <BreakdownRow label="Annual Rainfall" value={`${rainfall} mm`} dot="bg-blue-400" />
+          <BreakdownRow label="Efficiency" value={`${efficiency}%`} dot="bg-purple-400" />
+          <BreakdownRow label="Annual Harvest" value={`${fmt(annualLiters, 0)} L`} dot="bg-green-500" bold />
+          <BreakdownRow label="Monthly Harvest" value={`${fmt(monthlyLiters, 0)} L`} />
+          <BreakdownRow label="Annual Savings" value={`${cs(currency)}${fmt(annualSavings, 0)}`} bold />
+          <BreakdownRow label="Family Days (4 pax)" value={`${fmt(familyDays, 0)} days`} />
+        </ResultPanel>
+      }
+    />
+  );
+}
+
+function ExpenseSplitter() {
+  const [currency, setCurrency] = useState("INR");
+  const [mode, setMode] = useState("equal");
+  const [totalAmount, setTotalAmount] = useState("2000");
+  const [people, setPeople] = useState("4");
+  const [tipPercent, setTipPercent] = useState("10");
+  const [person1, setPerson1] = useState("30");
+  const [person2, setPerson2] = useState("25");
+  const [person3, setPerson3] = useState("25");
+  const [person4, setPerson4] = useState("20");
+
+  const total = parseFloat(totalAmount) || 2000;
+  const n = parseInt(people) || 4;
+  const tip = parseFloat(tipPercent) || 0;
+  const tipAmt = total * (tip / 100);
+  const grandTotal = total + tipAmt;
+
+  const shares = [parseFloat(person1), parseFloat(person2), parseFloat(person3), parseFloat(person4)].slice(0, n);
+  const shareSum = shares.reduce((a, b) => a + b, 0);
+  const perPerson = grandTotal / n;
+  const perPersonByShare = shares.map(s => (s / shareSum) * grandTotal);
+
+  return (
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Expense Details" icon={ShoppingCart} iconColor="bg-lime-500" currency={currency} currencies={CURRENCIES} onCurrencyChange={setCurrency}>
+          <ModeSelector modes={[{ id: "equal", label: "Split Equally" }, { id: "percent", label: "By % Share" }]} active={mode} onChange={setMode} />
+          <InputField label={`Total Amount (${cs(currency)})`} value={totalAmount} onChange={setTotalAmount} type="number" prefix={cs(currency)} />
+          <div className="grid grid-cols-2 gap-3">
+            <InputField label="Number of People" value={people} onChange={setPeople} type="number" />
+            <InputField label="Tip %" value={tipPercent} onChange={setTipPercent} type="number" />
+          </div>
+          {mode === "percent" && (
+            <>
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide block">Individual Shares (%)</label>
+              <div className="grid grid-cols-2 gap-2">
+                {[{ v: person1, s: setPerson1, l: "Person 1" }, { v: person2, s: setPerson2, l: "Person 2" }, { v: person3, s: setPerson3, l: "Person 3" }, { v: person4, s: setPerson4, l: "Person 4" }].slice(0, n).map((p, i) => (
+                  <InputField key={i} label={p.l} value={p.v} onChange={p.s} type="number" />
+                ))}
+              </div>
+            </>
+          )}
+        </InputPanel>
+      }
+      results={
+        <ResultPanel label={mode === "equal" ? "Per Person" : "Split Summary"}
+          primary={mode === "equal" ? `${cs(currency)}${fmt(perPerson, 2)}` : `${cs(currency)}${fmt(grandTotal, 2)}`}
+          summaries={<>
+            <SummaryCard label="Tip Amount" value={`${cs(currency)}${fmt(tipAmt, 0)}`} />
+            <SummaryCard label="Grand Total" value={`${cs(currency)}${fmt(grandTotal, 0)}`} accent="text-lime-500" />
+          </>}
+        >
+          <BreakdownRow label="Bill Amount" value={`${cs(currency)}${fmt(total, 2)}`} dot="bg-lime-400" />
+          <BreakdownRow label={`Tip (${tip}%)`} value={`${cs(currency)}${fmt(tipAmt, 2)}`} dot="bg-amber-400" />
+          <BreakdownRow label="Grand Total" value={`${cs(currency)}${fmt(grandTotal, 2)}`} dot="bg-green-500" bold />
+          {mode === "equal" ? (
+            <>
+              <BreakdownRow label={`Per Person (${n})`} value={`${cs(currency)}${fmt(perPerson, 2)}`} dot="bg-blue-400" bold />
+            </>
+          ) : (
+            perPersonByShare.map((amt, i) => (
+              <BreakdownRow key={i} label={`Person ${i + 1} (${shares[i]}%)`} value={`${cs(currency)}${fmt(amt, 2)}`} dot="bg-blue-400" />
+            ))
+          )}
+        </ResultPanel>
+      }
+    />
+  );
+}
+
+function DataUsageEstimator() {
+  const [currency, setCurrency] = useState("INR");
+  const [videoHours, setVideoHours] = useState("2");
+  const [musicHours, setMusicHours] = useState("2");
+  const [browsingHours, setBrowsingHours] = useState("2");
+  const [socialHours, setSocialHours] = useState("1");
+  const [gamingHours, setGamingHours] = useState("1");
+  const [videoQuality, setVideoQuality] = useState("hd");
+  const [plan, setPlan] = useState("1.5");
+  const [planCost, setPlanCost] = useState("299");
+
+  const qualityRates: Record<string, number> = { sd: 0.7, hd: 3, fhd: 7, "4k": 25 };
+  const vRate = qualityRates[videoQuality] || 3;
+
+  const dailyGB =
+    parseFloat(videoHours) * vRate / 1024 * 1024 / 1024 +
+    parseFloat(musicHours) * 0.075 +
+    parseFloat(browsingHours) * 0.05 +
+    parseFloat(socialHours) * 0.3 +
+    parseFloat(gamingHours) * 0.1;
+
+  const monthlyGB = dailyGB * 30;
+  const planGB = parseFloat(plan) * 30;
+  const surplus = planGB - monthlyGB;
+  const costPerGB = monthlyGB > 0 ? parseFloat(planCost) / monthlyGB : 0;
+
+  return (
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Daily Usage Estimate" icon={Wifi} iconColor="bg-purple-500" currency={currency} currencies={CURRENCIES} onCurrencyChange={setCurrency}>
+          <div>
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Video Quality</label>
+            <div className="flex gap-1.5">
+              {Object.keys(qualityRates).map(q => (
+                <button key={q} onClick={() => setVideoQuality(q)} className={`flex-1 py-2 rounded-lg text-xs font-bold uppercase ${videoQuality === q ? "bg-purple-500 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{q}</button>
+              ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <InputField label="Video (hrs/day)" value={videoHours} onChange={setVideoHours} type="number" />
+            <InputField label="Music (hrs/day)" value={musicHours} onChange={setMusicHours} type="number" />
+            <InputField label="Browsing (hrs/day)" value={browsingHours} onChange={setBrowsingHours} type="number" />
+            <InputField label="Social Media (hrs)" value={socialHours} onChange={setSocialHours} type="number" />
+            <InputField label="Gaming (hrs/day)" value={gamingHours} onChange={setGamingHours} type="number" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <InputField label="Plan (GB/day)" value={plan} onChange={setPlan} type="number" />
+            <InputField label={`Plan Cost (${cs(currency)}/mo)`} value={planCost} onChange={setPlanCost} type="number" prefix={cs(currency)} />
+          </div>
+        </InputPanel>
+      }
+      results={
+        <ResultPanel label="Daily Usage" primary={`${fmt(dailyGB, 2)} GB`} primarySub="/day"
+          summaries={<>
+            <SummaryCard label="Monthly" value={`${fmt(monthlyGB, 1)} GB`} accent="text-purple-500" />
+            <SummaryCard label={surplus >= 0 ? "Surplus" : "Shortfall"} value={`${fmt(Math.abs(surplus), 1)} GB`} accent={surplus >= 0 ? "text-green-500" : "text-red-500"} />
+          </>}
+          tip={`At ${videoQuality.toUpperCase()} quality, video uses ~${vRate} GB/hr. Consider SD streaming to save data.`}
+        >
+          <BreakdownRow label={`Video (${videoQuality.toUpperCase()})`} value={`${fmt(parseFloat(videoHours) * vRate / 1024 * 1024 / 1024, 2)} GB/day`} dot="bg-red-400" />
+          <BreakdownRow label="Music" value={`${fmt(parseFloat(musicHours) * 0.075, 2)} GB/day`} dot="bg-green-400" />
+          <BreakdownRow label="Browsing" value={`${fmt(parseFloat(browsingHours) * 0.05, 2)} GB/day`} dot="bg-blue-400" />
+          <BreakdownRow label="Social Media" value={`${fmt(parseFloat(socialHours) * 0.3, 2)} GB/day`} dot="bg-pink-400" />
+          <BreakdownRow label="Gaming" value={`${fmt(parseFloat(gamingHours) * 0.1, 2)} GB/day`} dot="bg-amber-400" />
+          <BreakdownRow label="Total Daily" value={`${fmt(dailyGB, 2)} GB`} dot="bg-purple-400" bold />
+          <BreakdownRow label="Monthly" value={`${fmt(monthlyGB, 1)} GB / ${fmt(planGB, 0)} GB plan`} bold />
+          <BreakdownRow label="Cost per GB" value={`${cs(currency)}${fmt(costPerGB, 2)}`} />
+        </ResultPanel>
+      }
+    />
+  );
+}
+
+function BatteryHealthEstimator() {
+  const [mode, setMode] = useState("health");
+  const [devicePreset, setDevicePreset] = useState("android");
+  const [originalCapacity, setOriginalCapacity] = useState("4000");
+  const [currentCapacity, setCurrentCapacity] = useState("3600");
+  const [cycleCount, setCycleCount] = useState("120");
+  const [dailyCharges, setDailyCharges] = useState("1");
+
+  const devicePresets: Record<string, { label: string; capacity: string; cycles: string }> = {
+    android: { label: "Android", capacity: "4000", cycles: "120" },
+    iphone: { label: "iPhone", capacity: "3095", cycles: "150" },
+    laptop: { label: "Laptop", capacity: "5000", cycles: "80" },
+    ipad: { label: "iPad", capacity: "8827", cycles: "60" },
+    custom: { label: "Custom", capacity: "4000", cycles: "100" },
+  };
+
+  const handlePreset = (p: string) => {
+    setDevicePreset(p);
+    if (p !== "custom") { setOriginalCapacity(devicePresets[p].capacity); setCycleCount(devicePresets[p].cycles); }
+  };
+
+  const original = parseFloat(originalCapacity) || 4000;
+  const current = parseFloat(currentCapacity) || 3600;
+  const cycles = parseInt(cycleCount) || 0;
+  const daily = parseFloat(dailyCharges) || 1;
+
+  const healthPct = (current / original) * 100;
+  const maxCycles = 500;
+  const cyclesRemaining = Math.max(0, maxCycles - cycles);
+  const daysRemaining = daily > 0 ? cyclesRemaining / daily : 0;
+  const status = healthPct >= 80 ? "Good" : healthPct >= 60 ? "Fair" : "Poor — Replace Soon";
+  const statusColor = healthPct >= 80 ? "text-green-500" : healthPct >= 60 ? "text-yellow-500" : "text-red-500";
+  const statusDot = healthPct >= 80 ? "bg-green-500" : healthPct >= 60 ? "bg-yellow-400" : "bg-red-500";
+  const estMonthsRemaining = daily > 0 ? cyclesRemaining / (daily * 30) : 0;
+
+  return (
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Battery Details" icon={Smartphone} iconColor="bg-green-500">
+          <ModeSelector modes={[{ id: "health", label: "Health Check" }, { id: "lifetime", label: "Lifetime" }]} active={mode} onChange={setMode} />
+          <div>
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Device Preset</label>
+            <div className="flex gap-1.5 flex-wrap">
+              {Object.entries(devicePresets).map(([k, v]) => (
+                <button key={k} onClick={() => handlePreset(k)} className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${devicePreset === k ? "bg-green-500 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{v.label}</button>
+              ))}
+            </div>
+          </div>
+          <InputField label="Original Capacity (mAh)" value={originalCapacity} onChange={setOriginalCapacity} type="number" />
+          <InputField label="Current Capacity (mAh)" value={currentCapacity} onChange={setCurrentCapacity} type="number" />
+          <InputField label="Charge Cycles Completed" value={cycleCount} onChange={setCycleCount} type="number" />
+          {mode === "lifetime" && <InputField label="Daily Charges" value={dailyCharges} onChange={setDailyCharges} type="number" />}
+        </InputPanel>
+      }
+      results={
+        <ResultPanel label="Battery Health" primary={`${fmt(healthPct, 1)}%`}
+          summaries={<>
+            <SummaryCard label="Status" value={status} accent={statusColor} />
+            <SummaryCard label="Capacity Lost" value={`${fmt(original - current, 0)} mAh`} />
+          </>}
+          tip="Most batteries need replacement when health drops below 80%. Avoid charging to 100% or draining to 0% to extend life."
+        >
+          <BreakdownRow label="Original Capacity" value={`${fmt(original, 0)} mAh`} dot="bg-blue-400" />
+          <BreakdownRow label="Current Capacity" value={`${fmt(current, 0)} mAh`} dot="bg-green-400" />
+          <BreakdownRow label="Health" value={`${fmt(healthPct, 1)}%`} dot={statusDot} bold />
+          <BreakdownRow label="Capacity Lost" value={`${fmt(original - current, 0)} mAh (${fmt(100 - healthPct, 1)}%)`} dot="bg-red-400" />
+          <BreakdownRow label="Cycles" value={`${cycles} / ~${maxCycles}`} dot="bg-purple-400" />
+          {mode === "lifetime" && (
+            <>
+              <BreakdownRow label="Cycles Remaining" value={`~${cyclesRemaining}`} dot="bg-amber-400" bold />
+              <BreakdownRow label="Days Remaining" value={`~${fmt(daysRemaining, 0)} days`} />
+              <BreakdownRow label="Months Remaining" value={`~${fmt(estMonthsRemaining, 1)} months`} />
             </>
           )}
         </ResultPanel>
