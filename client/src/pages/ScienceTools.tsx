@@ -1,8 +1,9 @@
 import { useState, useMemo } from "react";
-import { motion } from "framer-motion";
 import { Atom, Zap, Thermometer, Scale, FlaskConical, Calculator, Droplets, Car, TestTube2, BookOpen, Search } from "lucide-react";
-import { ToolCard, InputField, ResultDisplay, ToolButton } from "@/components/ToolCard";
+import { DesktopToolGrid, InputPanel, ResultPanel, SummaryCard, BreakdownRow, InputField, ModeSelector } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
+
+const sFmt = (n: number, d = 2) => (!isFinite(n) || isNaN(n) ? "—" : parseFloat(n.toFixed(d)).toLocaleString());
 
 const tools = [
   { id: "motion-master", label: "Motion Master", icon: Car },
@@ -18,16 +19,8 @@ const tools = [
 
 export default function ScienceTools() {
   const [activeTool, setActiveTool] = useState("motion-master");
-
   return (
-    <PageWrapper
-      title="Science Tools"
-      subtitle="Physics, Chemistry, Periodic Table and more"
-      accentColor="bg-violet-500"
-      tools={tools}
-      activeTool={activeTool}
-      onToolChange={(id) => setActiveTool(id)}
-    >
+    <PageWrapper title="Science Tools" subtitle="Physics, Chemistry, Periodic Table and more" accentColor="bg-violet-500" tools={tools} activeTool={activeTool} onToolChange={setActiveTool}>
       {activeTool === "motion-master"  && <MotionMaster />}
       {activeTool === "solution-mixer" && <SolutionMixer />}
       {activeTool === "periodic-table" && <PeriodicTableTool />}
@@ -41,9 +34,6 @@ export default function ScienceTools() {
   );
 }
 
-/* ══════════════════════════════════════════════════════════════
-   MOTION MASTER
-══════════════════════════════════════════════════════════════ */
 function MotionMaster() {
   const [mode, setMode] = useState("car");
   const [v0kmh, setV0kmh] = useState("0");
@@ -54,15 +44,8 @@ function MotionMaster() {
   const [angle, setAngle] = useState("45");
   const [speed, setSpeed] = useState("30");
   const [su, setSu] = useState("0");
-  const [sv, setSv] = useState("");
   const [sa, setSa] = useState("9.8");
   const [st, setSt] = useState("5");
-  const [ss, setSs] = useState("");
-
-  function fmt(n: number, d = 2) {
-    if (!isFinite(n) || isNaN(n)) return "—";
-    return parseFloat(n.toFixed(d)).toLocaleString();
-  }
 
   const carComparisons = [
     { name: "Honda City", t: 10.8 }, { name: "Maruti Swift", t: 11.5 },
@@ -84,9 +67,8 @@ function MotionMaster() {
     const force = mass * acc;
     const gForce = acc / 9.81;
     const t060mph = (60 * 1.60934 / 3.6 - u) / acc;
-    const tgt = parseFloat(v1kmh);
     const comparable = carComparisons.filter(c => Math.abs(c.t - parseFloat(timeSec)) < 2).slice(0, 3);
-    return { u, v, t, mass, acc, dist, force, gForce, t060mph: t060mph > 0 ? t060mph : null, comparable };
+    return { acc, dist, force, gForce, t060mph: t060mph > 0 ? t060mph : null, comparable };
   }, [v0kmh, v1kmh, timeSec, massTon]);
 
   const freefallResult = useMemo(() => {
@@ -94,8 +76,7 @@ function MotionMaster() {
     const g = 9.81;
     const t = Math.sqrt((2 * h) / g);
     const vImpact = g * t;
-    const vImpactKmh = vImpact * 3.6;
-    return { t, vImpact, vImpactKmh, h };
+    return { t, vImpact, vImpactKmh: vImpact * 3.6 };
   }, [height]);
 
   const projectileResult = useMemo(() => {
@@ -106,162 +87,104 @@ function MotionMaster() {
     const range = (v0 * v0 * Math.sin(2 * rad)) / g;
     const maxH = (v0 * v0 * Math.sin(rad) ** 2) / (2 * g);
     const totalTime = (2 * v0 * Math.sin(rad)) / g;
-    const vx = v0 * Math.cos(rad);
-    const vy = v0 * Math.sin(rad);
-    return { range, maxH, totalTime, vx, vy };
+    return { range, maxH, totalTime, vx: v0 * Math.cos(rad), vy: v0 * Math.sin(rad) };
   }, [angle, speed]);
 
   const suvatResult = useMemo(() => {
     const u = parseFloat(su) || 0;
-    const v = sv !== "" ? parseFloat(sv) : null;
-    const a = sa !== "" ? parseFloat(sa) : null;
+    const a = parseFloat(sa) || 0;
     const t = parseFloat(st) || 0;
-    const s = ss !== "" ? parseFloat(ss) : null;
-    // Given u, a, t → find v and s
-    if (a !== null && t) {
-      const vCalc = u + a * t;
-      const sCalc = u * t + 0.5 * a * t * t;
-      return [
-        { label: "Final velocity (v = u + at)", value: `${fmt(vCalc)} m/s` },
-        { label: "Distance (s = ut + ½at²)", value: `${fmt(sCalc)} m` },
-        { label: "v² (v² = u² + 2as)", value: `${fmt(vCalc * vCalc)} m²/s²` },
-      ];
-    }
-    return [];
-  }, [su, sv, sa, st, ss]);
+    const vCalc = u + a * t;
+    const sCalc = u * t + 0.5 * a * t * t;
+    return { vCalc, sCalc, vSq: vCalc * vCalc };
+  }, [su, sa, st]);
 
-  const modes = [
-    { id: "car", label: "🚗 Car Mode" },
-    { id: "freefall", label: "🪂 Free Fall" },
-    { id: "projectile", label: "🏹 Projectile" },
-    { id: "suvat", label: "📐 SUVAT Solver" },
-  ];
+  const modeDefs = [{ id: "car", label: "🚗 Car" }, { id: "freefall", label: "🪂 Free Fall" }, { id: "projectile", label: "🏹 Projectile" }, { id: "suvat", label: "📐 SUVAT" }];
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Motion Master" icon={Car} iconColor="bg-violet-500">
-        <div className="flex gap-2 p-1 bg-muted rounded-xl mb-4 flex-wrap">
-          {modes.map(m => (
-            <button key={m.id} onClick={() => setMode(m.id)} data-testid={`mode-${m.id}`}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${mode === m.id ? "bg-violet-500 text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
-              {m.label}
-            </button>
-          ))}
-        </div>
-
-        {mode === "car" && (
-          <div className="space-y-3">
-            <div className="p-2.5 bg-violet-500/10 border border-violet-500/20 rounded-xl mb-1">
-              <p className="text-xs font-mono text-violet-400">a = (v−u)/t &nbsp; | &nbsp; s = ut + ½at² &nbsp; | &nbsp; F = ma</p>
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Motion Parameters" icon={Car} iconColor="bg-violet-500">
+          <ModeSelector modes={modeDefs} active={mode} onChange={setMode} />
+          {mode === "car" && <>
+            <div className="grid grid-cols-2 gap-2">
+              <InputField label="Start Speed (km/h)" value={v0kmh} onChange={setV0kmh} type="number" />
+              <InputField label="End Speed (km/h)" value={v1kmh} onChange={setV1kmh} type="number" />
             </div>
-            <InputField label="Initial Speed (km/h)" value={v0kmh} onChange={setV0kmh} type="number" placeholder="0" suffix="km/h" />
-            <InputField label="Final Speed (km/h)" value={v1kmh} onChange={setV1kmh} type="number" placeholder="100" suffix="km/h" />
-            <InputField label="Time (seconds)" value={timeSec} onChange={setTimeSec} type="number" placeholder="8" suffix="s" />
-            <InputField label="Vehicle Mass (tonnes)" value={massTon} onChange={setMassTon} type="number" placeholder="1" suffix="t" />
-            <div className="mt-4 space-y-2">
-              {[
-                { label: "⚡ Acceleration", value: `${fmt(carResult.acc)} m/s²`, hi: true },
-                { label: "📏 Distance Covered", value: `${fmt(carResult.dist)} m (${fmt(carResult.dist / 1000, 3)} km)` },
-                { label: "💥 Engine Force", value: `${fmt(carResult.force)} N (${fmt(carResult.force / 1000, 2)} kN)` },
-                { label: "🌀 G-Force", value: `${fmt(carResult.gForce, 3)} g` },
-                ...(carResult.t060mph !== null ? [{ label: "🏁 0→60 mph time", value: `${fmt(carResult.t060mph)} s` }] : []),
-              ].map((r, i) => (
-                <div key={i} className={`flex justify-between items-center p-2.5 rounded-xl ${r.hi ? "bg-violet-500/15 border border-violet-500/20" : "bg-muted/30"}`}>
-                  <span className="text-xs font-semibold text-muted-foreground">{r.label}</span>
-                  <span className={`text-sm font-bold ${r.hi ? "text-violet-400" : "text-foreground"}`}>{r.value}</span>
-                </div>
-              ))}
+            <div className="grid grid-cols-2 gap-2">
+              <InputField label="Time (sec)" value={timeSec} onChange={setTimeSec} type="number" suffix="s" />
+              <InputField label="Mass (tonnes)" value={massTon} onChange={setMassTon} type="number" suffix="t" />
             </div>
-            {carResult.comparable.length > 0 && (
-              <div className="mt-3 p-3 bg-muted/20 rounded-xl border border-border/50">
-                <p className="text-xs font-bold text-muted-foreground uppercase mb-2">🏎️ Similar Cars (0-100 km/h)</p>
-                {carResult.comparable.map((c, i) => (
-                  <p key={i} className="text-xs text-foreground">• {c.name} — {c.t}s</p>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {mode === "freefall" && (
-          <div className="space-y-3">
-            <div className="p-2.5 bg-violet-500/10 border border-violet-500/20 rounded-xl">
-              <p className="text-xs font-mono text-violet-400">t = √(2h/g) &nbsp;|&nbsp; v = gt &nbsp;|&nbsp; g = 9.81 m/s²</p>
-            </div>
-            <InputField label="Drop Height (meters)" value={height} onChange={setHeight} type="number" placeholder="20" suffix="m" />
-            <div className="mt-3 space-y-2">
-              {[
-                { label: "⏱️ Time to Fall", value: `${fmt(freefallResult.t)} s`, hi: true },
-                { label: "💥 Impact Velocity", value: `${fmt(freefallResult.vImpact)} m/s` },
-                { label: "🚀 Impact Speed (km/h)", value: `${fmt(freefallResult.vImpactKmh)} km/h` },
-                { label: "⚡ g acceleration", value: "9.81 m/s²" },
-              ].map((r, i) => (
-                <div key={i} className={`flex justify-between items-center p-2.5 rounded-xl ${r.hi ? "bg-violet-500/15 border border-violet-500/20" : "bg-muted/30"}`}>
-                  <span className="text-xs font-semibold text-muted-foreground">{r.label}</span>
-                  <span className={`text-sm font-bold ${r.hi ? "text-violet-400" : "text-foreground"}`}>{r.value}</span>
-                </div>
-              ))}
-            </div>
-            <div className="mt-2 p-3 bg-muted/20 rounded-xl border border-border/50">
-              <p className="text-xs font-bold text-muted-foreground uppercase mb-1.5">Real-world reference</p>
-              <p className="text-xs text-muted-foreground">• 20m = 6-storey building | 45m = 15 floors | 100m = Qutub Minar base</p>
-              <p className="text-xs text-muted-foreground">• Human terminal velocity ≈ 195 km/h (spread eagle)</p>
-            </div>
-          </div>
-        )}
-
-        {mode === "projectile" && (
-          <div className="space-y-3">
-            <div className="p-2.5 bg-violet-500/10 border border-violet-500/20 rounded-xl">
-              <p className="text-xs font-mono text-violet-400">Range = v²sin(2θ)/g &nbsp;|&nbsp; H = v²sin²(θ)/2g</p>
-            </div>
-            <InputField label="Launch Speed (m/s)" value={speed} onChange={setSpeed} type="number" placeholder="30" suffix="m/s" />
-            <InputField label="Launch Angle (degrees)" value={angle} onChange={setAngle} type="number" placeholder="45" suffix="°" />
-            <div className="mt-3 space-y-2">
-              {[
-                { label: "📏 Horizontal Range", value: `${fmt(projectileResult.range)} m`, hi: true },
-                { label: "📐 Max Height", value: `${fmt(projectileResult.maxH)} m` },
-                { label: "⏱️ Total Flight Time", value: `${fmt(projectileResult.totalTime)} s` },
-                { label: "➡️ Horizontal velocity (Vx)", value: `${fmt(projectileResult.vx)} m/s` },
-                { label: "⬆️ Vertical velocity (Vy)", value: `${fmt(projectileResult.vy)} m/s` },
-              ].map((r, i) => (
-                <div key={i} className={`flex justify-between items-center p-2.5 rounded-xl ${r.hi ? "bg-violet-500/15 border border-violet-500/20" : "bg-muted/30"}`}>
-                  <span className="text-xs font-semibold text-muted-foreground">{r.label}</span>
-                  <span className={`text-sm font-bold ${r.hi ? "text-violet-400" : "text-foreground"}`}>{r.value}</span>
-                </div>
-              ))}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">💡 Maximum range is always at 45°. Complementary angles (e.g. 30° & 60°) give the same range.</p>
-          </div>
-        )}
-
-        {mode === "suvat" && (
-          <div className="space-y-3">
-            <div className="p-2.5 bg-violet-500/10 border border-violet-500/20 rounded-xl">
-              <p className="text-xs font-mono text-violet-400">s=ut+½at² &nbsp;|&nbsp; v=u+at &nbsp;|&nbsp; v²=u²+2as</p>
-            </div>
-            <p className="text-xs text-muted-foreground">Enter u, a, t → get v and s</p>
-            <InputField label="u — Initial Velocity (m/s)" value={su} onChange={setSu} type="number" placeholder="0" suffix="m/s" />
-            <InputField label="a — Acceleration (m/s²)" value={sa} onChange={setSa} type="number" placeholder="9.8" suffix="m/s²" />
-            <InputField label="t — Time (s)" value={st} onChange={setSt} type="number" placeholder="5" suffix="s" />
-            <div className="mt-3 space-y-2">
-              {suvatResult.map((r, i) => (
-                <div key={i} className={`flex justify-between items-center p-2.5 rounded-xl ${i === 0 ? "bg-violet-500/15 border border-violet-500/20" : "bg-muted/30"}`}>
-                  <span className="text-xs font-semibold text-muted-foreground">{r.label}</span>
-                  <span className={`text-sm font-bold ${i === 0 ? "text-violet-400" : "text-foreground"}`}>{r.value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </ToolCard>
-    </div>
+          </>}
+          {mode === "freefall" && <InputField label="Drop Height" value={height} onChange={setHeight} type="number" suffix="m" />}
+          {mode === "projectile" && <>
+            <InputField label="Launch Angle" value={angle} onChange={setAngle} type="number" suffix="°" />
+            <InputField label="Launch Speed" value={speed} onChange={setSpeed} type="number" suffix="m/s" />
+          </>}
+          {mode === "suvat" && <>
+            <InputField label="Initial Velocity (u)" value={su} onChange={setSu} type="number" suffix="m/s" />
+            <InputField label="Acceleration (a)" value={sa} onChange={setSa} type="number" suffix="m/s²" />
+            <InputField label="Time (t)" value={st} onChange={setSt} type="number" suffix="s" />
+          </>}
+        </InputPanel>
+      }
+      results={
+        mode === "car" ? (
+          <ResultPanel label="Acceleration" primary={`${sFmt(carResult.acc, 2)} m/s²`}
+            summaries={<>
+              <SummaryCard label="Distance" value={`${sFmt(carResult.dist, 1)} m`} accent="text-violet-500" />
+              <SummaryCard label="G-Force" value={`${sFmt(carResult.gForce, 2)} g`} />
+            </>}
+          >
+            <BreakdownRow label="Acceleration" value={`${sFmt(carResult.acc, 2)} m/s²`} dot="bg-violet-400" bold />
+            <BreakdownRow label="Distance Covered" value={`${sFmt(carResult.dist, 1)} m`} dot="bg-blue-400" />
+            <BreakdownRow label="Force Required" value={`${sFmt(carResult.force, 0)} N`} dot="bg-amber-400" />
+            <BreakdownRow label="G-Force" value={`${sFmt(carResult.gForce, 3)} g`} dot="bg-red-400" />
+            {carResult.t060mph && <BreakdownRow label="0-60 mph time" value={`${sFmt(carResult.t060mph, 2)} s`} dot="bg-green-500" bold />}
+            {carResult.comparable.length > 0 && <BreakdownRow label="Similar to" value={carResult.comparable.map(c => c.name).join(", ")} dot="bg-purple-400" />}
+          </ResultPanel>
+        ) : mode === "freefall" ? (
+          <ResultPanel label="Fall Duration" primary={`${sFmt(freefallResult.t, 2)} s`}
+            summaries={<>
+              <SummaryCard label="Impact Speed" value={`${sFmt(freefallResult.vImpactKmh, 1)} km/h`} accent="text-violet-500" />
+              <SummaryCard label="In m/s" value={`${sFmt(freefallResult.vImpact, 2)} m/s`} />
+            </>}
+          >
+            <BreakdownRow label="Drop Height" value={`${height} m`} dot="bg-blue-400" />
+            <BreakdownRow label="Fall Time" value={`${sFmt(freefallResult.t, 2)} s`} dot="bg-violet-400" bold />
+            <BreakdownRow label="Impact Speed" value={`${sFmt(freefallResult.vImpact, 2)} m/s`} dot="bg-red-400" />
+            <BreakdownRow label="Impact Speed" value={`${sFmt(freefallResult.vImpactKmh, 1)} km/h`} dot="bg-amber-400" bold />
+          </ResultPanel>
+        ) : mode === "projectile" ? (
+          <ResultPanel label="Range" primary={`${sFmt(projectileResult.range, 2)} m`}
+            summaries={<>
+              <SummaryCard label="Max Height" value={`${sFmt(projectileResult.maxH, 2)} m`} accent="text-violet-500" />
+              <SummaryCard label="Time" value={`${sFmt(projectileResult.totalTime, 2)} s`} />
+            </>}
+          >
+            <BreakdownRow label="Horizontal Range" value={`${sFmt(projectileResult.range, 2)} m`} dot="bg-violet-400" bold />
+            <BreakdownRow label="Max Height" value={`${sFmt(projectileResult.maxH, 2)} m`} dot="bg-blue-400" />
+            <BreakdownRow label="Total Time" value={`${sFmt(projectileResult.totalTime, 2)} s`} dot="bg-amber-400" />
+            <BreakdownRow label="Horizontal Velocity" value={`${sFmt(projectileResult.vx, 2)} m/s`} dot="bg-green-400" />
+            <BreakdownRow label="Vertical Velocity" value={`${sFmt(projectileResult.vy, 2)} m/s`} dot="bg-cyan-400" />
+          </ResultPanel>
+        ) : (
+          <ResultPanel label="Final Velocity" primary={`${sFmt(suvatResult.vCalc, 2)} m/s`}
+            summaries={<>
+              <SummaryCard label="Distance" value={`${sFmt(suvatResult.sCalc, 2)} m`} accent="text-violet-500" />
+              <SummaryCard label="v²" value={`${sFmt(suvatResult.vSq, 2)}`} />
+            </>}
+          >
+            <BreakdownRow label="v = u + at" value={`${sFmt(suvatResult.vCalc, 2)} m/s`} dot="bg-violet-400" bold />
+            <BreakdownRow label="s = ut + ½at²" value={`${sFmt(suvatResult.sCalc, 2)} m`} dot="bg-blue-400" bold />
+            <BreakdownRow label="v² = u² + 2as" value={`${sFmt(suvatResult.vSq, 2)} m²/s²`} dot="bg-amber-400" />
+          </ResultPanel>
+        )
+      }
+    />
   );
 }
 
-/* ══════════════════════════════════════════════════════════════
-   SOLUTION MIXER
-══════════════════════════════════════════════════════════════ */
 function SolutionMixer() {
   const [mode, setMode] = useState("mix");
   const [v1, setV1] = useState("500");
@@ -273,181 +196,127 @@ function SolutionMixer() {
   const [solVolume, setSolVolume] = useState("1000");
   const [solMolarMass, setSolMolarMass] = useState("58.5");
 
-  function fmt(n: number, d = 2) {
-    if (!isFinite(n) || isNaN(n)) return "—";
-    return parseFloat(n.toFixed(d)).toLocaleString();
-  }
-
   const mixResult = useMemo(() => {
-    const vol1 = parseFloat(v1) || 0;
-    const con1 = parseFloat(c1) || 0;
-    const vol2 = parseFloat(v2) || 0;
-    const con2 = parseFloat(c2) || 0;
+    const vol1 = parseFloat(v1) || 0; const con1 = parseFloat(c1) || 0;
+    const vol2 = parseFloat(v2) || 0; const con2 = parseFloat(c2) || 0;
     const totalVol = vol1 + vol2;
     const pureAmount = (vol1 * con1 / 100) + (vol2 * con2 / 100);
-    const finalConc = (pureAmount / totalVol) * 100;
-    return { totalVol, pureAmount, finalConc, vol1, con1, vol2, con2 };
+    const finalConc = totalVol > 0 ? (pureAmount / totalVol) * 100 : 0;
+    return { totalVol, pureAmount, finalConc };
   }, [v1, c1, v2, c2]);
 
-  const dilutionResult = useMemo(() => {
-    const vol = parseFloat(v1) || 0;
-    const conc = parseFloat(c1) || 0;
+  const dilResult = useMemo(() => {
+    const vol = parseFloat(v1) || 0; const conc = parseFloat(c1) || 0;
     const target = parseFloat(targetConc) || 0;
     if (!target || target >= conc) return null;
     const pureAmount = vol * conc / 100;
     const finalVol = (pureAmount / target) * 100;
     const waterToAdd = finalVol - vol;
-    const steps = [
-      { water: 50, newConc: (pureAmount / (vol + 50)) * 100 },
-      { water: 100, newConc: (pureAmount / (vol + 100)) * 100 },
-      { water: 200, newConc: (pureAmount / (vol + 200)) * 100 },
-    ];
-    return { finalVol, waterToAdd, steps, pureAmount, finalConc: target };
+    return { finalVol, waterToAdd, pureAmount };
   }, [v1, c1, targetConc]);
 
   const concResult = useMemo(() => {
     const mass = parseFloat(soluteMass) || 0;
     const vol = parseFloat(solVolume) || 0;
     const mm = parseFloat(solMolarMass) || 0;
-    const wv = (mass / vol) * 100;
+    const wv = vol > 0 ? (mass / vol) * 100 : 0;
     const molarity = mm > 0 ? (mass / mm) / (vol / 1000) : 0;
-    const ppm = (mass / vol) * 1000000;
+    const ppm = vol > 0 ? (mass / vol) * 1000000 : 0;
     return { wv, molarity, ppm };
   }, [soluteMass, solVolume, solMolarMass]);
 
-  const modes = [
-    { id: "mix", label: "🧪 Mix Two Solutions" },
-    { id: "dilute", label: "💧 Dilution Guide" },
-    { id: "concentration", label: "📊 Find Concentration" },
-  ];
-
   const sanitizerTip = mixResult.finalConc >= 60 && mixResult.finalConc <= 85;
-  const isAlcohol = c1 === "40" || c1 === "60" || c1 === "70";
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Chemistry Solution Mixer" icon={TestTube2} iconColor="bg-green-500">
-        <div className="flex gap-2 p-1 bg-muted rounded-xl mb-4 flex-wrap">
-          {modes.map(m => (
-            <button key={m.id} onClick={() => setMode(m.id)} data-testid={`mode-${m.id}`}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${mode === m.id ? "bg-green-500 text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
-              {m.label}
-            </button>
-          ))}
-        </div>
-
-        {mode === "mix" && (
-          <div className="space-y-3">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Solution Parameters" icon={TestTube2} iconColor="bg-green-500">
+          <ModeSelector modes={[{ id: "mix", label: "🧪 Mix" }, { id: "dilute", label: "💧 Dilute" }, { id: "concentration", label: "📊 Concentration" }]} active={mode} onChange={setMode} />
+          {mode === "mix" && <>
             <div className="p-2.5 bg-green-500/10 border border-green-500/20 rounded-xl">
               <p className="text-xs font-mono text-green-400">C_final = (V₁C₁ + V₂C₂) / (V₁ + V₂)</p>
             </div>
-            <p className="text-xs font-bold text-muted-foreground uppercase">Solution 1</p>
-            <InputField label="Volume (mL)" value={v1} onChange={setV1} type="number" placeholder="500" suffix="mL" />
-            <InputField label="Concentration (%)" value={c1} onChange={setC1} type="number" placeholder="40" suffix="%" />
-            <p className="text-xs font-bold text-muted-foreground uppercase pt-1">Solution 2</p>
-            <InputField label="Volume (mL)" value={v2} onChange={setV2} type="number" placeholder="300" suffix="mL" />
-            <InputField label="Concentration (%)" value={c2} onChange={setC2} type="number" placeholder="60" suffix="%" />
-            <div className="mt-3 space-y-2">
-              {[
-                { label: "🧪 Total Volume", value: `${fmt(mixResult.totalVol)} mL`, hi: true },
-                { label: "📊 Final Concentration", value: `${fmt(mixResult.finalConc)}%`, hi: true },
-                { label: "💧 Pure Solute Amount", value: `${fmt(mixResult.pureAmount)} mL` },
-              ].map((r, i) => (
-                <div key={i} className={`flex justify-between items-center p-2.5 rounded-xl ${r.hi ? "bg-green-500/15 border border-green-500/20" : "bg-muted/30"}`}>
-                  <span className="text-xs font-semibold text-muted-foreground">{r.label}</span>
-                  <span className={`text-sm font-bold ${r.hi ? "text-green-400" : "text-foreground"}`}>{r.value}</span>
-                </div>
-              ))}
+            <p className="text-[11px] font-bold text-muted-foreground uppercase">Solution 1</p>
+            <div className="grid grid-cols-2 gap-2">
+              <InputField label="Volume (mL)" value={v1} onChange={setV1} type="number" suffix="mL" />
+              <InputField label="Concentration (%)" value={c1} onChange={setC1} type="number" suffix="%" />
             </div>
-            {sanitizerTip && (
-              <div className="mt-2 p-3 bg-green-500/10 border border-green-500/20 rounded-xl">
-                <p className="text-xs font-bold text-green-400 mb-1">✅ Great for Hand Sanitizer!</p>
-                <p className="text-xs text-muted-foreground">WHO recommends 60-80% alcohol. Add aloe vera gel for skin-friendly sanitizer.</p>
-              </div>
-            )}
-            <div className="mt-2 p-3 bg-muted/20 rounded-xl border border-border/50">
-              <p className="text-xs font-bold text-muted-foreground uppercase mb-1.5">Dilution Guide — add water to achieve</p>
-              {[30, 40, 50].map(target => {
-                const pure = mixResult.pureAmount;
-                const tv = mixResult.totalVol;
-                const fv = (pure / target) * 100;
-                const w = fv - tv;
-                return w > 0 ? (
-                  <p key={target} className="text-xs text-muted-foreground">➕ Add {fmt(w)} mL water → {target}%</p>
-                ) : null;
-              })}
+            <p className="text-[11px] font-bold text-muted-foreground uppercase">Solution 2</p>
+            <div className="grid grid-cols-2 gap-2">
+              <InputField label="Volume (mL)" value={v2} onChange={setV2} type="number" suffix="mL" />
+              <InputField label="Concentration (%)" value={c2} onChange={setC2} type="number" suffix="%" />
             </div>
-          </div>
-        )}
-
-        {mode === "dilute" && (
-          <div className="space-y-3">
-            <div className="p-2.5 bg-green-500/10 border border-green-500/20 rounded-xl">
-              <p className="text-xs font-mono text-green-400">V_final = (V × C_initial) / C_target</p>
+          </>}
+          {mode === "dilute" && <>
+            <div className="grid grid-cols-2 gap-2">
+              <InputField label="Volume (mL)" value={v1} onChange={setV1} type="number" suffix="mL" />
+              <InputField label="Concentration (%)" value={c1} onChange={setC1} type="number" suffix="%" />
             </div>
-            <InputField label="Solution Volume (mL)" value={v1} onChange={setV1} type="number" placeholder="500" suffix="mL" />
-            <InputField label="Current Concentration (%)" value={c1} onChange={setC1} type="number" placeholder="70" suffix="%" />
-            <InputField label="Target Concentration (%)" value={targetConc} onChange={setTargetConc} type="number" placeholder="40" suffix="%" />
-            {dilutionResult && (
-              <div className="mt-3 space-y-2">
-                {[
-                  { label: "💧 Water to Add", value: `${fmt(dilutionResult.waterToAdd)} mL`, hi: true },
-                  { label: "🧪 Final Volume", value: `${fmt(dilutionResult.finalVol)} mL` },
-                  { label: "📊 Final Concentration", value: `${targetConc}%` },
-                  { label: "💧 Pure Solute", value: `${fmt(dilutionResult.pureAmount)} mL` },
-                ].map((r, i) => (
-                  <div key={i} className={`flex justify-between items-center p-2.5 rounded-xl ${r.hi ? "bg-green-500/15 border border-green-500/20" : "bg-muted/30"}`}>
-                    <span className="text-xs font-semibold text-muted-foreground">{r.label}</span>
-                    <span className={`text-sm font-bold ${r.hi ? "text-green-400" : "text-foreground"}`}>{r.value}</span>
-                  </div>
-                ))}
-                <div className="mt-2 p-3 bg-muted/20 rounded-xl border border-border/50">
-                  <p className="text-xs font-bold text-muted-foreground uppercase mb-1.5">Other options (adding water):</p>
-                  {dilutionResult.steps.map((s, i) => (
-                    <p key={i} className="text-xs text-muted-foreground">➕ Add {s.water} mL water → {fmt(s.newConc)}%</p>
-                  ))}
-                </div>
-              </div>
-            )}
-            {!dilutionResult && <p className="text-xs text-orange-400 mt-2">⚠️ Target must be lower than current concentration</p>}
-          </div>
-        )}
-
-        {mode === "concentration" && (
-          <div className="space-y-3">
-            <div className="p-2.5 bg-green-500/10 border border-green-500/20 rounded-xl">
-              <p className="text-xs font-mono text-green-400">%(w/v) = (mass/vol)×100 &nbsp;|&nbsp; M = n/V(L)</p>
-            </div>
-            <InputField label="Solute Mass (g)" value={soluteMass} onChange={setSoluteMass} type="number" placeholder="58.5" suffix="g" />
-            <InputField label="Solution Volume (mL)" value={solVolume} onChange={setSolVolume} type="number" placeholder="1000" suffix="mL" />
-            <InputField label="Molar Mass of Solute (g/mol)" value={solMolarMass} onChange={setSolMolarMass} type="number" placeholder="58.5" suffix="g/mol" />
-            <div className="mt-3 space-y-2">
-              {[
-                { label: "% (w/v) Concentration", value: `${fmt(concResult.wv)}%`, hi: true },
-                { label: "Molarity (M)", value: `${fmt(concResult.molarity, 4)} mol/L` },
-                { label: "ppm (mg/L)", value: `${fmt(concResult.ppm, 0)} ppm` },
-              ].map((r, i) => (
-                <div key={i} className={`flex justify-between items-center p-2.5 rounded-xl ${r.hi ? "bg-green-500/15 border border-green-500/20" : "bg-muted/30"}`}>
-                  <span className="text-xs font-semibold text-muted-foreground">{r.label}</span>
-                  <span className={`text-sm font-bold ${r.hi ? "text-green-400" : "text-foreground"}`}>{r.value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </ToolCard>
-    </div>
+            <InputField label="Target Concentration (%)" value={targetConc} onChange={setTargetConc} type="number" suffix="%" />
+          </>}
+          {mode === "concentration" && <>
+            <InputField label="Solute Mass (g)" value={soluteMass} onChange={setSoluteMass} type="number" suffix="g" />
+            <InputField label="Solution Volume (mL)" value={solVolume} onChange={setSolVolume} type="number" suffix="mL" />
+            <InputField label="Molar Mass (g/mol)" value={solMolarMass} onChange={setSolMolarMass} type="number" suffix="g/mol" />
+          </>}
+        </InputPanel>
+      }
+      results={
+        mode === "mix" ? (
+          <ResultPanel label="Final Concentration" primary={`${sFmt(mixResult.finalConc)}%`}
+            summaries={<>
+              <SummaryCard label="Total Volume" value={`${sFmt(mixResult.totalVol)} mL`} accent="text-green-500" />
+              <SummaryCard label="Pure Solute" value={`${sFmt(mixResult.pureAmount)} mL`} />
+            </>}
+            tip={sanitizerTip ? "✅ Great for Hand Sanitizer! WHO recommends 60–80% alcohol." : undefined}
+          >
+            <BreakdownRow label="Total Volume" value={`${sFmt(mixResult.totalVol)} mL`} dot="bg-blue-400" bold />
+            <BreakdownRow label="Final Concentration" value={`${sFmt(mixResult.finalConc)}%`} dot="bg-green-500" bold />
+            <BreakdownRow label="Pure Solute" value={`${sFmt(mixResult.pureAmount)} mL`} dot="bg-cyan-400" />
+            {[30, 40, 50].map(target => {
+              const fv = (mixResult.pureAmount / target) * 100;
+              const w = fv - mixResult.totalVol;
+              return w > 0 ? <BreakdownRow key={target} label={`→ add water for ${target}%`} value={`${sFmt(w)} mL`} dot="bg-amber-400" /> : null;
+            })}
+          </ResultPanel>
+        ) : mode === "dilute" ? (
+          <ResultPanel label="Water to Add" primary={dilResult ? `${sFmt(dilResult.waterToAdd)} mL` : "—"}
+            summaries={<>
+              <SummaryCard label="Final Volume" value={dilResult ? `${sFmt(dilResult.finalVol)} mL` : "—"} accent="text-green-500" />
+              <SummaryCard label="Target" value={`${targetConc}%`} />
+            </>}
+            tip={!dilResult ? "Target concentration must be lower than current." : undefined}
+          >
+            {dilResult ? <>
+              <BreakdownRow label="Initial Volume" value={`${v1} mL`} dot="bg-blue-400" />
+              <BreakdownRow label="Initial Concentration" value={`${c1}%`} dot="bg-amber-400" />
+              <BreakdownRow label="Pure Solute" value={`${sFmt(dilResult.pureAmount)} mL`} dot="bg-cyan-400" />
+              <BreakdownRow label="Water to Add" value={`${sFmt(dilResult.waterToAdd)} mL`} dot="bg-green-500" bold />
+              <BreakdownRow label="Final Volume" value={`${sFmt(dilResult.finalVol)} mL`} dot="bg-purple-400" />
+            </> : <BreakdownRow label="Status" value="Invalid — target ≥ current concentration" dot="bg-red-400" />}
+          </ResultPanel>
+        ) : (
+          <ResultPanel label="Molarity" primary={`${sFmt(concResult.molarity, 4)} M`}
+            summaries={<>
+              <SummaryCard label="w/v %" value={`${sFmt(concResult.wv, 4)}%`} accent="text-green-500" />
+              <SummaryCard label="PPM" value={`${sFmt(concResult.ppm, 2)}`} />
+            </>}
+          >
+            <BreakdownRow label="w/v %" value={`${sFmt(concResult.wv, 4)}%`} dot="bg-blue-400" />
+            <BreakdownRow label="Molarity" value={`${sFmt(concResult.molarity, 4)} M`} dot="bg-green-500" bold />
+            <BreakdownRow label="PPM" value={`${sFmt(concResult.ppm, 2)} mg/L`} dot="bg-amber-400" />
+          </ResultPanel>
+        )
+      }
+    />
   );
 }
 
-/* ══════════════════════════════════════════════════════════════
-   PERIODIC TABLE ASSISTANT
-══════════════════════════════════════════════════════════════ */
-interface Element {
+type Element = {
   symbol: string; name: string; atomic: number; mass: number;
   electrons: string; density: string; meltPt: string; boilPt: string;
   group: string; category: string; uses: string[];
-}
+};
 
 const ELEMENTS: Element[] = [
   { symbol:"H",  name:"Hydrogen",    atomic:1,   mass:1.008,   electrons:"1",       density:"0.0899 g/L",   meltPt:"-259.1°C", boilPt:"-252.9°C", group:"1",  category:"Non-metal",     uses:["Fuel cells","Ammonia production","Petroleum refining"] },
@@ -467,16 +336,13 @@ const ELEMENTS: Element[] = [
   { symbol:"Cl", name:"Chlorine",    atomic:17,  mass:35.453,  electrons:"2,8,7",   density:"3.214 g/L",    meltPt:"-101.5°C", boilPt:"-34.1°C",  group:"17", category:"Halogen",        uses:["Water purification","PVC plastic","Bleaching agents","Disinfectants"] },
   { symbol:"Ar", name:"Argon",       atomic:18,  mass:39.948,  electrons:"2,8,8",   density:"1.784 g/L",    meltPt:"-189.4°C", boilPt:"-185.9°C", group:"18", category:"Noble gas",      uses:["Welding shield gas","Incandescent bulbs","Wine preservation"] },
   { symbol:"K",  name:"Potassium",   atomic:19,  mass:39.098,  electrons:"2,8,8,1", density:"0.862 g/cm³",  meltPt:"63.4°C",   boilPt:"759°C",    group:"1",  category:"Alkali metal",   uses:["Fertilizers","Banana nutrition","Gunpowder","Soap"] },
-  { symbol:"Ca", name:"Calcium",     atomic:20,  mass:40.078,  electrons:"2,8,8,2", density:"1.55 g/cm³",   meltPt:"842°C",    boilPt:"1484°C",   group:"2",  category:"Alkaline earth", uses:["Bones & teeth","Cement","Limestone","Calcium supplements"] },
-  { symbol:"Fe", name:"Iron",        atomic:26,  mass:55.845,  electrons:"2,8,14,2",density:"7.874 g/cm³",  meltPt:"1538°C",   boilPt:"2861°C",   group:"8",  category:"Transition",     uses:["Steel","Cast iron","Hemoglobin (blood)","Magnets"] },
-  { symbol:"Co", name:"Cobalt",      atomic:27,  mass:58.933,  electrons:"2,8,15,2",density:"8.9 g/cm³",    meltPt:"1495°C",   boilPt:"2927°C",   group:"9",  category:"Transition",     uses:["Li-ion batteries","Superalloys","Blue pigment","Vitamin B12"] },
-  { symbol:"Ni", name:"Nickel",      atomic:28,  mass:58.693,  electrons:"2,8,16,2",density:"8.908 g/cm³",  meltPt:"1455°C",   boilPt:"2913°C",   group:"10", category:"Transition",     uses:["Stainless steel","Coins","EV batteries","Electroplating"] },
-  { symbol:"Cu", name:"Copper",      atomic:29,  mass:63.546,  electrons:"2,8,18,1",density:"8.96 g/cm³",   meltPt:"1084.6°C", boilPt:"2562°C",   group:"11", category:"Transition",     uses:["Electrical wires","Plumbing","Coins","Alloys (brass,bronze)"] },
-  { symbol:"Zn", name:"Zinc",        atomic:30,  mass:65.38,   electrons:"2,8,18,2",density:"7.134 g/cm³",  meltPt:"419.5°C",  boilPt:"907°C",    group:"12", category:"Transition",     uses:["Galvanizing steel","Supplements","Brass","Die casting"] },
-  { symbol:"Br", name:"Bromine",     atomic:35,  mass:79.904,  electrons:"2,8,18,7",density:"3.122 g/cm³",  meltPt:"-7.3°C",   boilPt:"58.8°C",   group:"17", category:"Halogen",        uses:["Fire retardants","Photography","Pesticides","Pool treatment"] },
-  { symbol:"Ag", name:"Silver",      atomic:47,  mass:107.868, electrons:"2,8,18,18,1",density:"10.49 g/cm³",meltPt:"961.8°C", boilPt:"2162°C",   group:"11", category:"Transition",     uses:["Jewelry","Mirrors","Antibacterial coatings","Photography"] },
-  { symbol:"Sn", name:"Tin",         atomic:50,  mass:118.71,  electrons:"2,8,18,18,4",density:"7.287 g/cm³",meltPt:"231.9°C", boilPt:"2602°C",   group:"14", category:"Post-transition",uses:["Tin cans","Solder","Bronze alloy","Pewter"] },
-  { symbol:"I",  name:"Iodine",      atomic:53,  mass:126.904, electrons:"2,8,18,18,7",density:"4.933 g/cm³",meltPt:"113.7°C", boilPt:"184.4°C",  group:"17", category:"Halogen",        uses:["Iodised salt","Antiseptics","Thyroid medicine","Photography"] },
+  { symbol:"Ca", name:"Calcium",     atomic:20,  mass:40.078,  electrons:"2,8,8,2", density:"1.55 g/cm³",   meltPt:"842°C",    boilPt:"1484°C",   group:"2",  category:"Alkaline earth", uses:["Bones & teeth","Cement","Antacids","Steel production"] },
+  { symbol:"Fe", name:"Iron",        atomic:26,  mass:55.845,  electrons:"2,8,14,2",density:"7.874 g/cm³",  meltPt:"1538°C",   boilPt:"2861°C",   group:"8",  category:"Transition",     uses:["Steel (buildings)","Magnets","Blood hemoglobin","Cast iron"] },
+  { symbol:"Cu", name:"Copper",      atomic:29,  mass:63.546,  electrons:"2,8,18,1",density:"8.96 g/cm³",   meltPt:"1085°C",   boilPt:"2562°C",   group:"11", category:"Transition",     uses:["Electrical wiring","Plumbing","Currency coins","Brass alloys"] },
+  { symbol:"Zn", name:"Zinc",        atomic:30,  mass:65.38,   electrons:"2,8,18,2",density:"7.133 g/cm³",  meltPt:"419.5°C",  boilPt:"907°C",    group:"12", category:"Transition",     uses:["Galvanizing steel","Batteries","Sunscreen","Dietary supplement"] },
+  { symbol:"Br", name:"Bromine",     atomic:35,  mass:79.904,  electrons:"2,8,18,7",density:"3.122 g/cm³",  meltPt:"-7.2°C",   boilPt:"58.8°C",   group:"17", category:"Halogen",        uses:["Flame retardants","Photography","Medicines","Fumigants"] },
+  { symbol:"Ag", name:"Silver",      atomic:47,  mass:107.868, electrons:"2,8,18,18,1",density:"10.49 g/cm³",meltPt:"961.8°C",boilPt:"2162°C",  group:"11", category:"Transition",     uses:["Jewelry","Photography","Electronics","Antibacterial coatings"] },
+  { symbol:"I",  name:"Iodine",      atomic:53,  mass:126.904, electrons:"2,8,18,18,7",density:"4.933 g/cm³",meltPt:"113.7°C",boilPt:"184.3°C",  group:"17", category:"Halogen",        uses:["Thyroid health","Antiseptic","Photography","Table salt additive"] },
   { symbol:"Ba", name:"Barium",      atomic:56,  mass:137.327, electrons:"2,8,18,18,8,2",density:"3.5 g/cm³",meltPt:"727°C",  boilPt:"1897°C",   group:"2",  category:"Alkaline earth", uses:["Fireworks (green)","X-ray contrast","Barium sulfate paint"] },
   { symbol:"Au", name:"Gold",        atomic:79,  mass:196.967, electrons:"2,8,18,32,18,1",density:"19.32 g/cm³",meltPt:"1064.2°C",boilPt:"2856°C",group:"11",category:"Transition",     uses:["Jewelry","Electronics","Currency standard","Dentistry"] },
   { symbol:"Hg", name:"Mercury",     atomic:80,  mass:200.59,  electrons:"2,8,18,32,18,2",density:"13.534 g/cm³",meltPt:"-38.8°C",boilPt:"356.7°C",group:"12",category:"Transition",    uses:["Thermometers (old)","Fluorescent lamps","Dental fillings (old)"] },
@@ -488,17 +354,14 @@ const ELEMENTS: Element[] = [
   { symbol:"Mn", name:"Manganese",   atomic:25,  mass:54.938,  electrons:"2,8,13,2",density:"7.21 g/cm³",   meltPt:"1246°C",   boilPt:"2061°C",   group:"7",  category:"Transition",     uses:["Steel alloys","Batteries","Fertilizer","Disinfectants"] },
   { symbol:"Ga", name:"Gallium",     atomic:31,  mass:69.723,  electrons:"2,8,18,3",density:"5.904 g/cm³",  meltPt:"29.8°C",   boilPt:"2229°C",   group:"13", category:"Post-transition",uses:["LEDs (GaN)","Solar cells","Semiconductors","Thermometers"] },
   { symbol:"Ge", name:"Germanium",   atomic:32,  mass:72.631,  electrons:"2,8,18,4",density:"5.323 g/cm³",  meltPt:"938.4°C",  boilPt:"2833°C",   group:"14", category:"Metalloid",      uses:["Fiber optics","Semiconductors","Solar panels","Night vision"] },
-  { symbol:"As", name:"Arsenic",     atomic:33,  mass:74.922,  electrons:"2,8,18,5",density:"5.776 g/cm³",  meltPt:"814°C",    boilPt:"615°C",    group:"15", category:"Metalloid",      uses:["Wood preservation","Pesticides","Semiconductors (GaAs)"] },
   { symbol:"Sr", name:"Strontium",   atomic:38,  mass:87.62,   electrons:"2,8,18,8,2",density:"2.64 g/cm³", meltPt:"777°C",    boilPt:"1382°C",   group:"2",  category:"Alkaline earth", uses:["Fireworks (red)","Bone density studies","TV tubes (old)"] },
-  { symbol:"Rb", name:"Rubidium",    atomic:37,  mass:85.468,  electrons:"2,8,18,8,1",density:"1.532 g/cm³",meltPt:"39.3°C",   boilPt:"688°C",    group:"1",  category:"Alkali metal",   uses:["Atomic clocks","Research","Vacuum tubes"] },
   { symbol:"Mo", name:"Molybdenum",  atomic:42,  mass:95.96,   electrons:"2,8,18,13,1",density:"10.22 g/cm³",meltPt:"2623°C",  boilPt:"4639°C",   group:"6",  category:"Transition",     uses:["High-strength steels","Lubricants","Catalysts","Electronics"] },
   { symbol:"Pd", name:"Palladium",   atomic:46,  mass:106.42,  electrons:"2,8,18,18,0",density:"12.023 g/cm³",meltPt:"1554.9°C",boilPt:"2963°C",  group:"10", category:"Transition",     uses:["Catalytic converters","Hydrogen storage","Electronics","Jewelry"] },
   { symbol:"W",  name:"Tungsten",    atomic:74,  mass:183.84,  electrons:"2,8,18,32,12,2",density:"19.3 g/cm³",meltPt:"3422°C", boilPt:"5555°C",   group:"6",  category:"Transition",     uses:["Light bulb filaments","Cutting tools","X-ray tubes","Military"] },
   { symbol:"Bi", name:"Bismuth",     atomic:83,  mass:208.98,  electrons:"2,8,18,32,18,5",density:"9.807 g/cm³",meltPt:"271.4°C",boilPt:"1564°C",  group:"15", category:"Post-transition",uses:["Cosmetics","Pepto-Bismol","Low-melt alloys","Fire sprinklers"] },
-  { symbol:"Ra", name:"Radium",      atomic:88,  mass:226,     electrons:"2,8,18,32,18,8,2",density:"5.5 g/cm³",meltPt:"700°C", boilPt:"1737°C",   group:"2",  category:"Alkaline earth", uses:["Historical cancer treatment","Radium watches (historical)","Research"] },
   { symbol:"Xe", name:"Xenon",       atomic:54,  mass:131.293, electrons:"2,8,18,18,8",density:"5.894 g/L",  meltPt:"-111.8°C", boilPt:"-108.1°C", group:"18", category:"Noble gas",      uses:["Flash lamps","Ion propulsion","Anaesthesia","Headlights (HID)"] },
   { symbol:"Kr", name:"Krypton",     atomic:36,  mass:83.798,  electrons:"2,8,18,8",  density:"3.749 g/L",  meltPt:"-157.4°C", boilPt:"-153.4°C", group:"18", category:"Noble gas",      uses:["Photography flash","Laser eye surgery","Fluorescent lamps"] },
-  { symbol:"Rn", name:"Radon",       atomic:86,  mass:222,     electrons:"2,8,18,32,18,8",density:"9.73 g/L",meltPt:"-71.1°C",  boilPt:"-61.8°C",  group:"18", category:"Noble gas",      uses:["Cancer treatment (radon therapy)","Earthquake prediction research"] },
+  { symbol:"Ra", name:"Radium",      atomic:88,  mass:226,     electrons:"2,8,18,32,18,8,2",density:"5.5 g/cm³",meltPt:"700°C", boilPt:"1737°C",   group:"2",  category:"Alkaline earth", uses:["Historical cancer treatment","Radium watches (historical)","Research"] },
 ];
 
 const categoryColors: Record<string, string> = {
@@ -530,141 +393,115 @@ function PeriodicTableTool() {
   }, [query, filterCat]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Periodic Table Assistant" icon={BookOpen} iconColor="bg-indigo-500">
-        <div className="relative mb-3">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search element name, symbol or atomic number..."
-            className="w-full pl-9 pr-4 py-2.5 bg-muted/50 border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-            data-testid="input-element-search"
-          />
-        </div>
-
-        <div className="flex gap-1.5 flex-wrap mb-3">
-          {categories.slice(0, 6).map(cat => (
-            <button key={cat} onClick={() => setFilterCat(cat)}
-              className={`px-2 py-1 text-[10px] font-semibold rounded-lg transition-all border ${filterCat === cat ? "bg-indigo-500 text-white border-indigo-500" : "border-border text-muted-foreground hover:text-foreground"}`}>
-              {cat}
-            </button>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-4 gap-1.5 max-h-48 overflow-y-auto mb-3">
-          {filtered.map(el => (
-            <button
-              key={el.symbol}
-              onClick={() => setSelected(el)}
-              data-testid={`element-${el.symbol}`}
-              className={`p-2 rounded-xl border text-center transition-all hover:border-indigo-500/40 ${selected?.symbol === el.symbol ? "bg-indigo-500/20 border-indigo-500/40" : "bg-muted/30 border-border/50"}`}
-            >
-              <div className="text-xs font-bold text-foreground">{el.symbol}</div>
-              <div className="text-[9px] text-muted-foreground">{el.atomic}</div>
-            </button>
-          ))}
-        </div>
-
-        {selected && (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} key={selected.symbol} className="space-y-3">
-            <div className="flex items-center gap-4 p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl">
-              <div className="text-center">
-                <div className="text-4xl font-black text-indigo-400">{selected.symbol}</div>
-                <div className="text-[10px] text-muted-foreground">{selected.atomic}</div>
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-foreground">{selected.name}</h3>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full border font-semibold ${categoryColors[selected.category] || "bg-muted text-muted-foreground border-border"}`}>
-                  {selected.category}
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { label: "⚛️ Atomic Number", value: selected.atomic },
-                { label: "⚖️ Atomic Mass", value: `${selected.mass} u` },
-                { label: "🔬 Electron Config.", value: selected.electrons },
-                { label: "🔢 Group", value: selected.group },
-                { label: "💨 Density", value: selected.density },
-                { label: "🌡️ Melting Point", value: selected.meltPt },
-                { label: "🔥 Boiling Point", value: selected.boilPt },
-              ].map((r, i) => (
-                <div key={i} className="flex flex-col p-2.5 bg-muted/30 rounded-xl">
-                  <span className="text-[10px] font-semibold text-muted-foreground">{r.label}</span>
-                  <span className="text-sm font-bold text-foreground mt-0.5">{r.value}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="p-3 bg-muted/20 rounded-xl border border-border/50">
-              <p className="text-xs font-bold text-muted-foreground uppercase mb-2">💡 Common Uses</p>
-              <div className="space-y-1">
-                {selected.uses.map((use, i) => (
-                  <p key={i} className="text-xs text-foreground">• {use}</p>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </ToolCard>
-    </div>
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Periodic Table Search" icon={BookOpen} iconColor="bg-indigo-500">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input type="text" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search element, symbol or number..."
+              data-testid="input-element-search"
+              className="w-full pl-9 pr-4 py-2.5 bg-muted/30 border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-indigo-500/50" />
+          </div>
+          <div className="flex gap-1 flex-wrap">
+            {categories.slice(0, 6).map(cat => (
+              <button key={cat} onClick={() => setFilterCat(cat)}
+                className={`px-2 py-1 text-[10px] font-semibold rounded-lg transition-all border ${filterCat === cat ? "bg-indigo-500 text-white border-indigo-500" : "border-border text-muted-foreground hover:text-foreground"}`}>
+                {cat}
+              </button>
+            ))}
+          </div>
+          <div className="grid grid-cols-4 gap-1 max-h-52 overflow-y-auto">
+            {filtered.map(el => (
+              <button key={el.symbol} onClick={() => setSelected(el)} data-testid={`element-${el.symbol}`}
+                className={`p-2 rounded-xl border text-center transition-all hover:border-indigo-500/40 ${selected?.symbol === el.symbol ? "bg-indigo-500/20 border-indigo-500/40" : "bg-muted/30 border-border/50"}`}>
+                <div className="text-xs font-bold text-foreground">{el.symbol}</div>
+                <div className="text-[9px] text-muted-foreground">{el.atomic}</div>
+              </button>
+            ))}
+          </div>
+        </InputPanel>
+      }
+      results={
+        selected ? (
+          <ResultPanel label={selected.name} primary={selected.symbol} primarySub={`Z = ${selected.atomic}`}
+            summaries={<>
+              <SummaryCard label="Category" value={selected.category} />
+              <SummaryCard label="Molar Mass" value={`${selected.mass} g/mol`} accent="text-indigo-500" />
+            </>}
+          >
+            <BreakdownRow label="Symbol" value={selected.symbol} dot="bg-indigo-400" bold />
+            <BreakdownRow label="Atomic Number" value={`${selected.atomic}`} dot="bg-blue-400" />
+            <BreakdownRow label="Molar Mass" value={`${selected.mass} g/mol`} dot="bg-green-400" />
+            <BreakdownRow label="Electrons" value={selected.electrons} dot="bg-amber-400" />
+            <BreakdownRow label="Density" value={selected.density} dot="bg-purple-400" />
+            <BreakdownRow label="Melting Pt." value={selected.meltPt} dot="bg-orange-400" />
+            <BreakdownRow label="Boiling Pt." value={selected.boilPt} dot="bg-red-400" />
+            <BreakdownRow label="Group" value={selected.group} dot="bg-cyan-400" />
+            <BreakdownRow label="Uses" value={selected.uses.slice(0, 2).join(", ")} dot="bg-pink-400" />
+          </ResultPanel>
+        ) : (
+          <ResultPanel label="Element" primary="Select an element" />
+        )
+      }
+    />
   );
 }
 
 function OhmsLaw() {
-  const [voltage, setVoltage] = useState("");
-  const [current, setCurrent] = useState("");
+  const [voltage, setVoltage] = useState("12");
+  const [current, setCurrent] = useState("2");
   const [resistance, setResistance] = useState("");
-  const [result, setResult] = useState<{ type: string; value: number; unit: string } | null>(null);
 
-  const calculate = () => {
-    const v = parseFloat(voltage) || 0;
-    const i = parseFloat(current) || 0;
-    const r = parseFloat(resistance) || 0;
+  const v = parseFloat(voltage) || 0;
+  const i = parseFloat(current) || 0;
+  const r = parseFloat(resistance) || 0;
 
-    if (v && i && !r) {
-      setResult({ type: "Resistance", value: v / i, unit: "Ohms" });
-    } else if (v && r && !i) {
-      setResult({ type: "Current", value: v / r, unit: "Amps" });
-    } else if (i && r && !v) {
-      setResult({ type: "Voltage", value: i * r, unit: "Volts" });
-    } else {
-      setResult(null);
-    }
-  };
+  let resType = "", resValue = 0, resUnit = "";
+  let power = 0;
+  if (voltage && current && !resistance) {
+    resType = "Resistance"; resValue = v / i; resUnit = "Ω";
+    power = v * i;
+  } else if (voltage && resistance && !current) {
+    resType = "Current"; resValue = v / r; resUnit = "A";
+    power = v * (v / r);
+  } else if (current && resistance && !voltage) {
+    resType = "Voltage"; resValue = i * r; resUnit = "V";
+    power = i * i * r;
+  }
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Ohm's Law (V = I x R)" icon={Zap} iconColor="bg-yellow-500">
-        <p className="text-muted-foreground text-sm mb-4">Enter any two values to calculate the third</p>
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Ohm's Law (V = I × R)" icon={Zap} iconColor="bg-yellow-500">
+          <p className="text-xs text-muted-foreground p-3 bg-muted/20 rounded-xl">Enter any two values to calculate the third.</p>
           <InputField label="Voltage (V)" value={voltage} onChange={setVoltage} type="number" suffix="V" />
           <InputField label="Current (I)" value={current} onChange={setCurrent} type="number" suffix="A" />
-          <InputField label="Resistance (R)" value={resistance} onChange={setResistance} type="number" suffix="Ohm" />
-          <ToolButton onClick={calculate} className="bg-yellow-500 hover:bg-yellow-600 text-black">Calculate</ToolButton>
-        </div>
-      </ToolCard>
-
-      {result && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <ToolCard title="Result" icon={Calculator} iconColor="bg-emerald-500">
-            <div className="text-center py-4">
-              <p className="text-muted-foreground">{result.type}</p>
-              <p className="text-4xl font-bold text-yellow-400">{result.value.toFixed(4)} {result.unit}</p>
-            </div>
-          </ToolCard>
-        </motion.div>
-      )}
-    </div>
+          <InputField label="Resistance (R)" value={resistance} onChange={setResistance} type="number" suffix="Ω" />
+        </InputPanel>
+      }
+      results={
+        <ResultPanel label={resType || "Result"} primary={resType ? `${sFmt(resValue, 4)} ${resUnit}` : "Enter two values"}
+          summaries={<>
+            <SummaryCard label="Power" value={`${sFmt(power, 2)} W`} accent="text-yellow-500" />
+            <SummaryCard label="Formula" value="V = I × R" />
+          </>}
+          tip="Power = V × I = I² × R = V² / R"
+        >
+          {resType && <>
+            <BreakdownRow label={resType} value={`${sFmt(resValue, 4)} ${resUnit}`} dot="bg-yellow-400" bold />
+            {voltage && <BreakdownRow label="Voltage" value={`${voltage} V`} dot="bg-blue-400" />}
+            {current && <BreakdownRow label="Current" value={`${current} A`} dot="bg-green-400" />}
+            {resistance && <BreakdownRow label="Resistance" value={`${resistance} Ω`} dot="bg-amber-400" />}
+            <BreakdownRow label="Power" value={`${sFmt(power, 4)} W`} dot="bg-red-400" bold />
+          </>}
+        </ResultPanel>
+      }
+    />
   );
 }
 
 function MolarMass() {
-  const [element, setElement] = useState("H2O");
-  const [result, setResult] = useState<number | null>(null);
+  const [formula, setFormula] = useState("H2O");
 
   const masses: Record<string, number> = {
     H: 1.008, He: 4.003, Li: 6.941, Be: 9.012, B: 10.81, C: 12.01, N: 14.01, O: 16.00,
@@ -672,37 +509,53 @@ function MolarMass() {
     Cl: 35.45, Ar: 39.95, K: 39.10, Ca: 40.08, Fe: 55.85, Cu: 63.55, Zn: 65.38, Br: 79.90, I: 126.9
   };
 
-  const calculate = () => {
+  const breakdown = useMemo(() => {
+    const result: { element: string; count: number; mass: number }[] = [];
     let total = 0;
     const regex = /([A-Z][a-z]?)(\d*)/g;
     let match;
-    while ((match = regex.exec(element)) !== null) {
-      const el = match[1];
-      const count = parseInt(match[2]) || 1;
-      if (masses[el]) total += masses[el] * count;
+    while ((match = regex.exec(formula)) !== null) {
+      const el = match[1]; const count = parseInt(match[2]) || 1;
+      if (masses[el]) {
+        total += masses[el] * count;
+        result.push({ element: el, count, mass: masses[el] * count });
+      }
     }
-    setResult(total);
-  };
+    return { result, total };
+  }, [formula]);
+
+  const examples = ["H2O", "NaCl", "C6H12O6", "H2SO4", "CH4", "CO2", "NH3"];
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Molar Mass Calculator" icon={FlaskConical} iconColor="bg-green-500">
-        <div className="space-y-4">
-          <InputField label="Chemical Formula" value={element} onChange={setElement} placeholder="e.g., H2O, NaCl, C6H12O6" />
-          <ToolButton onClick={calculate} className="bg-green-500 hover:bg-green-600">Calculate</ToolButton>
-        </div>
-      </ToolCard>
-
-      {result !== null && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <ToolCard title="Molar Mass" icon={Scale} iconColor="bg-emerald-500">
-            <div className="text-center py-4">
-              <p className="text-4xl font-bold text-green-400">{result.toFixed(3)} g/mol</p>
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Molar Mass Calculator" icon={FlaskConical} iconColor="bg-green-500">
+          <InputField label="Chemical Formula" value={formula} onChange={setFormula} placeholder="e.g., H2O" />
+          <div>
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Quick Examples</label>
+            <div className="flex gap-1.5 flex-wrap">
+              {examples.map(ex => (
+                <button key={ex} onClick={() => setFormula(ex)} className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold ${formula === ex ? "bg-green-500 text-white" : "bg-muted/50 text-muted-foreground border border-border"}`}>{ex}</button>
+              ))}
             </div>
-          </ToolCard>
-        </motion.div>
-      )}
-    </div>
+          </div>
+        </InputPanel>
+      }
+      results={
+        <ResultPanel label="Molar Mass" primary={`${breakdown.total.toFixed(3)} g/mol`}
+          summaries={<>
+            <SummaryCard label="Formula" value={formula} accent="text-green-500" />
+            <SummaryCard label="Elements" value={`${breakdown.result.length}`} />
+          </>}
+          tip="Molar mass = sum of atomic masses × count for each element in the formula."
+        >
+          {breakdown.result.map((r, i) => (
+            <BreakdownRow key={i} label={`${r.element} × ${r.count}`} value={`${r.mass.toFixed(3)} g/mol`} dot="bg-green-400" bold={r.count > 1} />
+          ))}
+          <BreakdownRow label="Total" value={`${breakdown.total.toFixed(3)} g/mol`} dot="bg-emerald-500" bold />
+        </ResultPanel>
+      }
+    />
   );
 }
 
@@ -714,27 +567,39 @@ function MotionEquations() {
   const initial = parseFloat(u) || 0;
   const accel = parseFloat(a) || 0;
   const time = parseFloat(t) || 0;
-
   const v = initial + accel * time;
   const s = initial * time + 0.5 * accel * time * time;
+  const vSq = initial * initial + 2 * accel * s;
+  const avgV = (initial + v) / 2;
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Motion Equations" icon={Atom} iconColor="bg-purple-500">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="SUVAT Parameters" icon={Atom} iconColor="bg-purple-500">
           <InputField label="Initial Velocity (u)" value={u} onChange={setU} type="number" suffix="m/s" />
-          <InputField label="Acceleration (a)" value={a} onChange={setA} type="number" suffix="m/s2" />
+          <InputField label="Acceleration (a)" value={a} onChange={setA} type="number" suffix="m/s²" />
           <InputField label="Time (t)" value={t} onChange={setT} type="number" suffix="s" />
-        </div>
-      </ToolCard>
-
-      <ToolCard title="Results" icon={Calculator} iconColor="bg-emerald-500">
-        <div className="space-y-3">
-          <ResultDisplay label="Final Velocity (v = u + at)" value={`${v.toFixed(2)} m/s`} highlight color="text-purple-400" />
-          <ResultDisplay label="Distance (s = ut + 0.5at2)" value={`${s.toFixed(2)} m`} color="text-blue-400" />
-        </div>
-      </ToolCard>
-    </div>
+          <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-xl text-xs text-purple-400 font-mono space-y-1">
+            <p>v = u + at</p>
+            <p>s = ut + ½at²</p>
+            <p>v² = u² + 2as</p>
+          </div>
+        </InputPanel>
+      }
+      results={
+        <ResultPanel label="Final Velocity" primary={`${v.toFixed(2)} m/s`}
+          summaries={<>
+            <SummaryCard label="Distance" value={`${s.toFixed(2)} m`} accent="text-purple-500" />
+            <SummaryCard label="Avg Velocity" value={`${avgV.toFixed(2)} m/s`} />
+          </>}
+        >
+          <BreakdownRow label="v = u + at" value={`${v.toFixed(2)} m/s`} dot="bg-purple-400" bold />
+          <BreakdownRow label="s = ut + ½at²" value={`${s.toFixed(2)} m`} dot="bg-blue-400" bold />
+          <BreakdownRow label="v² = u² + 2as" value={`${vSq.toFixed(2)} m²/s²`} dot="bg-amber-400" />
+          <BreakdownRow label="Average Velocity" value={`${avgV.toFixed(2)} m/s`} dot="bg-cyan-400" />
+        </ResultPanel>
+      }
+    />
   );
 }
 
@@ -742,51 +607,89 @@ function TemperatureConverter() {
   const [celsius, setCelsius] = useState("25");
 
   const c = parseFloat(celsius) || 0;
-  const f = (c * 9/5) + 32;
+  const f = (c * 9 / 5) + 32;
   const k = c + 273.15;
+  const r = f + 459.67;
+  const tempDesc = c < 0 ? "Below freezing" : c < 20 ? "Cold" : c < 30 ? "Comfortable" : c < 40 ? "Hot" : "Very Hot";
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Temperature Converter" icon={Thermometer} iconColor="bg-red-500">
-        <div className="space-y-4">
-          <InputField label="Celsius" value={celsius} onChange={setCelsius} type="number" suffix="C" />
-        </div>
-      </ToolCard>
-
-      <ToolCard title="Conversions" icon={Calculator} iconColor="bg-emerald-500">
-        <div className="space-y-3">
-          <ResultDisplay label="Fahrenheit" value={`${f.toFixed(2)} F`} highlight color="text-red-400" />
-          <ResultDisplay label="Kelvin" value={`${k.toFixed(2)} K`} color="text-blue-400" />
-        </div>
-      </ToolCard>
-    </div>
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Temperature Input" icon={Thermometer} iconColor="bg-red-500">
+          <InputField label="Temperature in Celsius" value={celsius} onChange={setCelsius} type="number" suffix="°C" />
+          <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-xs text-red-400 space-y-1">
+            <p>0°C = 32°F = 273.15K (Water freezes)</p>
+            <p>100°C = 212°F = 373.15K (Water boils)</p>
+            <p>37°C = 98.6°F = 310.15K (Body temp)</p>
+          </div>
+        </InputPanel>
+      }
+      results={
+        <ResultPanel label="Fahrenheit" primary={`${f.toFixed(2)} °F`}
+          summaries={<>
+            <SummaryCard label="Kelvin" value={`${k.toFixed(2)} K`} accent="text-red-500" />
+            <SummaryCard label="Feel" value={tempDesc} />
+          </>}
+        >
+          <BreakdownRow label="Celsius" value={`${c} °C`} dot="bg-blue-400" />
+          <BreakdownRow label="Fahrenheit" value={`${f.toFixed(2)} °F`} dot="bg-red-400" bold />
+          <BreakdownRow label="Kelvin" value={`${k.toFixed(2)} K`} dot="bg-purple-400" bold />
+          <BreakdownRow label="Rankine" value={`${r.toFixed(2)} °R`} dot="bg-amber-400" />
+        </ResultPanel>
+      }
+    />
   );
 }
 
 function DensityCalculator() {
   const [mass, setMass] = useState("100");
   const [volume, setVolume] = useState("10");
+  const [mode, setMode] = useState("density");
 
   const m = parseFloat(mass) || 0;
-  const v = parseFloat(volume) || 1;
-  const density = m / v;
+  const v = parseFloat(volume) || 0;
+  const density = v > 0 ? m / v : 0;
+
+  const knownDensities = [
+    { name: "Water", d: 1.0 }, { name: "Ice", d: 0.92 }, { name: "Iron", d: 7.87 },
+    { name: "Aluminum", d: 2.7 }, { name: "Gold", d: 19.3 }, { name: "Wood (oak)", d: 0.8 },
+  ];
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Density Calculator" icon={Scale} iconColor="bg-teal-500">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Density Inputs" icon={Scale} iconColor="bg-teal-500">
           <InputField label="Mass" value={mass} onChange={setMass} type="number" suffix="g" />
-          <InputField label="Volume" value={volume} onChange={setVolume} type="number" suffix="cm3" />
-        </div>
-      </ToolCard>
-
-      <ToolCard title="Result" icon={Calculator} iconColor="bg-emerald-500">
-        <div className="text-center py-4">
-          <p className="text-muted-foreground">Density = Mass / Volume</p>
-          <p className="text-4xl font-bold text-teal-400">{density.toFixed(4)} g/cm3</p>
-        </div>
-      </ToolCard>
-    </div>
+          <InputField label="Volume" value={volume} onChange={setVolume} type="number" suffix="cm³" />
+          <div>
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Reference Densities</label>
+            <div className="grid grid-cols-2 gap-1.5">
+              {knownDensities.map(k => (
+                <div key={k.name} className="flex justify-between p-2 bg-muted/30 rounded-lg">
+                  <span className="text-xs text-muted-foreground">{k.name}</span>
+                  <span className="text-xs font-mono text-teal-400">{k.d} g/cm³</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </InputPanel>
+      }
+      results={
+        <ResultPanel label="Density" primary={`${density.toFixed(4)} g/cm³`}
+          summaries={<>
+            <SummaryCard label="Formula" value="ρ = m / V" accent="text-teal-500" />
+            <SummaryCard label="vs Water" value={density < 1 ? "Floats" : "Sinks"} />
+          </>}
+          tip={`Density = ${m} g ÷ ${v} cm³ = ${density.toFixed(4)} g/cm³. ${density < 1 ? "Less dense than water — it floats!" : "Denser than water — it sinks."}`}
+        >
+          <BreakdownRow label="Mass" value={`${m} g`} dot="bg-blue-400" />
+          <BreakdownRow label="Volume" value={`${v} cm³`} dot="bg-amber-400" />
+          <BreakdownRow label="Density" value={`${density.toFixed(4)} g/cm³`} dot="bg-teal-400" bold />
+          <BreakdownRow label="kg/m³" value={`${(density * 1000).toFixed(1)} kg/m³`} dot="bg-purple-400" />
+          <BreakdownRow label="vs Water" value={density < 1 ? "Floats ✓" : "Sinks"} dot={density < 1 ? "bg-green-500" : "bg-red-500"} />
+        </ResultPanel>
+      }
+    />
   );
 }
 
@@ -801,217 +704,88 @@ function PHCalculator() {
   const [acidConc, setAcidConc] = useState("0.1");
   const [baseConc, setBaseConc] = useState("0.15");
 
-  const modes = [
-    { id: "ph-to-h", label: "pH \u2192 [H\u207A]" },
-    { id: "h-to-ph", label: "[H\u207A] \u2192 pH" },
-    { id: "dilution", label: "Dilution" },
-    { id: "buffer", label: "Buffer pH" },
-  ];
+  const f = (n: number, d = 4) => (isNaN(n) || !isFinite(n) ? "—" : parseFloat(n.toFixed(d)).toString());
 
-  const fmt = (n: number, d = 4) => {
-    if (isNaN(n) || !isFinite(n)) return "\u2014";
-    return parseFloat(n.toFixed(d)).toString();
-  };
+  const getCategory = (ph: number) => ph < 3 ? "Strongly Acidic" : ph < 6 ? "Weakly Acidic" : ph <= 7.5 ? "Neutral" : ph <= 11 ? "Weakly Basic" : "Strongly Basic";
+  const getExamples = (ph: number) => ph < 2.5 ? "Stomach acid, lemon juice" : ph < 4 ? "Vinegar, coffee" : ph < 6.5 ? "Milk, rain water" : ph <= 7.5 ? "Pure water, blood" : ph <= 8.5 ? "Sea water, baking soda" : ph <= 12 ? "Ammonia, soapy water" : "Bleach, drain cleaner";
 
-  const getCategory = (ph: number) => {
-    if (ph < 3) return "Strongly Acidic";
-    if (ph < 6) return "Weakly Acidic";
-    if (ph < 6.5) return "Slightly Acidic";
-    if (ph <= 7.5) return "Neutral";
-    if (ph <= 8) return "Slightly Basic";
-    if (ph <= 11) return "Weakly Basic";
-    return "Strongly Basic";
-  };
-
-  const getExamples = (ph: number) => {
-    if (ph < 1) return "Battery acid";
-    if (ph < 2.5) return "Stomach acid, lemon juice";
-    if (ph < 4) return "Vinegar, orange juice";
-    if (ph < 5.5) return "Coffee, beer";
-    if (ph < 6.5) return "Milk, rain water";
-    if (ph <= 7.5) return "Pure water, blood";
-    if (ph <= 8.5) return "Sea water, baking soda";
-    if (ph <= 10) return "Milk of magnesia";
-    if (ph <= 12) return "Ammonia, soapy water";
-    return "Bleach, drain cleaner";
-  };
-
-  const renderResult = () => {
-    switch (mode) {
-      case "ph-to-h": {
-        const ph = parseFloat(phValue) || 0;
-        const h = Math.pow(10, -ph);
-        const oh = Math.pow(10, -(14 - ph));
-        const poh = 14 - ph;
-        return (
-          <div className="space-y-3 mt-4">
-            <div className="bg-muted/20 p-3 rounded-xl border border-border/50 space-y-1.5">
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Step-by-step</p>
-              <p className="text-xs text-foreground"><span className="font-bold text-violet-400 mr-1">Step 1:</span> pH = {fmt(ph, 2)}</p>
-              <p className="text-xs text-foreground"><span className="font-bold text-violet-400 mr-1">Step 2:</span> [H\u207A] = 10^(-pH) = 10^(-{fmt(ph, 2)}) = {h.toExponential(4)} M</p>
-              <p className="text-xs text-foreground"><span className="font-bold text-violet-400 mr-1">Step 3:</span> pOH = 14 - pH = 14 - {fmt(ph, 2)} = {fmt(poh, 2)}</p>
-              <p className="text-xs text-foreground"><span className="font-bold text-violet-400 mr-1">Step 4:</span> [OH\u207B] = 10^(-pOH) = {oh.toExponential(4)} M</p>
-              <p className="text-xs text-foreground"><span className="font-bold text-violet-400 mr-1">Step 5:</span> Category: {getCategory(ph)} (e.g., {getExamples(ph)})</p>
-            </div>
-            <div className="space-y-2">
-              {[
-                { label: "[H\u207A] Concentration", value: `${h.toExponential(4)} M` },
-                { label: "[OH\u207B] Concentration", value: `${oh.toExponential(4)} M` },
-                { label: "pOH", value: fmt(poh, 2) },
-                { label: "Nature", value: getCategory(ph) },
-                { label: "Example", value: getExamples(ph) },
-              ].map((r, i) => (
-                <div key={i} className="flex justify-between items-center p-2.5 bg-muted/30 rounded-xl">
-                  <span className="text-xs font-semibold text-muted-foreground">{r.label}</span>
-                  <span className="text-sm font-bold text-violet-400" data-testid={`result-${i}`}>{r.value}</span>
-                </div>
-              ))}
-            </div>
-            <div className="mt-3">
-              <p className="text-xs font-bold text-muted-foreground uppercase mb-2">pH Scale</p>
-              <div className="relative h-6 rounded-full overflow-hidden" style={{ background: "linear-gradient(to right, #ff0000, #ff6600, #ffcc00, #66cc00, #00aa00, #0066cc, #0000ff, #6600cc)" }}>
-                <div className="absolute top-0 h-full w-0.5 bg-white shadow" style={{ left: `${(ph / 14) * 100}%` }} />
-              </div>
-              <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
-                <span>0 (Acid)</span><span>7 (Neutral)</span><span>14 (Base)</span>
-              </div>
-            </div>
-          </div>
-        );
-      }
-      case "h-to-ph": {
-        const h = parseFloat(hConc) || 0;
-        if (h <= 0) return null;
-        const ph = -Math.log10(h);
-        const poh = 14 - ph;
-        const oh = Math.pow(10, -poh);
-        return (
-          <div className="space-y-3 mt-4">
-            <div className="bg-muted/20 p-3 rounded-xl border border-border/50 space-y-1.5">
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Step-by-step</p>
-              <p className="text-xs text-foreground"><span className="font-bold text-violet-400 mr-1">Step 1:</span> [H\u207A] = {h.toExponential(4)} M</p>
-              <p className="text-xs text-foreground"><span className="font-bold text-violet-400 mr-1">Step 2:</span> pH = -log\u2081\u2080({h.toExponential(4)}) = {fmt(ph, 4)}</p>
-              <p className="text-xs text-foreground"><span className="font-bold text-violet-400 mr-1">Step 3:</span> pOH = 14 - {fmt(ph, 2)} = {fmt(poh, 2)}</p>
-            </div>
-            <div className="space-y-2">
-              {[
-                { label: "pH", value: fmt(ph, 4) },
-                { label: "pOH", value: fmt(poh, 4) },
-                { label: "[OH\u207B]", value: `${oh.toExponential(4)} M` },
-                { label: "Nature", value: getCategory(ph) },
-              ].map((r, i) => (
-                <div key={i} className="flex justify-between items-center p-2.5 bg-muted/30 rounded-xl">
-                  <span className="text-xs font-semibold text-muted-foreground">{r.label}</span>
-                  <span className="text-sm font-bold text-violet-400" data-testid={`result-${i}`}>{r.value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-      }
-      case "dilution": {
-        const conc1 = parseFloat(c1) || 0;
-        const vol1 = parseFloat(v1) || 0;
-        const vol2 = parseFloat(v2) || 0;
-        if (vol2 <= 0) return null;
-        const c2 = (conc1 * vol1) / vol2;
-        const ph1 = conc1 > 0 ? -Math.log10(conc1) : 0;
-        const ph2 = c2 > 0 ? -Math.log10(c2) : 0;
-        return (
-          <div className="space-y-3 mt-4">
-            <div className="bg-muted/20 p-3 rounded-xl border border-border/50 space-y-1.5">
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Step-by-step</p>
-              <p className="text-xs text-foreground"><span className="font-bold text-violet-400 mr-1">Step 1:</span> C\u2081V\u2081 = C\u2082V\u2082 (dilution formula)</p>
-              <p className="text-xs text-foreground"><span className="font-bold text-violet-400 mr-1">Step 2:</span> {fmt(conc1)} \u00D7 {fmt(vol1, 0)} = C\u2082 \u00D7 {fmt(vol2, 0)}</p>
-              <p className="text-xs text-foreground"><span className="font-bold text-violet-400 mr-1">Step 3:</span> C\u2082 = {fmt(conc1 * vol1)} / {fmt(vol2, 0)} = {c2.toExponential(4)} M</p>
-              <p className="text-xs text-foreground"><span className="font-bold text-violet-400 mr-1">Step 4:</span> pH changes: {fmt(ph1, 2)} \u2192 {fmt(ph2, 2)}</p>
-            </div>
-            <div className="space-y-2">
-              {[
-                { label: "New Concentration", value: `${c2.toExponential(4)} M` },
-                { label: "Dilution Factor", value: `${fmt(vol2 / vol1, 1)}\u00D7` },
-                { label: "pH Before", value: fmt(ph1, 2) },
-                { label: "pH After", value: fmt(ph2, 2) },
-              ].map((r, i) => (
-                <div key={i} className="flex justify-between items-center p-2.5 bg-muted/30 rounded-xl">
-                  <span className="text-xs font-semibold text-muted-foreground">{r.label}</span>
-                  <span className="text-sm font-bold text-violet-400" data-testid={`result-${i}`}>{r.value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-      }
-      case "buffer": {
-        const pkaVal = parseFloat(pka) || 0;
-        const acid = parseFloat(acidConc) || 0;
-        const base = parseFloat(baseConc) || 0;
-        if (acid <= 0) return null;
-        const ratio = base / acid;
-        const ph = pkaVal + Math.log10(ratio);
-        return (
-          <div className="space-y-3 mt-4">
-            <div className="bg-muted/20 p-3 rounded-xl border border-border/50 space-y-1.5">
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Henderson-Hasselbalch</p>
-              <p className="text-xs text-foreground"><span className="font-bold text-violet-400 mr-1">Step 1:</span> pH = pKa + log([A\u207B]/[HA])</p>
-              <p className="text-xs text-foreground"><span className="font-bold text-violet-400 mr-1">Step 2:</span> pH = {fmt(pkaVal, 2)} + log({fmt(base)}/{fmt(acid)})</p>
-              <p className="text-xs text-foreground"><span className="font-bold text-violet-400 mr-1">Step 3:</span> pH = {fmt(pkaVal, 2)} + log({fmt(ratio, 4)})</p>
-              <p className="text-xs text-foreground"><span className="font-bold text-violet-400 mr-1">Step 4:</span> pH = {fmt(pkaVal, 2)} + {fmt(Math.log10(ratio), 4)} = {fmt(ph, 4)}</p>
-            </div>
-            <div className="space-y-2">
-              {[
-                { label: "Buffer pH", value: fmt(ph, 4) },
-                { label: "pKa", value: fmt(pkaVal, 2) },
-                { label: "[Base]/[Acid] Ratio", value: fmt(ratio, 4) },
-                { label: "Nature", value: getCategory(ph) },
-              ].map((r, i) => (
-                <div key={i} className="flex justify-between items-center p-2.5 bg-muted/30 rounded-xl">
-                  <span className="text-xs font-semibold text-muted-foreground">{r.label}</span>
-                  <span className="text-sm font-bold text-violet-400" data-testid={`result-${i}`}>{r.value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-      }
+  const getResult = () => {
+    if (mode === "ph-to-h") {
+      const ph = parseFloat(phValue) || 0;
+      const h = Math.pow(10, -ph); const oh = Math.pow(10, -(14 - ph)); const poh = 14 - ph;
+      return { primary: ph.toFixed(2), label: "pH", rows: [
+        { label: "[H⁺] Concentration", value: `${h.toExponential(4)} M` },
+        { label: "[OH⁻] Concentration", value: `${oh.toExponential(4)} M` },
+        { label: "pOH", value: f(poh, 2) },
+        { label: "Nature", value: getCategory(ph) },
+        { label: "Example", value: getExamples(ph) },
+      ], phVal: ph };
+    } else if (mode === "h-to-ph") {
+      const hC = parseFloat(hConc) || 0;
+      const ph = hC > 0 ? -Math.log10(hC) : 0;
+      const poh = 14 - ph; const oh = Math.pow(10, -poh);
+      return { primary: f(ph, 4), label: "pH", rows: [
+        { label: "pH", value: f(ph, 4) }, { label: "pOH", value: f(poh, 4) },
+        { label: "[OH⁻]", value: `${oh.toExponential(4)} M` },
+        { label: "Nature", value: getCategory(ph) },
+      ], phVal: ph };
+    } else if (mode === "dilution") {
+      const ci = parseFloat(c1) || 0; const vi = parseFloat(v1) || 0; const vf = parseFloat(v2) || 0;
+      const cf = vf > 0 ? (ci * vi) / vf : 0;
+      const pf = cf > 0 ? -Math.log10(cf) : 0;
+      return { primary: f(pf, 4), label: "Final pH", rows: [
+        { label: "C₁" , value: `${ci} M` }, { label: "V₁", value: `${vi} mL` },
+        { label: "V₂", value: `${vf} mL` },
+        { label: "C₂ = C₁V₁/V₂", value: `${cf.toExponential(4)} M` },
+        { label: "Final pH", value: f(pf, 4) },
+      ], phVal: pf };
+    } else {
+      const pH = parseFloat(pka) + Math.log10((parseFloat(baseConc) || 0) / (parseFloat(acidConc) || 1));
+      return { primary: f(pH, 4), label: "Buffer pH", rows: [
+        { label: "pKa", value: pka }, { label: "[Base]", value: `${baseConc} M` },
+        { label: "[Acid]", value: `${acidConc} M` },
+        { label: "Buffer pH (H-H)", value: f(pH, 4) },
+        { label: "Nature", value: getCategory(pH) },
+      ], phVal: pH };
     }
   };
 
+  const res = getResult();
+
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="pH Calculator" icon={Droplets} iconColor="bg-violet-500">
-        <div className="flex gap-2 p-1 bg-muted rounded-xl mb-4 flex-wrap">
-          {modes.map((m) => (
-            <button key={m.id} onClick={() => setMode(m.id as typeof mode)} data-testid={`mode-${m.id}`}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${mode === m.id ? "bg-violet-500 text-white shadow-sm" : "text-muted-foreground"}`}>
-              {m.label}
-            </button>
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="pH Calculator" icon={Droplets} iconColor="bg-violet-500">
+          <ModeSelector modes={[{ id: "ph-to-h", label: "pH → [H⁺]" }, { id: "h-to-ph", label: "[H⁺] → pH" }, { id: "dilution", label: "Dilution" }, { id: "buffer", label: "Buffer pH" }]} active={mode} onChange={v => setMode(v as typeof mode)} />
+          {mode === "ph-to-h" && <InputField label="pH Value" value={phValue} onChange={setPhValue} type="number" placeholder="7" />}
+          {mode === "h-to-ph" && <InputField label="[H⁺] Concentration (M)" value={hConc} onChange={setHConc} type="number" placeholder="0.001" />}
+          {mode === "dilution" && <>
+            <InputField label="Initial Concentration (M)" value={c1} onChange={setC1} type="number" />
+            <InputField label="Initial Volume (mL)" value={v1} onChange={setV1} type="number" />
+            <InputField label="Final Volume (mL)" value={v2} onChange={setV2} type="number" />
+          </>}
+          {mode === "buffer" && <>
+            <InputField label="pKa of Acid" value={pka} onChange={setPka} type="number" placeholder="4.76" />
+            <InputField label="[Acid] (M)" value={acidConc} onChange={setAcidConc} type="number" />
+            <InputField label="[Conjugate Base] (M)" value={baseConc} onChange={setBaseConc} type="number" />
+          </>}
+          <div className="relative h-5 rounded-full overflow-hidden" style={{ background: "linear-gradient(to right,#ff0000,#ff6600,#ffcc00,#66cc00,#00aa00,#0066cc,#0000ff,#6600cc)" }}>
+            <div className="absolute top-0 h-full w-0.5 bg-white shadow" style={{ left: `${Math.min(100, Math.max(0, ((res.phVal || 7) / 14) * 100))}%` }} />
+          </div>
+        </InputPanel>
+      }
+      results={
+        <ResultPanel label={res.label} primary={res.primary}
+          summaries={<>
+            <SummaryCard label="Nature" value={getCategory(res.phVal || 7)} accent="text-violet-500" />
+            <SummaryCard label="Example" value={getExamples(res.phVal || 7)} />
+          </>}
+        >
+          {res.rows.map((r, i) => (
+            <BreakdownRow key={i} label={r.label} value={r.value} dot="bg-violet-400" bold={i === 0} />
           ))}
-        </div>
-        <div className="space-y-3">
-          {mode === "ph-to-h" && (
-            <InputField label="pH Value" value={phValue} onChange={setPhValue} type="number" placeholder="7" />
-          )}
-          {mode === "h-to-ph" && (
-            <InputField label="[H\u207A] Concentration (M)" value={hConc} onChange={setHConc} type="number" placeholder="0.001" />
-          )}
-          {mode === "dilution" && (
-            <>
-              <InputField label="Initial Concentration (M)" value={c1} onChange={setC1} type="number" placeholder="0.1" />
-              <InputField label="Initial Volume (mL)" value={v1} onChange={setV1} type="number" placeholder="50" />
-              <InputField label="Final Volume (mL)" value={v2} onChange={setV2} type="number" placeholder="500" />
-            </>
-          )}
-          {mode === "buffer" && (
-            <>
-              <InputField label="pKa of Acid" value={pka} onChange={setPka} type="number" placeholder="4.76" />
-              <InputField label="[Acid] Concentration (M)" value={acidConc} onChange={setAcidConc} type="number" placeholder="0.1" />
-              <InputField label="[Conjugate Base] (M)" value={baseConc} onChange={setBaseConc} type="number" placeholder="0.15" />
-            </>
-          )}
-        </div>
-        {renderResult()}
-      </ToolCard>
-    </div>
+        </ResultPanel>
+      }
+    />
   );
 }
