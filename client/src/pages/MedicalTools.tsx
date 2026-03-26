@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Stethoscope, Pill, Heart, Droplets, Activity, Calculator, Flame, Eye } from "lucide-react";
-import { ToolCard, InputField, ResultDisplay, ToolButton } from "@/components/ToolCard";
+import { DesktopToolGrid, InputPanel, InputField, ResultDisplay, ToolButton } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
 
 type ToolType = "dosage" | "ivdrip" | "heartrate" | "oxygen" | "calories" | "bsa" | "water" | "period" | "vision";
@@ -51,28 +51,27 @@ function DosageCalculator() {
   const w = parseFloat(weight) || 0;
   const d = parseFloat(dosePerKg) || 0;
   const f = parseInt(frequency) || 1;
-
   const singleDose = w * d;
   const dailyDose = singleDose * f;
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Dosage Calculator" icon={Pill} iconColor="bg-blue-500">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Dosage Calculator" icon={Pill} iconColor="bg-blue-500">
           <InputField label="Patient Weight (kg)" value={weight} onChange={setWeight} type="number" />
           <InputField label="Dose per kg (mg/kg)" value={dosePerKg} onChange={setDosePerKg} type="number" />
           <InputField label="Times per Day" value={frequency} onChange={setFrequency} type="number" />
-        </div>
-      </ToolCard>
-
-      <ToolCard title="Dosage" icon={Calculator} iconColor="bg-emerald-500">
-        <div className="space-y-3">
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Dosage</p>
           <ResultDisplay label="Single Dose" value={`${singleDose.toFixed(1)} mg`} highlight color="text-blue-400" />
           <ResultDisplay label="Daily Total" value={`${dailyDose.toFixed(1)} mg`} color="text-emerald-400" />
+          <p className="text-xs text-muted-foreground mt-4">Consult a healthcare provider before administering medication.</p>
         </div>
-        <p className="text-xs text-muted-foreground mt-4">Consult a healthcare provider before administering medication.</p>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -84,43 +83,37 @@ function IVDripCalculator() {
   const v = parseFloat(volume) || 0;
   const t = parseFloat(time) || 1;
   const df = parseFloat(dropFactor) || 20;
-
   const dropsPerMin = (v * df) / (t * 60);
   const mlPerHour = v / t;
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="IV Drip Rate" icon={Droplets} iconColor="bg-cyan-500">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="IV Drip Rate" icon={Droplets} iconColor="bg-cyan-500">
           <InputField label="Volume (mL)" value={volume} onChange={setVolume} type="number" />
           <InputField label="Time (hours)" value={time} onChange={setTime} type="number" />
           <div>
-            <label className="text-sm font-medium text-muted-foreground mb-2 block">Drop Factor</label>
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Drop Factor</label>
             <div className="flex gap-2">
               {["10", "15", "20", "60"].map((df) => (
-                <button
-                  key={df}
-                  onClick={() => setDropFactor(df)}
-                  className={`flex-1 py-2 rounded-lg text-sm ${
-                    dropFactor === df ? "bg-cyan-500 text-white" : "bg-muted text-muted-foreground"
-                  }`}
-                  data-testid={`button-df-${df}`}
-                >
+                <button key={df} onClick={() => setDropFactor(df)}
+                  className={`flex-1 py-2 rounded-lg text-sm ${dropFactor === df ? "bg-cyan-500 text-white" : "bg-muted text-muted-foreground"}`}
+                  data-testid={`button-df-${df}`}>
                   {df} gtt/mL
                 </button>
               ))}
             </div>
           </div>
-        </div>
-      </ToolCard>
-
-      <ToolCard title="Flow Rate" icon={Calculator} iconColor="bg-emerald-500">
-        <div className="space-y-3">
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Flow Rate</p>
           <ResultDisplay label="Drops per Minute" value={`${dropsPerMin.toFixed(1)} gtt/min`} highlight color="text-cyan-400" />
           <ResultDisplay label="mL per Hour" value={`${mlPerHour.toFixed(1)} mL/hr`} color="text-blue-400" />
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -142,31 +135,33 @@ function HeartRateZones() {
   ];
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Heart Rate Zones" icon={Heart} iconColor="bg-red-500">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Heart Rate Zones" icon={Heart} iconColor="bg-red-500">
           <InputField label="Age" value={age} onChange={setAge} type="number" />
           <InputField label="Resting Heart Rate (bpm)" value={restingHR} onChange={setRestingHR} type="number" />
-        </div>
-      </ToolCard>
-
-      <ToolCard title="Training Zones" icon={Activity} iconColor="bg-emerald-500">
-        <div className="space-y-2">
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Training Zones</p>
           <div className="flex justify-between p-2 bg-muted/30 rounded-lg mb-3">
             <span className="text-muted-foreground">Max Heart Rate</span>
             <span className="font-bold text-red-400">{maxHR} bpm</span>
           </div>
-          {zones.map((zone) => (
-            <div key={zone.name} className="flex justify-between items-center p-2 bg-muted/30 rounded-lg">
-              <span className={`text-sm ${zone.color}`}>{zone.name}</span>
-              <span className="font-mono text-sm">
-                {Math.round(rhr + hrr * zone.min)} - {Math.round(rhr + hrr * zone.max)} bpm
-              </span>
-            </div>
-          ))}
+          <div className="space-y-2">
+            {zones.map((zone) => (
+              <div key={zone.name} className="flex justify-between items-center p-2 bg-muted/30 rounded-lg">
+                <span className={`text-sm ${zone.color}`}>{zone.name}</span>
+                <span className="font-mono text-sm">
+                  {Math.round(rhr + hrr * zone.min)} – {Math.round(rhr + hrr * zone.max)} bpm
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -183,44 +178,40 @@ function OxygenFlowRate() {
 
   const device = devices[deviceType as keyof typeof devices];
   const targetFiO2 = parseFloat(fio2) || 21;
-  
-  const flowRate = deviceType === "nasal" 
+  const flowRate = deviceType === "nasal"
     ? Math.max(1, Math.ceil((targetFiO2 - 21) / 4))
     : Math.ceil((targetFiO2 - 21) / 3);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Oxygen Flow Rate" icon={Activity} iconColor="bg-sky-500">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Oxygen Flow Rate" icon={Activity} iconColor="bg-sky-500">
           <InputField label="Target FiO2 (%)" value={fio2} onChange={setFio2} type="number" min={21} max={100} />
           <div>
-            <label className="text-sm font-medium text-muted-foreground mb-2 block">Device Type</label>
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Device Type</label>
             <div className="space-y-2">
               {Object.entries(devices).map(([key, val]) => (
-                <button
-                  key={key}
-                  onClick={() => setDeviceType(key)}
-                  className={`w-full text-left p-3 rounded-xl text-sm transition-all ${
-                    deviceType === key ? "bg-sky-500 text-white" : "bg-muted text-muted-foreground"
-                  }`}
-                  data-testid={`button-device-${key}`}
-                >
+                <button key={key} onClick={() => setDeviceType(key)}
+                  className={`w-full text-left p-3 rounded-xl text-sm transition-all ${deviceType === key ? "bg-sky-500 text-white" : "bg-muted text-muted-foreground"}`}
+                  data-testid={`button-device-${key}`}>
                   {val.name}
                 </button>
               ))}
             </div>
           </div>
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-4">Flow Rate</p>
+          <div className="text-center py-6">
+            <div className="text-5xl font-bold text-sky-400 mb-2">{Math.min(flowRate, device.maxFlow)} L/min</div>
+            <p className="text-muted-foreground">Recommended for {device.name}</p>
+            <p className="text-xs text-muted-foreground mt-2">Max: {device.maxFlow} L/min</p>
+          </div>
         </div>
-      </ToolCard>
-
-      <ToolCard title="Flow Rate" icon={Calculator} iconColor="bg-emerald-500">
-        <div className="text-center py-6">
-          <div className="text-4xl font-bold text-sky-400 mb-2">{Math.min(flowRate, device.maxFlow)} L/min</div>
-          <p className="text-muted-foreground">Recommended for {device.name}</p>
-          <p className="text-xs text-muted-foreground mt-2">Max: {device.maxFlow} L/min</p>
-        </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -244,38 +235,35 @@ function CaloriesBurned() {
   const calories = (met * w * d) / 60;
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Calories Burned" icon={Flame} iconColor="bg-orange-500">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Calories Burned" icon={Flame} iconColor="bg-orange-500">
           <InputField label="Weight (kg)" value={weight} onChange={setWeight} type="number" />
           <InputField label="Duration (minutes)" value={duration} onChange={setDuration} type="number" />
           <div>
-            <label className="text-sm font-medium text-muted-foreground mb-2 block">Activity</label>
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Activity</label>
             <div className="grid grid-cols-2 gap-2">
               {Object.entries(activities).map(([key, val]) => (
-                <button
-                  key={key}
-                  onClick={() => setActivity(key)}
-                  className={`p-2 rounded-lg text-sm transition-all ${
-                    activity === key ? "bg-orange-500 text-white" : "bg-muted text-muted-foreground"
-                  }`}
-                  data-testid={`button-activity-${key}`}
-                >
+                <button key={key} onClick={() => setActivity(key)}
+                  className={`p-2 rounded-lg text-sm transition-all ${activity === key ? "bg-orange-500 text-white" : "bg-muted text-muted-foreground"}`}
+                  data-testid={`button-activity-${key}`}>
                   {val.name}
                 </button>
               ))}
             </div>
           </div>
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-4">Result</p>
+          <div className="text-center py-6">
+            <div className="text-5xl font-bold text-orange-400 mb-2">{Math.round(calories)}</div>
+            <p className="text-muted-foreground">Calories Burned</p>
+          </div>
         </div>
-      </ToolCard>
-
-      <ToolCard title="Result" icon={Calculator} iconColor="bg-emerald-500">
-        <div className="text-center py-6">
-          <div className="text-4xl font-bold text-orange-400 mb-2">{Math.round(calories)}</div>
-          <p className="text-muted-foreground">Calories Burned</p>
-        </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -296,38 +284,35 @@ function BSACalculator() {
   const bsa = formulas[formula].calc();
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Body Surface Area" icon={Calculator} iconColor="bg-purple-500">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Body Surface Area" icon={Calculator} iconColor="bg-purple-500">
           <InputField label="Height (cm)" value={height} onChange={setHeight} type="number" />
           <InputField label="Weight (kg)" value={weight} onChange={setWeight} type="number" />
           <div>
-            <label className="text-sm font-medium text-muted-foreground mb-2 block">Formula</label>
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Formula</label>
             <div className="flex gap-2">
               {Object.entries(formulas).map(([key, val]) => (
-                <button
-                  key={key}
-                  onClick={() => setFormula(key)}
-                  className={`flex-1 py-2 rounded-lg text-sm ${
-                    formula === key ? "bg-purple-500 text-white" : "bg-muted text-muted-foreground"
-                  }`}
-                  data-testid={`button-formula-${key}`}
-                >
+                <button key={key} onClick={() => setFormula(key)}
+                  className={`flex-1 py-2 rounded-lg text-sm ${formula === key ? "bg-purple-500 text-white" : "bg-muted text-muted-foreground"}`}
+                  data-testid={`button-formula-${key}`}>
                   {val.name}
                 </button>
               ))}
             </div>
           </div>
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-4">BSA</p>
+          <div className="text-center py-6">
+            <div className="text-5xl font-bold text-purple-400 mb-2">{bsa.toFixed(2)} m²</div>
+            <p className="text-muted-foreground">Body Surface Area</p>
+          </div>
         </div>
-      </ToolCard>
-
-      <ToolCard title="BSA" icon={Activity} iconColor="bg-emerald-500">
-        <div className="text-center py-6">
-          <div className="text-4xl font-bold text-purple-400 mb-2">{bsa.toFixed(2)} m²</div>
-          <p className="text-muted-foreground">Body Surface Area</p>
-        </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -345,55 +330,45 @@ function WaterIntakeCalculator() {
   const glasses = Math.ceil(adjustedIntake / 250);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Water Intake" icon={Droplets} iconColor="bg-blue-500">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Water Intake" icon={Droplets} iconColor="bg-blue-500">
           <InputField label="Weight (kg)" value={weight} onChange={setWeight} type="number" />
           <div>
-            <label className="text-sm font-medium text-muted-foreground mb-2 block">Activity Level</label>
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Activity Level</label>
             <div className="grid grid-cols-2 gap-2">
               {Object.keys(activityFactors).map((level) => (
-                <button
-                  key={level}
-                  onClick={() => setActivityLevel(level)}
-                  className={`p-2 rounded-lg text-sm capitalize ${
-                    activityLevel === level ? "bg-blue-500 text-white" : "bg-muted text-muted-foreground"
-                  }`}
-                  data-testid={`button-activity-${level}`}
-                >
+                <button key={level} onClick={() => setActivityLevel(level)}
+                  className={`p-2 rounded-lg text-sm capitalize ${activityLevel === level ? "bg-blue-500 text-white" : "bg-muted text-muted-foreground"}`}
+                  data-testid={`button-activity-${level}`}>
                   {level}
                 </button>
               ))}
             </div>
           </div>
           <div>
-            <label className="text-sm font-medium text-muted-foreground mb-2 block">Climate</label>
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Climate</label>
             <div className="grid grid-cols-2 gap-2">
               {Object.keys(climateFactors).map((c) => (
-                <button
-                  key={c}
-                  onClick={() => setClimate(c)}
-                  className={`p-2 rounded-lg text-sm capitalize ${
-                    climate === c ? "bg-blue-500 text-white" : "bg-muted text-muted-foreground"
-                  }`}
-                  data-testid={`button-climate-${c}`}
-                >
+                <button key={c} onClick={() => setClimate(c)}
+                  className={`p-2 rounded-lg text-sm capitalize ${climate === c ? "bg-blue-500 text-white" : "bg-muted text-muted-foreground"}`}
+                  data-testid={`button-climate-${c}`}>
                   {c}
                 </button>
               ))}
             </div>
           </div>
-        </div>
-      </ToolCard>
-
-      <ToolCard title="Daily Intake" icon={Calculator} iconColor="bg-emerald-500">
-        <div className="space-y-3">
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Daily Intake</p>
           <ResultDisplay label="Recommended" value={`${Math.round(adjustedIntake)} mL`} highlight color="text-blue-400" />
-          <ResultDisplay label="Glasses (250mL)" value={`${glasses} glasses`} />
+          <ResultDisplay label="Glasses (250 mL each)" value={`${glasses} glasses`} />
           <ResultDisplay label="Liters" value={`${(adjustedIntake / 1000).toFixed(1)} L`} />
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -406,7 +381,6 @@ function PeriodCyclePredictor() {
     if (!lastPeriod) return null;
     const lmp = new Date(lastPeriod);
     const cycle = parseInt(cycleLength) || 28;
-    const period = parseInt(periodLength) || 5;
 
     const nextPeriod = new Date(lmp);
     nextPeriod.setDate(nextPeriod.getDate() + cycle);
@@ -426,26 +400,31 @@ function PeriodCyclePredictor() {
   const dates = calculateDates();
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Period Cycle Predictor" icon={Activity} iconColor="bg-pink-500">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Period Cycle Predictor" icon={Activity} iconColor="bg-pink-500">
           <InputField label="Last Period Start" value={lastPeriod} onChange={setLastPeriod} type="date" />
           <InputField label="Cycle Length (days)" value={cycleLength} onChange={setCycleLength} type="number" />
           <InputField label="Period Length (days)" value={periodLength} onChange={setPeriodLength} type="number" />
-        </div>
-      </ToolCard>
-
-      {dates && (
-        <ToolCard title="Predictions" icon={Calculator} iconColor="bg-emerald-500">
-          <div className="space-y-3">
+        </InputPanel>
+      }
+      results={
+        dates ? (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+            className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Predictions</p>
             <ResultDisplay label="Next Period" value={dates.nextPeriod.toLocaleDateString()} highlight color="text-pink-400" />
             <ResultDisplay label="Ovulation" value={dates.ovulation.toLocaleDateString()} color="text-purple-400" />
-            <ResultDisplay label="Fertile Window" value={`${dates.fertileStart.toLocaleDateString()} - ${dates.fertileEnd.toLocaleDateString()}`} />
+            <ResultDisplay label="Fertile Window" value={`${dates.fertileStart.toLocaleDateString()} – ${dates.fertileEnd.toLocaleDateString()}`} />
+            <p className="text-xs text-muted-foreground mt-4">This is an estimate. Consult a healthcare provider for accurate tracking.</p>
+          </motion.div>
+        ) : (
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-5 flex items-center justify-center min-h-[200px]">
+            <p className="text-muted-foreground text-sm text-center">Enter your last period start date to see predictions</p>
           </div>
-          <p className="text-xs text-muted-foreground mt-4">This is an estimate. Consult a healthcare provider for accurate tracking.</p>
-        </ToolCard>
-      )}
-    </div>
+        )
+      }
+    />
   );
 }
 
@@ -463,23 +442,23 @@ function VisionConverter() {
   const newAxis = axis <= 90 ? axis + 90 : axis - 90;
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Vision Prescription" icon={Eye} iconColor="bg-indigo-500">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Vision Prescription" icon={Eye} iconColor="bg-indigo-500">
           <p className="text-sm text-muted-foreground">Convert between plus and minus cylinder notation</p>
           <InputField label="Sphere (D)" value={sphereOD} onChange={setSphereOD} type="number" step={0.25} />
           <InputField label="Cylinder (D)" value={cylinderOD} onChange={setCylinderOD} type="number" step={0.25} />
           <InputField label="Axis (degrees)" value={axisOD} onChange={setAxisOD} type="number" min={1} max={180} />
-        </div>
-      </ToolCard>
-
-      <ToolCard title="Converted" icon={Calculator} iconColor="bg-emerald-500">
-        <div className="space-y-3">
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Converted</p>
           <ResultDisplay label="Sphere" value={newSphere >= 0 ? `+${newSphere.toFixed(2)}` : newSphere.toFixed(2)} highlight color="text-indigo-400" />
           <ResultDisplay label="Cylinder" value={newCylinder >= 0 ? `+${newCylinder.toFixed(2)}` : newCylinder.toFixed(2)} />
           <ResultDisplay label="Axis" value={`${newAxis}°`} />
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }

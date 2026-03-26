@@ -1,16 +1,8 @@
 import { useState, useMemo } from "react";
-import { motion } from "framer-motion";
-import { 
-  Calendar, 
-  Clock, 
-  Search, 
-  HelpCircle, 
-  TrendingUp,
-  CalendarDays
-} from "lucide-react";
-import { ToolCard, InputField, ToolButton } from "@/components/ToolCard";
+import { Calendar, HelpCircle, CalendarDays, Search } from "lucide-react";
+import { DesktopToolGrid, InputPanel, InputField } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
-import { format, addYears, getDay } from "date-fns";
+import { format, addYears } from "date-fns";
 
 type Mode = "day-finder" | "birthday-predictor";
 
@@ -40,70 +32,65 @@ export default function DayFinderTools() {
 
 function DayCalculator({ mode }: { mode: Mode }) {
   const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
-  
+
   const result = useMemo(() => {
     if (!date) return null;
     const d = new Date(date);
     if (isNaN(d.getTime())) return null;
-
     if (mode === "day-finder") {
       return DAYS[d.getDay()];
     } else {
       const predictions = [];
       for (let i = 1; i <= 10; i++) {
         const nextDate = addYears(d, i);
-        predictions.push({
-          year: nextDate.getFullYear(),
-          day: DAYS[nextDate.getDay()]
-        });
+        predictions.push({ year: nextDate.getFullYear(), day: DAYS[nextDate.getDay()] });
       }
       return predictions;
     }
   }, [mode, date]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard 
-        title={mode === "day-finder" ? "Find the Day" : "Birthday Predictor"} 
-        icon={mode === "day-finder" ? Calendar : CalendarDays} 
-        iconColor="bg-sky-500"
-      >
-        <div className="space-y-4">
-          <InputField 
-            label={mode === "day-finder" ? "Select Date" : "Your Birthday (Date & Month)"} 
-            value={date} 
-            onChange={setDate} 
-            type="date" 
+    <DesktopToolGrid
+      inputs={
+        <InputPanel
+          title={mode === "day-finder" ? "Find the Day" : "Birthday Predictor"}
+          icon={mode === "day-finder" ? Calendar : CalendarDays}
+          iconColor="bg-sky-500"
+        >
+          <InputField
+            label={mode === "day-finder" ? "Select Date" : "Your Birthday (Date & Month)"}
+            value={date}
+            onChange={setDate}
+            type="date"
           />
-          
-          <div className="bg-muted/30 p-4 rounded-xl border border-border/50">
-            <div className="flex items-center gap-2 mb-2 text-xs font-bold uppercase text-muted-foreground">
-              <Search className="w-3.5 h-3.5" />
-              {mode === "day-finder" ? "Result" : "Next 10 Years"}
-            </div>
-            
-            {mode === "day-finder" ? (
-              <div className="text-3xl font-bold text-sky-500 text-center py-2">
-                {result as string || "Invalid Date"}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-2 mt-2">
-                {(result as any[])?.map((p) => (
-                  <div key={p.year} className="flex justify-between p-2 bg-background rounded-lg border border-border text-sm">
-                    <span className="text-muted-foreground font-medium">{p.year}</span>
-                    <span className="text-sky-500 font-bold">{p.day}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
           <div className="flex items-center gap-2 text-[10px] text-muted-foreground bg-sky-500/5 p-3 rounded-lg border border-sky-500/10">
-            <HelpCircle className="w-3.5 h-3.5 text-sky-500" />
+            <HelpCircle className="w-3.5 h-3.5 text-sky-500 shrink-0" />
             <span>Calculation is based on the universal Gregorian calendar.</span>
           </div>
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5">
+          <div className="flex items-center gap-2 mb-4 text-xs font-bold uppercase text-muted-foreground">
+            <Search className="w-3.5 h-3.5" />
+            {mode === "day-finder" ? "Result" : "Next 10 Years"}
+          </div>
+          {mode === "day-finder" ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-4xl font-bold text-sky-400">{result as string || "Invalid Date"}</div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-2">
+              {(result as any[])?.map((p) => (
+                <div key={p.year} className="flex justify-between p-2 bg-muted/50 rounded-lg border border-border text-sm">
+                  <span className="text-muted-foreground font-medium">{p.year}</span>
+                  <span className="text-sky-400 font-bold">{p.day}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }

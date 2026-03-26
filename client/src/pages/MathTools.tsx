@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Hash, Percent, Shuffle, Calculator, Divide, Search } from "lucide-react";
-import { ToolCard, InputField, ResultDisplay, ToolButton } from "@/components/ToolCard";
+import { DesktopToolGrid, InputPanel, InputField, ResultDisplay, ToolButton } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
 
 const tools = [
@@ -39,44 +39,42 @@ function PrimeChecker() {
 
   const checkPrime = () => {
     const n = parseInt(number);
-    if (n < 2) {
-      setResult({ isPrime: false, factors: [] });
-      return;
-    }
+    if (n < 2) { setResult({ isPrime: false, factors: [] }); return; }
     const factors: number[] = [];
     for (let i = 2; i <= Math.sqrt(n); i++) {
-      if (n % i === 0) {
-        factors.push(i);
-        if (i !== n / i) factors.push(n / i);
-      }
+      if (n % i === 0) { factors.push(i); if (i !== n / i) factors.push(n / i); }
     }
     setResult({ isPrime: factors.length === 0, factors: factors.sort((a, b) => a - b) });
   };
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Prime Number Checker" icon={Hash} iconColor="bg-orange-500">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Prime Number Checker" icon={Hash} iconColor="bg-orange-500">
           <InputField label="Enter Number" value={number} onChange={setNumber} type="number" />
           <ToolButton onClick={checkPrime} className="bg-orange-500 hover:bg-orange-600">Check</ToolButton>
-        </div>
-      </ToolCard>
-
-      {result && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <ToolCard title="Result" icon={Search} iconColor="bg-blue-500">
+        </InputPanel>
+      }
+      results={
+        result ? (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+            className="bg-card rounded-2xl border border-border shadow-sm p-5">
             <div className="text-center py-4">
               <div className={`text-4xl font-bold ${result.isPrime ? "text-emerald-400" : "text-red-400"}`}>
                 {result.isPrime ? "Prime" : "Not Prime"}
               </div>
               {!result.isPrime && result.factors.length > 0 && (
-                <p className="text-muted-foreground mt-2">Factors: {result.factors.join(", ")}</p>
+                <p className="text-muted-foreground mt-3">Factors: {result.factors.join(", ")}</p>
               )}
             </div>
-          </ToolCard>
-        </motion.div>
-      )}
-    </div>
+          </motion.div>
+        ) : (
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-5 flex items-center justify-center min-h-[200px]">
+            <p className="text-muted-foreground text-sm text-center">Enter a number and click Check</p>
+          </div>
+        )
+      }
+    />
   );
 }
 
@@ -89,34 +87,34 @@ function LcmHcfCalculator() {
     const a = parseInt(num1) || 0;
     const b = parseInt(num2) || 0;
     if (a <= 0 || b <= 0) return;
-
     const gcd = (x: number, y: number): number => (y === 0 ? x : gcd(y, x % y));
     const hcf = gcd(a, b);
-    const lcm = (a * b) / hcf;
-    setResult({ lcm, hcf });
+    setResult({ lcm: (a * b) / hcf, hcf });
   };
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="LCM & HCF Calculator" icon={Divide} iconColor="bg-blue-500">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="LCM & HCF Calculator" icon={Divide} iconColor="bg-blue-500">
           <InputField label="First Number" value={num1} onChange={setNum1} type="number" />
           <InputField label="Second Number" value={num2} onChange={setNum2} type="number" />
           <ToolButton onClick={calculate}>Calculate</ToolButton>
-        </div>
-      </ToolCard>
-
-      {result && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <ToolCard title="Results" icon={Calculator} iconColor="bg-emerald-500">
-            <div className="space-y-3">
-              <ResultDisplay label="LCM (Least Common Multiple)" value={result.lcm.toLocaleString()} highlight color="text-blue-400" />
-              <ResultDisplay label="HCF (Highest Common Factor)" value={result.hcf.toLocaleString()} color="text-emerald-400" />
-            </div>
-          </ToolCard>
-        </motion.div>
-      )}
-    </div>
+        </InputPanel>
+      }
+      results={
+        result ? (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+            className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
+            <ResultDisplay label="LCM (Least Common Multiple)" value={result.lcm.toLocaleString()} highlight color="text-blue-400" />
+            <ResultDisplay label="HCF (Highest Common Factor)" value={result.hcf.toLocaleString()} color="text-emerald-400" />
+          </motion.div>
+        ) : (
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-5 flex items-center justify-center min-h-[200px]">
+            <p className="text-muted-foreground text-sm text-center">Enter two numbers and click Calculate</p>
+          </div>
+        )
+      }
+    />
   );
 }
 
@@ -138,30 +136,35 @@ function RandomGenerator() {
   };
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Random Number Generator" icon={Shuffle} iconColor="bg-purple-500">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Random Number Generator" icon={Shuffle} iconColor="bg-purple-500">
           <div className="grid grid-cols-2 gap-4">
             <InputField label="Min" value={min} onChange={setMin} type="number" />
             <InputField label="Max" value={max} onChange={setMax} type="number" />
           </div>
           <InputField label="How Many" value={count} onChange={setCount} type="number" />
           <ToolButton onClick={generate} className="bg-purple-500 hover:bg-purple-600">Generate</ToolButton>
-        </div>
-      </ToolCard>
-
-      {results.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <ToolCard title="Random Numbers" icon={Hash} iconColor="bg-emerald-500">
+        </InputPanel>
+      }
+      results={
+        results.length > 0 ? (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+            className="bg-card rounded-2xl border border-border shadow-sm p-5">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-4">Random Numbers</p>
             <div className="flex flex-wrap gap-2">
               {results.map((n, i) => (
                 <span key={i} className="px-3 py-2 bg-muted rounded-lg font-mono text-lg">{n}</span>
               ))}
             </div>
-          </ToolCard>
-        </motion.div>
-      )}
-    </div>
+          </motion.div>
+        ) : (
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-5 flex items-center justify-center min-h-[200px]">
+            <p className="text-muted-foreground text-sm text-center">Set range and click Generate</p>
+          </div>
+        )
+      }
+    />
   );
 }
 
@@ -171,35 +174,35 @@ function FactorialCalculator() {
 
   const calculate = () => {
     const n = parseInt(number) || 0;
-    if (n < 0 || n > 170) {
-      setResult("Number must be 0-170");
-      return;
-    }
+    if (n < 0 || n > 170) { setResult("Number must be 0-170"); return; }
     let fact = BigInt(1);
     for (let i = BigInt(2); i <= BigInt(n); i = i + BigInt(1)) fact = fact * i;
     setResult(fact.toString());
   };
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Factorial Calculator" icon={Calculator} iconColor="bg-amber-500">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Factorial Calculator" icon={Calculator} iconColor="bg-amber-500">
           <InputField label="Enter Number (n)" value={number} onChange={setNumber} type="number" />
           <ToolButton onClick={calculate} className="bg-amber-500 hover:bg-amber-600">Calculate n!</ToolButton>
-        </div>
-      </ToolCard>
-
-      {result && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <ToolCard title="Result" icon={Hash} iconColor="bg-emerald-500">
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-2">{number}! =</p>
-              <p className="text-lg font-mono text-emerald-400 break-all">{result}</p>
-            </div>
-          </ToolCard>
-        </motion.div>
-      )}
-    </div>
+        </InputPanel>
+      }
+      results={
+        result ? (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+            className="bg-card rounded-2xl border border-border shadow-sm p-5">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Result</p>
+            <p className="text-sm text-muted-foreground mb-2">{number}! =</p>
+            <p className="text-lg font-mono text-emerald-400 break-all">{result}</p>
+          </motion.div>
+        ) : (
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-5 flex items-center justify-center min-h-[200px]">
+            <p className="text-muted-foreground text-sm text-center">Enter a number and click Calculate</p>
+          </div>
+        )
+      }
+    />
   );
 }
 
@@ -213,24 +216,26 @@ function PercentChangeCalculator() {
   const isIncrease = change >= 0;
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Percentage Change" icon={Percent} iconColor="bg-pink-500">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Percentage Change" icon={Percent} iconColor="bg-pink-500">
           <InputField label="Original Value" value={oldValue} onChange={setOldValue} type="number" />
           <InputField label="New Value" value={newValue} onChange={setNewValue} type="number" />
-        </div>
-      </ToolCard>
-
-      <ToolCard title="Change" icon={Calculator} iconColor="bg-emerald-500">
-        <div className="text-center py-4">
-          <div className={`text-4xl font-bold ${isIncrease ? "text-emerald-400" : "text-red-400"}`}>
-            {isIncrease ? "+" : ""}{change.toFixed(2)}%
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-4">Change</p>
+          <div className="text-center py-4">
+            <div className={`text-4xl font-bold ${isIncrease ? "text-emerald-400" : "text-red-400"}`}>
+              {isIncrease ? "+" : ""}{change.toFixed(2)}%
+            </div>
+            <p className="text-muted-foreground mt-2">
+              {isIncrease ? "Increase" : "Decrease"} of {Math.abs(current - old).toFixed(2)}
+            </p>
           </div>
-          <p className="text-muted-foreground mt-2">
-            {isIncrease ? "Increase" : "Decrease"} of {Math.abs(current - old).toFixed(2)}
-          </p>
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }

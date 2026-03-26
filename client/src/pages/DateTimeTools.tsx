@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Calendar as CalendarIcon, Clock, Timer, Hourglass, Play, Pause, RotateCcw, Globe, Target, Briefcase, ArrowRightLeft, Users, CalendarDays } from "lucide-react";
 import { motion } from "framer-motion";
 import { differenceInDays, differenceInYears, differenceInMonths, addDays, format } from "date-fns";
-import { ToolCard, InputField, ResultDisplay, ToolButton } from "@/components/ToolCard";
+import { DesktopToolGrid, InputPanel, InputField, ResultDisplay, ToolButton } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
 import RelationshipTools from "./RelationshipTools";
 import DayFinderTools from "./DayFinderTools";
@@ -71,8 +71,8 @@ function AgeCalculator() {
       { name: "Scorpio", emoji: "♏", start: [10, 23], end: [11, 21], indian: "Vrishchika" },
       { name: "Sagittarius", emoji: "♐", start: [11, 22], end: [12, 21], indian: "Dhanu" }
     ];
-    const sign = signs.find(s => 
-      (month === s.start[0] && day >= s.start[1]) || 
+    const sign = signs.find(s =>
+      (month === s.start[0] && day >= s.start[1]) ||
       (month === s.end[0] && day <= s.end[1]) ||
       (month === 12 && day >= 22 && s.name === "Capricorn") ||
       (month === 1 && day <= 19 && s.name === "Capricorn")
@@ -85,11 +85,9 @@ function AgeCalculator() {
     if (mode === "birthdate") {
       if (!birthDate) return;
       const birth = new Date(birthDate);
-      
       let years = now.getFullYear() - birth.getFullYear();
       let months = now.getMonth() - birth.getMonth();
       let days = now.getDate() - birth.getDate();
-      
       if (days < 0) {
         months--;
         const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
@@ -99,14 +97,9 @@ function AgeCalculator() {
         years--;
         months += 12;
       }
-
       const nextBirthday = new Date(now.getFullYear(), birth.getMonth(), birth.getDate());
       if (nextBirthday < now) nextBirthday.setFullYear(nextBirthday.getFullYear() + 1);
-      
       const zodiac = getZodiac(birth);
-      const diffMonths = differenceInMonths(nextBirthday, now);
-      const diffDays = differenceInDays(nextBirthday, addDays(now, diffMonths * 30));
-
       setResult({
         type: "age",
         years, months, days,
@@ -130,83 +123,75 @@ function AgeCalculator() {
   };
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Age Calculator" icon={CalendarIcon} iconColor="bg-purple-500">
-        <div className="space-y-4">
-          <div className="flex gap-2 mb-4">
-            <button
-              onClick={() => { setMode("birthdate"); setResult(null); }}
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Age Calculator" icon={CalendarIcon} iconColor="bg-purple-500">
+          <div className="flex gap-2">
+            <button onClick={() => { setMode("birthdate"); setResult(null); }}
               className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${mode === "birthdate" ? "bg-purple-500 text-white" : "bg-muted text-muted-foreground"}`}
-            >
-              Find Age
-            </button>
-            <button
-              onClick={() => { setMode("age-to-dob"); setResult(null); }}
+              data-testid="button-find-age">Find Age</button>
+            <button onClick={() => { setMode("age-to-dob"); setResult(null); }}
               className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${mode === "age-to-dob" ? "bg-purple-500 text-white" : "bg-muted text-muted-foreground"}`}
-            >
-              Find DOB
-            </button>
+              data-testid="button-find-dob">Find DOB</button>
           </div>
-          
-          {mode === "birthdate" ? (
-            <InputField label="Date of Birth" value={birthDate} onChange={setBirthDate} type="date" />
-          ) : (
-            <InputField label="Enter Your Age" value={inputAge} onChange={setInputAge} type="number" suffix="years" />
-          )}
-          
+          {mode === "birthdate"
+            ? <InputField label="Date of Birth" value={birthDate} onChange={setBirthDate} type="date" />
+            : <InputField label="Enter Your Age" value={inputAge} onChange={setInputAge} type="number" suffix="years" />}
           <ToolButton onClick={calculate} variant="primary" className="bg-purple-500">
             {mode === "birthdate" ? "Calculate Age" : "Find Birth Year"}
           </ToolButton>
-        </div>
-      </ToolCard>
-
-      {result && result.type === "age" && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-          <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-6">
-            <div className="text-center border-b border-border pb-6">
-              <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">Result</div>
-              <div className="text-5xl font-black text-primary">{result.years} <span className="text-xl font-normal text-muted-foreground">years</span></div>
-              <div className="text-lg font-medium text-purple-400 mt-1">{result.months} months, {result.days} days</div>
-              <div className="text-xs text-muted-foreground mt-2 font-mono">Total Days: {result.totalDays.toLocaleString()}</div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <div className="text-[10px] font-bold text-muted-foreground uppercase">Western Zodiac</div>
-                <div className="text-lg font-bold">{result.zodiac.emoji} {result.zodiac.name}</div>
-              </div>
-              <div className="space-y-1">
-                <div className="text-[10px] font-bold text-muted-foreground uppercase">Indian Rashi</div>
-                <div className="text-lg font-bold">🦁 {result.zodiac.indian}</div>
-              </div>
-            </div>
-
-            <div className="pt-4 border-t border-border space-y-3">
-              <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Upcoming Birthday</div>
-              <div className="flex justify-between items-end">
-                <div>
-                  <div className="text-lg font-bold text-foreground">{result.nextBirthdayDate}</div>
-                  <div className="text-sm text-muted-foreground">({result.nextBirthdayDay})</div>
+        </InputPanel>
+      }
+      results={
+        result ? (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+            className="bg-card rounded-2xl border border-border shadow-sm p-5">
+            {result.type === "age" ? (
+              <div className="space-y-4">
+                <div className="text-center border-b border-border pb-4">
+                  <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">Age</div>
+                  <div className="text-5xl font-black text-primary">{result.years} <span className="text-xl font-normal text-muted-foreground">years</span></div>
+                  <div className="text-lg font-medium text-purple-400 mt-1">{result.months} months, {result.days} days</div>
+                  <div className="text-xs text-muted-foreground mt-2 font-mono">Total: {result.totalDays.toLocaleString()} days</div>
                 </div>
-                <div className="text-right">
-                  <div className="text-sm font-bold text-purple-400">In {result.countdown}</div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase">Western Zodiac</div>
+                    <div className="text-lg font-bold">{result.zodiac.emoji} {result.zodiac.name}</div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase">Indian Rashi</div>
+                    <div className="text-lg font-bold">🦁 {result.zodiac.indian}</div>
+                  </div>
+                </div>
+                <div className="pt-3 border-t border-border space-y-2">
+                  <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Next Birthday</div>
+                  <div className="flex justify-between items-end">
+                    <div>
+                      <div className="text-base font-bold text-foreground">{result.nextBirthdayDate}</div>
+                      <div className="text-sm text-muted-foreground">({result.nextBirthdayDay})</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-bold text-purple-400">In {result.countdown}</div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="text-center py-6">
+                <div className="text-xs font-bold text-muted-foreground uppercase mb-2">Estimated Birth Date</div>
+                <div className="text-3xl font-black text-primary">{result.dob}</div>
+                <div className="text-sm text-muted-foreground mt-1">Born in {result.year}</div>
+              </div>
+            )}
+          </motion.div>
+        ) : (
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-5 flex items-center justify-center min-h-[200px]">
+            <p className="text-muted-foreground text-sm text-center">Enter a date and click Calculate</p>
           </div>
-        </motion.div>
-      )}
-
-      {result && result.type === "dob" && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="bg-card border border-border rounded-2xl p-6 text-center shadow-sm">
-            <div className="text-xs font-bold text-muted-foreground uppercase mb-2">Estimated Birth Date</div>
-            <div className="text-3xl font-black text-primary">{result.dob}</div>
-            <div className="text-sm text-muted-foreground mt-1">Born in {result.year}</div>
-          </div>
-        </motion.div>
-      )}
-    </div>
+        )
+      }
+    />
   );
 }
 
@@ -219,7 +204,6 @@ function DateDifference() {
     if (!startDate || !endDate) return;
     const start = new Date(startDate);
     const end = new Date(endDate);
-    
     const days = Math.abs(differenceInDays(end, start));
     setResult({
       days,
@@ -230,30 +214,33 @@ function DateDifference() {
   };
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Date Difference" icon={Hourglass} iconColor="bg-orange-500">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Date Difference" icon={Hourglass} iconColor="bg-orange-500">
           <InputField label="Start Date" value={startDate} onChange={setStartDate} type="date" />
           <InputField label="End Date" value={endDate} onChange={setEndDate} type="date" />
           <ToolButton onClick={calculate} variant="primary" className="bg-orange-500 hover:bg-orange-600">
             Calculate Difference
           </ToolButton>
-        </div>
-      </ToolCard>
-
-      {result && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <ToolCard title="Difference" icon={Clock} iconColor="bg-blue-500">
-            <div className="grid grid-cols-2 gap-3">
-              <ResultDisplay label="Days" value={result.days.toLocaleString()} highlight />
-              <ResultDisplay label="Weeks" value={result.weeks.toLocaleString()} />
-              <ResultDisplay label="Months" value={result.months.toString()} />
-              <ResultDisplay label="Years" value={result.years.toString()} />
-            </div>
-          </ToolCard>
-        </motion.div>
-      )}
-    </div>
+        </InputPanel>
+      }
+      results={
+        result ? (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+            className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Difference</p>
+            <ResultDisplay label="Days" value={result.days.toLocaleString()} highlight />
+            <ResultDisplay label="Weeks" value={result.weeks.toLocaleString()} />
+            <ResultDisplay label="Months" value={result.months.toString()} />
+            <ResultDisplay label="Years" value={result.years.toString()} />
+          </motion.div>
+        ) : (
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-5 flex items-center justify-center min-h-[200px]">
+            <p className="text-muted-foreground text-sm text-center">Enter two dates to see the difference</p>
+          </div>
+        )
+      }
+    />
   );
 }
 
@@ -265,15 +252,11 @@ function Stopwatch() {
 
   useEffect(() => {
     if (isRunning) {
-      intervalRef.current = setInterval(() => {
-        setTime((t) => t + 10);
-      }, 10);
+      intervalRef.current = setInterval(() => setTime((t) => t + 10), 10);
     } else if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [isRunning]);
 
   const formatTime = (ms: number) => {
@@ -283,57 +266,40 @@ function Stopwatch() {
     return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}.${centiseconds.toString().padStart(2, "0")}`;
   };
 
-  const reset = () => {
-    setTime(0);
-    setIsRunning(false);
-    setLaps([]);
-  };
-
-  const addLap = () => {
-    setLaps((prev) => [...prev, time]);
-  };
+  const reset = () => { setTime(0); setIsRunning(false); setLaps([]); };
+  const addLap = () => setLaps((prev) => [...prev, time]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Stopwatch" icon={Clock} iconColor="bg-cyan-500">
-        <div className="text-center py-8">
-          <div className="text-6xl font-mono font-bold text-foreground mb-8">
-            {formatTime(time)}
-          </div>
-          <div className="flex justify-center gap-4">
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setIsRunning(!isRunning)}
-              data-testid="button-start-stop"
-              className={`p-4 rounded-full ${isRunning ? "bg-red-500" : "bg-emerald-500"} text-white shadow-lg`}
-            >
-              {isRunning ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
-            </motion.button>
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={reset}
-              data-testid="button-reset"
-              className="p-4 rounded-full bg-muted text-foreground"
-            >
-              <RotateCcw className="w-6 h-6" />
-            </motion.button>
-            {isRunning && (
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={addLap}
-                data-testid="button-lap"
-                className="p-4 rounded-full bg-blue-500 text-white"
-              >
-                Lap
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Stopwatch" icon={Clock} iconColor="bg-cyan-500">
+          <div className="text-center py-4">
+            <div className="text-5xl font-mono font-bold text-foreground mb-6">{formatTime(time)}</div>
+            <div className="flex justify-center gap-4">
+              <motion.button whileTap={{ scale: 0.95 }} onClick={() => setIsRunning(!isRunning)}
+                data-testid="button-start-stop"
+                className={`p-4 rounded-full ${isRunning ? "bg-red-500" : "bg-emerald-500"} text-white shadow-lg`}>
+                {isRunning ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
               </motion.button>
-            )}
+              <motion.button whileTap={{ scale: 0.95 }} onClick={reset} data-testid="button-reset"
+                className="p-4 rounded-full bg-muted text-foreground">
+                <RotateCcw className="w-6 h-6" />
+              </motion.button>
+              {isRunning && (
+                <motion.button whileTap={{ scale: 0.95 }} onClick={addLap} data-testid="button-lap"
+                  className="p-4 rounded-full bg-blue-500 text-white">
+                  Lap
+                </motion.button>
+              )}
+            </div>
           </div>
-        </div>
-
-        {laps.length > 0 && (
-          <div className="mt-6 border-t border-border pt-4">
-            <h3 className="text-sm font-medium text-muted-foreground mb-3">Laps</h3>
-            <div className="space-y-2 max-h-40 overflow-y-auto">
+        </InputPanel>
+      }
+      results={
+        laps.length > 0 ? (
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-5">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Laps</p>
+            <div className="space-y-2 max-h-80 overflow-y-auto">
               {laps.map((lap, i) => (
                 <div key={i} className="flex justify-between text-sm bg-muted/50 px-3 py-2 rounded-lg">
                   <span className="text-muted-foreground">Lap {i + 1}</span>
@@ -342,9 +308,13 @@ function Stopwatch() {
               ))}
             </div>
           </div>
-        )}
-      </ToolCard>
-    </div>
+        ) : (
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-5 flex items-center justify-center min-h-[200px]">
+            <p className="text-muted-foreground text-sm text-center">Start the stopwatch and press Lap to record times</p>
+          </div>
+        )
+      }
+    />
   );
 }
 
@@ -360,19 +330,14 @@ function CountdownTimer() {
     if (isRunning && timeLeft > 0) {
       intervalRef.current = setInterval(() => {
         setTimeLeft((t) => {
-          if (t <= 1000) {
-            setIsRunning(false);
-            return 0;
-          }
+          if (t <= 1000) { setIsRunning(false); return 0; }
           return t - 1000;
         });
       }, 1000);
     } else if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [isRunning, timeLeft]);
 
   const startTimer = () => {
@@ -388,63 +353,72 @@ function CountdownTimer() {
     return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
 
-  const reset = () => {
-    setTimeLeft(0);
-    setIsRunning(false);
-  };
+  const reset = () => { setTimeLeft(0); setIsRunning(false); };
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Countdown Timer" icon={Timer} iconColor="bg-rose-500">
-        {!isRunning && timeLeft === 0 ? (
-          <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-3">
-              <InputField label="Hours" value={hours} onChange={setHours} type="number" min={0} />
-              <InputField label="Minutes" value={minutes} onChange={setMinutes} type="number" min={0} max={59} />
-              <InputField label="Seconds" value={seconds} onChange={setSeconds} type="number" min={0} max={59} />
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Countdown Timer" icon={Timer} iconColor="bg-rose-500">
+          {!isRunning && timeLeft === 0 ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-3">
+                <InputField label="Hours" value={hours} onChange={setHours} type="number" min={0} />
+                <InputField label="Minutes" value={minutes} onChange={setMinutes} type="number" min={0} max={59} />
+                <InputField label="Seconds" value={seconds} onChange={setSeconds} type="number" min={0} max={59} />
+              </div>
+              <ToolButton onClick={startTimer} variant="primary" className="bg-rose-500 hover:bg-rose-600">
+                Start Countdown
+              </ToolButton>
             </div>
-            <ToolButton onClick={startTimer} variant="primary" className="bg-rose-500 hover:bg-rose-600">
-              Start Countdown
-            </ToolButton>
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <div className={`text-6xl font-mono font-bold mb-8 ${timeLeft === 0 ? "text-rose-500 animate-pulse" : "text-foreground"}`}>
-              {formatTime(timeLeft)}
-            </div>
-            {timeLeft === 0 && (
-              <div className="text-rose-400 mb-4 text-xl">Time's up!</div>
-            )}
-            <div className="flex justify-center gap-4">
-              {timeLeft > 0 && (
-                <motion.button
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setIsRunning(!isRunning)}
-                  data-testid="button-pause-resume"
-                  className={`p-4 rounded-full ${isRunning ? "bg-yellow-500" : "bg-emerald-500"} text-white shadow-lg`}
-                >
-                  {isRunning ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
+          ) : (
+            <div className="text-center py-4">
+              <div className={`text-5xl font-mono font-bold mb-6 ${timeLeft === 0 ? "text-rose-500 animate-pulse" : "text-foreground"}`}>
+                {formatTime(timeLeft)}
+              </div>
+              {timeLeft === 0 && <div className="text-rose-400 mb-4 text-xl">Time's up!</div>}
+              <div className="flex justify-center gap-4">
+                {timeLeft > 0 && (
+                  <motion.button whileTap={{ scale: 0.95 }} onClick={() => setIsRunning(!isRunning)}
+                    data-testid="button-pause-resume"
+                    className={`p-4 rounded-full ${isRunning ? "bg-yellow-500" : "bg-emerald-500"} text-white shadow-lg`}>
+                    {isRunning ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
+                  </motion.button>
+                )}
+                <motion.button whileTap={{ scale: 0.95 }} onClick={reset} data-testid="button-reset-countdown"
+                  className="p-4 rounded-full bg-muted text-foreground">
+                  <RotateCcw className="w-6 h-6" />
                 </motion.button>
-              )}
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={reset}
-                data-testid="button-reset-countdown"
-                className="p-4 rounded-full bg-muted text-foreground"
-              >
-                <RotateCcw className="w-6 h-6" />
-              </motion.button>
+              </div>
             </div>
+          )}
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-4">Timer Status</p>
+          <div className="space-y-3">
+            <div className="p-3 bg-muted/30 rounded-xl flex justify-between">
+              <span className="text-muted-foreground">Status</span>
+              <span className={`font-bold ${isRunning ? "text-emerald-400" : timeLeft === 0 && !isRunning ? "text-muted-foreground" : "text-yellow-400"}`}>
+                {isRunning ? "Running" : timeLeft === 0 ? "Stopped" : "Paused"}
+              </span>
+            </div>
+            {timeLeft > 0 && (
+              <div className="p-3 bg-muted/30 rounded-xl flex justify-between">
+                <span className="text-muted-foreground">Time Left</span>
+                <span className="font-bold text-rose-400">{formatTime(timeLeft)}</span>
+              </div>
+            )}
           </div>
-        )}
-      </ToolCard>
-    </div>
+        </div>
+      }
+    />
   );
 }
 
 function WorldClock() {
   const [currentTime, setCurrentTime] = useState(new Date());
-  
+
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
@@ -472,25 +446,50 @@ function WorldClock() {
     };
   };
 
+  const half = Math.ceil(cities.length / 2);
+
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="World Clock" icon={Globe} iconColor="bg-sky-500">
-        <div className="space-y-2">
-          {cities.map((city) => {
-            const { time, date } = getTimeInZone(city.offset);
-            return (
-              <div key={city.name} className="flex items-center justify-between p-3 bg-muted/30 rounded-xl" data-testid={`clock-${city.name.toLowerCase().replace(/\s+/g, "-")}`}>
-                <div>
-                  <p className="font-medium text-foreground">{city.name}</p>
-                  <p className="text-xs text-muted-foreground">{city.country} - {date}</p>
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="World Clock" icon={Globe} iconColor="bg-sky-500">
+          <div className="space-y-2">
+            {cities.slice(0, half).map((city) => {
+              const { time, date } = getTimeInZone(city.offset);
+              return (
+                <div key={city.name} className="flex items-center justify-between p-3 bg-muted/30 rounded-xl"
+                  data-testid={`clock-${city.name.toLowerCase().replace(/\s+/g, "-")}`}>
+                  <div>
+                    <p className="font-medium text-foreground">{city.name}</p>
+                    <p className="text-xs text-muted-foreground">{city.country} · {date}</p>
+                  </div>
+                  <p className="font-mono text-sky-400">{time}</p>
                 </div>
-                <p className="font-mono text-lg text-sky-400">{time}</p>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-3">More Cities</p>
+          <div className="space-y-2">
+            {cities.slice(half).map((city) => {
+              const { time, date } = getTimeInZone(city.offset);
+              return (
+                <div key={city.name} className="flex items-center justify-between p-3 bg-muted/30 rounded-xl"
+                  data-testid={`clock-${city.name.toLowerCase().replace(/\s+/g, "-")}`}>
+                  <div>
+                    <p className="font-medium text-foreground">{city.name}</p>
+                    <p className="text-xs text-muted-foreground">{city.country} · {date}</p>
+                  </div>
+                  <p className="font-mono text-sky-400">{time}</p>
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -516,17 +515,13 @@ function TimeZoneConverter() {
     const [hours, minutes] = time.split(":").map(Number);
     const fromOffset = timeZones.find(z => z.id === fromZone)?.offset || 0;
     const toOffset = timeZones.find(z => z.id === toZone)?.offset || 0;
-    
     const totalMinutes = hours * 60 + minutes;
     const utcMinutes = totalMinutes - fromOffset * 60;
     let convertedMinutes = utcMinutes + toOffset * 60;
-    
     if (convertedMinutes < 0) convertedMinutes += 24 * 60;
     if (convertedMinutes >= 24 * 60) convertedMinutes -= 24 * 60;
-    
     const convertedHours = Math.floor(convertedMinutes / 60);
     const convertedMins = Math.floor(convertedMinutes % 60);
-    
     return `${convertedHours.toString().padStart(2, "0")}:${convertedMins.toString().padStart(2, "0")}`;
   };
 
@@ -534,66 +529,50 @@ function TimeZoneConverter() {
     const [hours] = time.split(":").map(Number);
     const fromOffset = timeZones.find(z => z.id === fromZone)?.offset || 0;
     const toOffset = timeZones.find(z => z.id === toZone)?.offset || 0;
-    
     const totalMinutes = hours * 60;
     const utcMinutes = totalMinutes - fromOffset * 60;
     const convertedMinutes = utcMinutes + toOffset * 60;
-    
     if (convertedMinutes < 0) return "Previous day";
     if (convertedMinutes >= 24 * 60) return "Next day";
     return "Same day";
   };
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Time Zone Converter" icon={ArrowRightLeft} iconColor="bg-indigo-500">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Time Zone Converter" icon={ArrowRightLeft} iconColor="bg-indigo-500">
           <InputField label="Time" value={time} onChange={setTime} type="time" />
-          
           <div>
-            <label className="text-sm font-medium text-muted-foreground mb-2 block">From Time Zone</label>
-            <select
-              value={fromZone}
-              onChange={(e) => setFromZone(e.target.value)}
-              className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-              data-testid="select-from-zone"
-            >
-              {timeZones.map((zone) => (
-                <option key={zone.id} value={zone.id}>{zone.label}</option>
-              ))}
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">From Time Zone</label>
+            <select value={fromZone} onChange={(e) => setFromZone(e.target.value)} data-testid="select-from-zone"
+              className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50">
+              {timeZones.map((zone) => <option key={zone.id} value={zone.id}>{zone.label}</option>)}
             </select>
           </div>
-          
           <div>
-            <label className="text-sm font-medium text-muted-foreground mb-2 block">To Time Zone</label>
-            <select
-              value={toZone}
-              onChange={(e) => setToZone(e.target.value)}
-              className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-              data-testid="select-to-zone"
-            >
-              {timeZones.map((zone) => (
-                <option key={zone.id} value={zone.id}>{zone.label}</option>
-              ))}
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">To Time Zone</label>
+            <select value={toZone} onChange={(e) => setToZone(e.target.value)} data-testid="select-to-zone"
+              className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50">
+              {timeZones.map((zone) => <option key={zone.id} value={zone.id}>{zone.label}</option>)}
             </select>
           </div>
-        </div>
-      </ToolCard>
-
-      <ToolCard title="Converted Time" icon={Clock} iconColor="bg-emerald-500">
-        <div className="text-center py-6">
-          <div className="text-5xl font-mono font-bold text-indigo-400 mb-2">
-            {convertTime()}
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-4">Converted Time</p>
+          <div className="text-center py-6">
+            <div className="text-5xl font-mono font-bold text-indigo-400 mb-2">{convertTime()}</div>
+            <p className="text-muted-foreground">{getDayDiff()}</p>
+            <div className="mt-4 p-3 bg-muted/30 rounded-xl">
+              <p className="text-sm text-muted-foreground">
+                {time} in {timeZones.find(z => z.id === fromZone)?.label} → {convertTime()} in {timeZones.find(z => z.id === toZone)?.label}
+              </p>
+            </div>
           </div>
-          <p className="text-muted-foreground">{getDayDiff()}</p>
-          <div className="mt-4 p-3 bg-muted/30 rounded-xl">
-            <p className="text-sm text-muted-foreground">
-              {time} in {timeZones.find(z => z.id === fromZone)?.label} is {convertTime()} in {timeZones.find(z => z.id === toZone)?.label}
-            </p>
-          </div>
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -627,42 +606,47 @@ function PomodoroTimer() {
     return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
 
-  const reset = () => {
-    setIsRunning(false);
-    setMode("work");
-    setTimeLeft(25 * 60);
-  };
+  const reset = () => { setIsRunning(false); setMode("work"); setTimeLeft(25 * 60); };
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Pomodoro Timer" icon={Target} iconColor={mode === "work" ? "bg-red-500" : "bg-emerald-500"}>
-        <div className="text-center py-8">
-          <p className="text-muted-foreground mb-2 capitalize">{mode} Session</p>
-          <div className={`text-7xl font-mono font-bold mb-6 ${mode === "work" ? "text-red-400" : "text-emerald-400"}`}>
-            {formatTime(timeLeft)}
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Pomodoro Timer" icon={Target} iconColor={mode === "work" ? "bg-red-500" : "bg-emerald-500"}>
+          <div className="text-center py-4">
+            <p className="text-muted-foreground mb-2 capitalize">{mode} Session</p>
+            <div className={`text-6xl font-mono font-bold mb-6 ${mode === "work" ? "text-red-400" : "text-emerald-400"}`}>
+              {formatTime(timeLeft)}
+            </div>
+            <div className="flex justify-center gap-4">
+              <motion.button whileTap={{ scale: 0.95 }} onClick={() => setIsRunning(!isRunning)}
+                data-testid="button-pomodoro-toggle"
+                className={`p-4 rounded-full ${isRunning ? "bg-yellow-500" : "bg-emerald-500"} text-white shadow-lg`}>
+                {isRunning ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
+              </motion.button>
+              <motion.button whileTap={{ scale: 0.95 }} onClick={reset} data-testid="button-pomodoro-reset"
+                className="p-4 rounded-full bg-muted text-foreground">
+                <RotateCcw className="w-6 h-6" />
+              </motion.button>
+            </div>
           </div>
-          <div className="flex justify-center gap-4">
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setIsRunning(!isRunning)}
-              data-testid="button-pomodoro-toggle"
-              className={`p-4 rounded-full ${isRunning ? "bg-yellow-500" : "bg-emerald-500"} text-white shadow-lg`}
-            >
-              {isRunning ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
-            </motion.button>
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={reset}
-              data-testid="button-pomodoro-reset"
-              className="p-4 rounded-full bg-muted text-foreground"
-            >
-              <RotateCcw className="w-6 h-6" />
-            </motion.button>
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-4">Session Info</p>
+          <div className="space-y-3">
+            <ResultDisplay label="Sessions Completed" value={sessions.toString()} highlight color="text-red-400" />
+            <ResultDisplay label="Current Mode" value={mode === "work" ? "Work (25 min)" : "Break (5 min)"} />
+            <div className="mt-4 text-sm text-muted-foreground space-y-2 bg-muted/20 p-3 rounded-xl">
+              <p className="font-semibold text-foreground">How Pomodoro Works:</p>
+              <p>1. Focus for 25 minutes</p>
+              <p>2. Take a 5-minute break</p>
+              <p>3. After 4 sessions, take a longer break</p>
+            </div>
           </div>
-          <p className="mt-6 text-muted-foreground">Sessions completed: <span className="text-foreground font-bold">{sessions}</span></p>
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -678,38 +662,39 @@ function WorkDaysCalculator() {
     let workdays = 0;
     let weekends = 0;
     const current = new Date(start);
-    
     while (current <= end) {
       const day = current.getDay();
       if (day === 0 || day === 6) weekends++;
       else workdays++;
       current.setDate(current.getDate() + 1);
     }
-    
     setResult({ workdays, weekends, total: workdays + weekends });
   };
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Work Days Calculator" icon={Briefcase} iconColor="bg-indigo-500">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Work Days Calculator" icon={Briefcase} iconColor="bg-indigo-500">
           <InputField label="Start Date" value={startDate} onChange={setStartDate} type="date" />
           <InputField label="End Date" value={endDate} onChange={setEndDate} type="date" />
           <ToolButton onClick={calculate} className="bg-indigo-500 hover:bg-indigo-600">Calculate</ToolButton>
-        </div>
-      </ToolCard>
-
-      {result && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <ToolCard title="Results" icon={CalendarIcon} iconColor="bg-emerald-500">
-            <div className="space-y-3">
-              <ResultDisplay label="Work Days (Mon-Fri)" value={result.workdays.toString()} highlight color="text-indigo-400" />
-              <ResultDisplay label="Weekend Days" value={result.weekends.toString()} color="text-yellow-400" />
-              <ResultDisplay label="Total Days" value={result.total.toString()} />
-            </div>
-          </ToolCard>
-        </motion.div>
-      )}
-    </div>
+        </InputPanel>
+      }
+      results={
+        result ? (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+            className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Results</p>
+            <ResultDisplay label="Work Days (Mon–Fri)" value={result.workdays.toString()} highlight color="text-indigo-400" />
+            <ResultDisplay label="Weekend Days" value={result.weekends.toString()} color="text-yellow-400" />
+            <ResultDisplay label="Total Days" value={result.total.toString()} />
+          </motion.div>
+        ) : (
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-5 flex items-center justify-center min-h-[200px]">
+            <p className="text-muted-foreground text-sm text-center">Enter a date range to count working days</p>
+          </div>
+        )
+      }
+    />
   );
 }

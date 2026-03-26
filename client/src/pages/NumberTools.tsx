@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { Hash, ArrowRightLeft, DollarSign, IndianRupee, Calculator, Columns3 } from "lucide-react";
-import { ToolCard, InputField, ResultDisplay, ToolButton } from "@/components/ToolCard";
+import { DesktopToolGrid, InputPanel, InputField, ResultDisplay } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
 
 type ToolType = "billion-million" | "crore-lakh" | "us-indian" | "number-words" | "roman" | "fibonacci" | "factors";
@@ -63,47 +62,37 @@ function BillionMillionConverter() {
   };
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Billion/Million Converter" icon={DollarSign} iconColor="bg-teal-500">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Billion/Million Converter" icon={DollarSign} iconColor="bg-teal-500">
           <InputField label="Value" value={value} onChange={setValue} type="number" />
           <div>
-            <label className="text-sm font-medium text-muted-foreground mb-2 block">From</label>
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">From</label>
             <div className="flex flex-wrap gap-2">
               {units.map((unit) => (
-                <button
-                  key={unit.id}
-                  onClick={() => setFromUnit(unit.id)}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                    fromUnit === unit.id
-                      ? "bg-teal-500 text-white"
-                      : "bg-muted text-muted-foreground hover:text-foreground"
-                  }`}
-                  data-testid={`button-from-${unit.id}`}
-                >
+                <button key={unit.id} onClick={() => setFromUnit(unit.id)}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${fromUnit === unit.id ? "bg-teal-500 text-white" : "bg-muted text-muted-foreground hover:text-foreground"}`}
+                  data-testid={`button-from-${unit.id}`}>
                   {unit.label}
                 </button>
               ))}
             </div>
           </div>
-        </div>
-      </ToolCard>
-
-      <ToolCard title="Conversions" icon={Calculator} iconColor="bg-emerald-500">
-        <div className="space-y-3">
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Conversions</p>
           {units.map((unit) => (
-            <ResultDisplay
-              key={unit.id}
-              label={unit.label}
+            <ResultDisplay key={unit.id} label={unit.label}
               value={formatNumber(baseValue / unit.factor)}
               highlight={unit.id === fromUnit}
-              color={unit.id === fromUnit ? "text-teal-400" : undefined}
-            />
+              color={unit.id === fromUnit ? "text-teal-400" : undefined} />
           ))}
           <ResultDisplay label="Full Number" value={baseValue.toLocaleString()} color="text-foreground" />
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -112,10 +101,10 @@ function CroreLakhConverter() {
   const [fromUnit, setFromUnit] = useState("crore");
 
   const units = [
-    { id: "kharab", label: "Kharab (100 Arab)", factor: 1e11 },
-    { id: "arab", label: "Arab (100 Crore)", factor: 1e9 },
-    { id: "crore", label: "Crore (100 Lakh)", factor: 1e7 },
-    { id: "lakh", label: "Lakh (100 Thousand)", factor: 1e5 },
+    { id: "kharab", label: "Kharab", factor: 1e11 },
+    { id: "arab", label: "Arab", factor: 1e9 },
+    { id: "crore", label: "Crore", factor: 1e7 },
+    { id: "lakh", label: "Lakh", factor: 1e5 },
     { id: "thousand", label: "Thousand", factor: 1e3 },
     { id: "hundred", label: "Hundred", factor: 100 },
   ];
@@ -132,54 +121,42 @@ function CroreLakhConverter() {
   };
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Crore/Lakh Converter" icon={IndianRupee} iconColor="bg-orange-500">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Crore/Lakh Converter" icon={IndianRupee} iconColor="bg-orange-500">
           <InputField label="Value" value={value} onChange={setValue} type="number" />
           <div>
-            <label className="text-sm font-medium text-muted-foreground mb-2 block">From</label>
+            <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">From</label>
             <div className="flex flex-wrap gap-2">
               {units.map((unit) => (
-                <button
-                  key={unit.id}
-                  onClick={() => setFromUnit(unit.id)}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                    fromUnit === unit.id
-                      ? "bg-orange-500 text-white"
-                      : "bg-muted text-muted-foreground hover:text-foreground"
-                  }`}
-                  data-testid={`button-from-${unit.id}`}
-                >
+                <button key={unit.id} onClick={() => setFromUnit(unit.id)}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${fromUnit === unit.id ? "bg-orange-500 text-white" : "bg-muted text-muted-foreground hover:text-foreground"}`}
+                  data-testid={`button-from-${unit.id}`}>
                   {unit.label}
                 </button>
               ))}
             </div>
           </div>
-        </div>
-      </ToolCard>
-
-      <ToolCard title="Conversions" icon={Calculator} iconColor="bg-emerald-500">
-        <div className="space-y-3">
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Conversions</p>
           {units.map((unit) => (
-            <ResultDisplay
-              key={unit.id}
-              label={unit.label}
+            <ResultDisplay key={unit.id} label={unit.label}
               value={formatNumber(baseValue / unit.factor)}
               highlight={unit.id === fromUnit}
-              color={unit.id === fromUnit ? "text-orange-400" : undefined}
-            />
+              color={unit.id === fromUnit ? "text-orange-400" : undefined} />
           ))}
           <ResultDisplay label="Full Number" value={baseValue.toLocaleString("en-IN")} color="text-foreground" />
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
 function USIndianConverter() {
   const [value, setValue] = useState("1000000000");
-  const [mode, setMode] = useState<"us" | "indian">("us");
-
   const num = parseFloat(value.replace(/,/g, "")) || 0;
 
   const formatUS = (n: number) => {
@@ -200,35 +177,31 @@ function USIndianConverter() {
   };
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="US ↔ Indian Number System" icon={ArrowRightLeft} iconColor="bg-blue-500">
-        <div className="space-y-4">
-          <div className="flex gap-2 mb-4">
-            <button
-              onClick={() => setMode("us")}
-              className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                mode === "us" ? "bg-blue-500 text-white" : "bg-muted text-muted-foreground"
-              }`}
-              data-testid="button-mode-us"
-            >
-              US System
-            </button>
-            <button
-              onClick={() => setMode("indian")}
-              className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                mode === "indian" ? "bg-orange-500 text-white" : "bg-muted text-muted-foreground"
-              }`}
-              data-testid="button-mode-indian"
-            >
-              Indian System
-            </button>
-          </div>
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="US ↔ Indian Number System" icon={ArrowRightLeft} iconColor="bg-blue-500">
           <InputField label="Enter Number" value={value} onChange={setValue} type="text" />
-        </div>
-      </ToolCard>
-
-      <ToolCard title="Conversions" icon={Calculator} iconColor="bg-emerald-500">
-        <div className="space-y-4">
+          <div className="space-y-2 pt-2">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Quick Reference</p>
+            <div className="space-y-1.5 text-sm">
+              {[
+                { l: "1 Million", r: "10 Lakh" },
+                { l: "1 Billion", r: "100 Crore" },
+                { l: "1 Trillion", r: "1 Lakh Crore" },
+                { l: "1 Crore", r: "10 Million" },
+              ].map(({ l, r }) => (
+                <div key={l} className="flex justify-between p-2 bg-muted/30 rounded-lg">
+                  <span className="text-muted-foreground">{l}</span>
+                  <span className="text-foreground">= {r}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-4">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Conversions</p>
           <div className="p-4 bg-muted/30 rounded-xl">
             <p className="text-sm text-muted-foreground mb-1">US System</p>
             <p className="text-2xl font-bold text-blue-400">{formatUS(num)}</p>
@@ -240,29 +213,8 @@ function USIndianConverter() {
             <p className="text-sm text-muted-foreground mt-1">{num.toLocaleString("en-IN")}</p>
           </div>
         </div>
-      </ToolCard>
-
-      <ToolCard title="Quick Reference" icon={Hash} iconColor="bg-purple-500">
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between p-2 bg-muted/30 rounded-lg">
-            <span className="text-muted-foreground">1 Million</span>
-            <span className="text-foreground">= 10 Lakh</span>
-          </div>
-          <div className="flex justify-between p-2 bg-muted/30 rounded-lg">
-            <span className="text-muted-foreground">1 Billion</span>
-            <span className="text-foreground">= 100 Crore</span>
-          </div>
-          <div className="flex justify-between p-2 bg-muted/30 rounded-lg">
-            <span className="text-muted-foreground">1 Trillion</span>
-            <span className="text-foreground">= 1 Lakh Crore</span>
-          </div>
-          <div className="flex justify-between p-2 bg-muted/30 rounded-lg">
-            <span className="text-muted-foreground">1 Crore</span>
-            <span className="text-foreground">= 10 Million</span>
-          </div>
-        </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -301,48 +253,38 @@ function NumberToWords() {
   const num = parseInt(value.replace(/,/g, "")) || 0;
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Number to Words" icon={Hash} iconColor="bg-purple-500">
-        <div className="space-y-4">
-          <div className="flex gap-2 mb-4">
-            <button
-              onClick={() => setSystem("us")}
-              className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                system === "us" ? "bg-blue-500 text-white" : "bg-muted text-muted-foreground"
-              }`}
-              data-testid="button-system-us"
-            >
-              US System
-            </button>
-            <button
-              onClick={() => setSystem("indian")}
-              className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                system === "indian" ? "bg-orange-500 text-white" : "bg-muted text-muted-foreground"
-              }`}
-              data-testid="button-system-indian"
-            >
-              Indian System
-            </button>
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Number to Words" icon={Hash} iconColor="bg-purple-500">
+          <div className="flex gap-2">
+            <button onClick={() => setSystem("us")}
+              className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${system === "us" ? "bg-blue-500 text-white" : "bg-muted text-muted-foreground"}`}
+              data-testid="button-system-us">US System</button>
+            <button onClick={() => setSystem("indian")}
+              className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${system === "indian" ? "bg-orange-500 text-white" : "bg-muted text-muted-foreground"}`}
+              data-testid="button-system-indian">Indian System</button>
           </div>
           <InputField label="Enter Number" value={value} onChange={setValue} type="text" />
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-4">In Words</p>
+          <div className="p-4 bg-muted/30 rounded-xl mb-4">
+            <p className="text-lg text-foreground leading-relaxed">
+              {system === "us" ? convertToWordsUS(num) : convertToWordsIndian(num)}
+            </p>
+          </div>
+          <div className="p-3 bg-muted/20 rounded-lg">
+            <p className="text-sm text-muted-foreground">
+              Numeric: <span className="text-foreground font-mono">
+                {system === "us" ? num.toLocaleString("en-US") : num.toLocaleString("en-IN")}
+              </span>
+            </p>
+          </div>
         </div>
-      </ToolCard>
-
-      <ToolCard title="In Words" icon={Calculator} iconColor="bg-emerald-500">
-        <div className="p-4 bg-muted/30 rounded-xl">
-          <p className="text-lg text-foreground leading-relaxed">
-            {system === "us" ? convertToWordsUS(num) : convertToWordsIndian(num)}
-          </p>
-        </div>
-        <div className="mt-4 p-3 bg-muted/20 rounded-lg">
-          <p className="text-sm text-muted-foreground">
-            Numeric: <span className="text-foreground font-mono">
-              {system === "us" ? num.toLocaleString("en-US") : num.toLocaleString("en-IN")}
-            </span>
-          </p>
-        </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -359,7 +301,7 @@ function RomanNumeralConverter() {
 
   const toRoman = (num: number): { result: string; steps: string[] } => {
     if (num <= 0 || num > 3999 || !Number.isInteger(num)) {
-      return { result: "Invalid (1\u20133999)", steps: ["Input must be an integer between 1 and 3999"] };
+      return { result: "Invalid (1–3999)", steps: ["Input must be an integer between 1 and 3999"] };
     }
     let remaining = num;
     let result = "";
@@ -368,7 +310,7 @@ function RomanNumeralConverter() {
       while (remaining >= value) {
         result += symbol;
         remaining -= value;
-        steps.push(`Subtract ${value} (${symbol}) \u2192 remaining: ${remaining}, result: ${result}`);
+        steps.push(`Subtract ${value} (${symbol}) → remaining: ${remaining}, result: ${result}`);
       }
     }
     return { result, steps };
@@ -387,10 +329,10 @@ function RomanNumeralConverter() {
       const next = i + 1 < upper.length ? romanMap[upper[i + 1]] : 0;
       if (current < next) {
         total -= current;
-        steps.push(`${upper[i]} (${current}) < ${upper[i + 1]} (${next}) \u2192 subtract ${current}, total: ${total}`);
+        steps.push(`${upper[i]} (${current}) < ${upper[i + 1]} (${next}) → subtract, total: ${total}`);
       } else {
         total += current;
-        steps.push(`${upper[i]} (${current}) \u2192 add ${current}, total: ${total}`);
+        steps.push(`${upper[i]} (${current}) → add, total: ${total}`);
       }
     }
     return { result: total, steps };
@@ -405,82 +347,81 @@ function RomanNumeralConverter() {
   ];
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Roman Numerals Converter" icon={Columns3} iconColor="bg-teal-500">
-        <div className="flex gap-2 p-1 bg-muted rounded-xl mb-4">
-          <button onClick={() => setMode("to-roman")} data-testid="mode-to-roman"
-            className={`flex-1 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${mode === "to-roman" ? "bg-teal-500 text-white shadow-sm" : "text-muted-foreground"}`}>
-            Number \u2192 Roman
-          </button>
-          <button onClick={() => setMode("to-number")} data-testid="mode-to-number"
-            className={`flex-1 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${mode === "to-number" ? "bg-teal-500 text-white shadow-sm" : "text-muted-foreground"}`}>
-            Roman \u2192 Number
-          </button>
-        </div>
-
-        {mode === "to-roman" ? (
-          <>
-            <InputField label="Enter Number (1\u20133999)" value={numberInput} onChange={setNumberInput} type="number" placeholder="2024" />
-            {(() => {
-              const num = parseInt(numberInput) || 0;
-              const { result, steps } = toRoman(num);
-              return (
-                <div className="mt-4 space-y-3">
-                  <div className="bg-muted/20 p-3 rounded-xl border border-border/50 space-y-1.5">
-                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Step-by-step</p>
-                    {steps.map((s, i) => (
-                      <p key={i} className="text-xs text-foreground"><span className="font-bold text-teal-500 mr-1">Step {i + 1}:</span> {s}</p>
-                    ))}
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-muted/30 rounded-xl">
-                    <span className="text-sm font-semibold text-muted-foreground">Roman Numeral</span>
-                    <span className="text-xl font-bold text-teal-500" data-testid="result-roman">{result}</span>
-                  </div>
-                </div>
-              );
-            })()}
-          </>
-        ) : (
-          <>
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Roman Numerals Converter" icon={Columns3} iconColor="bg-teal-500">
+          <div className="flex gap-2 p-1 bg-muted rounded-xl">
+            <button onClick={() => setMode("to-roman")} data-testid="mode-to-roman"
+              className={`flex-1 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${mode === "to-roman" ? "bg-teal-500 text-white shadow-sm" : "text-muted-foreground"}`}>
+              Number → Roman
+            </button>
+            <button onClick={() => setMode("to-number")} data-testid="mode-to-number"
+              className={`flex-1 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${mode === "to-number" ? "bg-teal-500 text-white shadow-sm" : "text-muted-foreground"}`}>
+              Roman → Number
+            </button>
+          </div>
+          {mode === "to-roman" ? (
+            <InputField label="Enter Number (1–3999)" value={numberInput} onChange={setNumberInput} type="number" placeholder="2024" />
+          ) : (
             <div>
-              <label className="text-sm font-medium text-muted-foreground mb-1.5 block">Enter Roman Numeral</label>
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Enter Roman Numeral</label>
               <input type="text" value={romanInput} onChange={(e) => setRomanInput(e.target.value.toUpperCase())} placeholder="MMXXIV"
                 data-testid="input-roman"
                 className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-mono tracking-widest text-lg" />
             </div>
-            {(() => {
-              const { result, steps } = fromRoman(romanInput);
-              return (
-                <div className="mt-4 space-y-3">
-                  <div className="bg-muted/20 p-3 rounded-xl border border-border/50 space-y-1.5">
-                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Step-by-step</p>
-                    {steps.map((s, i) => (
-                      <p key={i} className="text-xs text-foreground"><span className="font-bold text-teal-500 mr-1">Step {i + 1}:</span> {s}</p>
-                    ))}
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-muted/30 rounded-xl">
-                    <span className="text-sm font-semibold text-muted-foreground">Decimal Number</span>
-                    <span className="text-xl font-bold text-teal-500" data-testid="result-number">{result.toLocaleString()}</span>
-                  </div>
+          )}
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5">
+          {mode === "to-roman" ? (() => {
+            const num = parseInt(numberInput) || 0;
+            const { result, steps } = toRoman(num);
+            return (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 bg-muted/30 rounded-xl mb-4">
+                  <span className="text-sm font-semibold text-muted-foreground">Roman Numeral</span>
+                  <span className="text-2xl font-bold text-teal-400" data-testid="result-roman">{result}</span>
                 </div>
-              );
-            })()}
-          </>
-        )}
-
-        <div className="mt-4">
-          <p className="text-xs font-bold text-muted-foreground uppercase mb-2">Reference Chart</p>
-          <div className="grid grid-cols-2 gap-1.5">
-            {commonExamples.map((ex) => (
-              <div key={ex.num} className="flex justify-between items-center px-3 py-1.5 bg-muted/20 rounded-lg">
-                <span className="text-xs text-muted-foreground">{ex.num}</span>
-                <span className="text-xs font-bold text-teal-500 font-mono">{ex.roman}</span>
+                <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Steps</p>
+                <div className="bg-muted/20 p-3 rounded-xl border border-border/50 space-y-1.5 max-h-48 overflow-y-auto">
+                  {steps.map((s, i) => (
+                    <p key={i} className="text-xs text-foreground"><span className="font-bold text-teal-500 mr-1">Step {i + 1}:</span> {s}</p>
+                  ))}
+                </div>
               </div>
-            ))}
+            );
+          })() : (() => {
+            const { result, steps } = fromRoman(romanInput);
+            return (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 bg-muted/30 rounded-xl mb-4">
+                  <span className="text-sm font-semibold text-muted-foreground">Decimal Number</span>
+                  <span className="text-2xl font-bold text-teal-400" data-testid="result-number">{result.toLocaleString()}</span>
+                </div>
+                <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Steps</p>
+                <div className="bg-muted/20 p-3 rounded-xl border border-border/50 space-y-1.5 max-h-48 overflow-y-auto">
+                  {steps.map((s, i) => (
+                    <p key={i} className="text-xs text-foreground"><span className="font-bold text-teal-500 mr-1">Step {i + 1}:</span> {s}</p>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+          <div className="mt-4">
+            <p className="text-xs font-bold text-muted-foreground uppercase mb-2">Reference Chart</p>
+            <div className="grid grid-cols-2 gap-1.5">
+              {commonExamples.map((ex) => (
+                <div key={ex.num} className="flex justify-between items-center px-3 py-1.5 bg-muted/20 rounded-lg">
+                  <span className="text-xs text-muted-foreground">{ex.num}</span>
+                  <span className="text-xs font-bold text-teal-500 font-mono">{ex.roman}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -501,13 +442,13 @@ function FibonacciGenerator() {
   const sequence = generateFibonacci(Math.min(n, 100));
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Fibonacci Generator" icon={Calculator} iconColor="bg-teal-500">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Fibonacci Generator" icon={Calculator} iconColor="bg-teal-500">
           <InputField label="Number of Terms (Max 100)" value={count} onChange={setCount} type="number" min={1} max={100} />
           <div className="bg-muted/30 p-4 rounded-xl space-y-2">
             <p className="text-sm font-medium text-muted-foreground">Sequence:</p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
               {sequence.map((num, i) => (
                 <div key={i} className="px-3 py-1.5 bg-teal-500/10 border border-teal-500/20 rounded-lg text-teal-400 font-mono font-bold">
                   {num}
@@ -515,16 +456,30 @@ function FibonacciGenerator() {
               ))}
             </div>
           </div>
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-4">About Fibonacci</p>
+          <div className="text-sm text-muted-foreground leading-relaxed">
+            The Fibonacci sequence is a series of numbers where each number is the sum of the two preceding ones, usually starting with 0 and 1.
+            <p className="mt-4 font-mono text-foreground bg-muted/20 p-3 rounded-lg">F(n) = F(n-1) + F(n-2)</p>
+            <div className="mt-4 space-y-2">
+              <div className="flex justify-between p-2 bg-muted/30 rounded-lg">
+                <span>Total Terms</span>
+                <span className="font-bold text-teal-400">{sequence.length}</span>
+              </div>
+              {sequence.length > 0 && (
+                <div className="flex justify-between p-2 bg-muted/30 rounded-lg">
+                  <span>Last Number</span>
+                  <span className="font-bold text-teal-400">{sequence[sequence.length - 1]?.toLocaleString()}</span>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-      </ToolCard>
-
-      <ToolCard title="Explanation" icon={Hash} iconColor="bg-emerald-500">
-        <div className="text-sm text-muted-foreground leading-relaxed">
-          The Fibonacci sequence is a series of numbers where each number is the sum of the two preceding ones, usually starting with 0 and 1.
-          <p className="mt-2 font-mono text-foreground bg-muted/20 p-2 rounded">F(n) = F(n-1) + F(n-2)</p>
-        </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -532,7 +487,8 @@ function FactorFinder() {
   const [value, setValue] = useState("24");
 
   const findFactors = (n: number) => {
-    const factors = [];
+    if (n <= 0) return [];
+    const factors: number[] = [];
     for (let i = 1; i <= Math.sqrt(n); i++) {
       if (n % i === 0) {
         factors.push(i);
@@ -544,37 +500,41 @@ function FactorFinder() {
 
   const n = parseInt(value) || 0;
   const factors = n > 0 ? findFactors(n) : [];
-  const isPrime = n > 1 && factors.length === 2;
+  const isPrime = factors.length === 2;
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Factor Finder" icon={Hash} iconColor="bg-teal-500">
-        <div className="space-y-4">
-          <InputField label="Enter a Number" value={value} onChange={setValue} type="number" min={1} />
-          <div className="bg-muted/30 p-4 rounded-xl space-y-4">
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">Factors of {n}:</p>
-              <div className="flex flex-wrap gap-2">
-                {factors.map((f, i) => (
-                  <div key={i} className="px-3 py-1.5 bg-teal-500/10 border border-teal-500/20 rounded-lg text-teal-400 font-mono font-bold">
-                    {f}
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
-              <span className="text-sm font-medium text-muted-foreground">Total Factors</span>
-              <span className="text-lg font-bold text-teal-400">{factors.length}</span>
-            </div>
-            <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
-              <span className="text-sm font-medium text-muted-foreground">Number Type</span>
-              <span className={`text-lg font-bold ${isPrime ? "text-emerald-400" : "text-amber-400"}`}>
-                {isPrime ? "Prime Number" : "Composite Number"}
-              </span>
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Factor Finder" icon={Hash} iconColor="bg-teal-500">
+          <InputField label="Enter Number" value={value} onChange={setValue} type="number" />
+          <div className="bg-muted/30 p-4 rounded-xl">
+            <p className="text-sm font-medium text-muted-foreground mb-2">All Factors:</p>
+            <div className="flex flex-wrap gap-2">
+              {factors.map((f) => (
+                <div key={f} className="px-3 py-1.5 bg-teal-500/10 border border-teal-500/20 rounded-lg text-teal-400 font-mono font-bold">
+                  {f}
+                </div>
+              ))}
+              {factors.length === 0 && <p className="text-muted-foreground text-sm">Enter a positive number</p>}
             </div>
           </div>
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Analysis</p>
+          <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
+            <span className="text-sm font-medium text-muted-foreground">Total Factors</span>
+            <span className="text-lg font-bold text-teal-400">{factors.length}</span>
+          </div>
+          <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
+            <span className="text-sm font-medium text-muted-foreground">Number Type</span>
+            <span className={`text-lg font-bold ${isPrime ? "text-emerald-400" : "text-amber-400"}`}>
+              {factors.length === 0 ? "N/A" : isPrime ? "Prime Number" : "Composite Number"}
+            </span>
+          </div>
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }

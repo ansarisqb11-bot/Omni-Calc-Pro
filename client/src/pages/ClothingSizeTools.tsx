@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Shirt, Footprints, Baby, Scissors } from "lucide-react";
-import { ToolCard, ResultDisplay } from "@/components/ToolCard";
+import { DesktopToolGrid, InputPanel, ResultDisplay } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
 
 type ToolType = "men-clothing" | "women-clothing" | "kids-clothing" | "men-shoes" | "women-shoes" | "kids-shoes" | "slippers";
@@ -160,9 +160,7 @@ function convertToCm(value: number, unit: MeasurementUnit): number {
   }
 }
 
-function cmToDisplay(cm: number): string {
-  return `${cm.toFixed(1)} cm / ${(cm / 2.54).toFixed(1)} in`;
-}
+function cmToDisplay(cm: number): string { return `${cm.toFixed(1)} cm / ${(cm / 2.54).toFixed(1)} in`; }
 
 function SelectField({ label, value, onChange, options, testId }: {
   label: string; value: string; onChange: (v: string) => void;
@@ -170,16 +168,11 @@ function SelectField({ label, value, onChange, options, testId }: {
 }) {
   return (
     <div>
-      <label className="text-sm font-medium text-muted-foreground mb-1.5 block">{label}</label>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+      <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">{label}</label>
+      <select value={value} onChange={(e) => onChange(e.target.value)}
         className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all appearance-none cursor-pointer"
-        data-testid={testId || `select-${label.toLowerCase().replace(/\s+/g, "-")}`}
-      >
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>{opt.label}</option>
-        ))}
+        data-testid={testId || `select-${label.toLowerCase().replace(/\s+/g, "-")}`}>
+        {options.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
       </select>
     </div>
   );
@@ -190,27 +183,31 @@ function NumberInput({ label, value, onChange, placeholder, testId }: {
 }) {
   return (
     <div>
-      <label className="text-sm font-medium text-muted-foreground mb-1.5 block">{label}</label>
-      <input
-        type="number"
-        inputMode="decimal"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+      <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">{label}</label>
+      <input type="number" inputMode="decimal" value={value} onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder || "Enter value"}
         className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-        data-testid={testId || "input-number"}
-      />
+        data-testid={testId || "input-number"} />
     </div>
   );
 }
 
-function ResultsGrid({ results }: { results: { label: string; value: string }[] }) {
-  if (results.length === 0) return null;
+function ResultsPanel({ results }: { results: { label: string; value: string }[] }) {
+  if (results.length === 0) {
+    return (
+      <div className="bg-card rounded-2xl border border-border shadow-sm p-5 flex items-center justify-center min-h-[200px]">
+        <p className="text-muted-foreground text-sm text-center">Enter your size details to see conversions</p>
+      </div>
+    );
+  }
   return (
-    <div className="space-y-2 mt-4">
-      {results.map((r, i) => (
-        <ResultDisplay key={i} label={r.label} value={r.value} highlight={i === 0} />
-      ))}
+    <div className="bg-card rounded-2xl border border-border shadow-sm p-5">
+      <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Size Conversions</p>
+      <div className="space-y-2">
+        {results.map((r, i) => (
+          <ResultDisplay key={i} label={r.label} value={r.value} highlight={i === 0} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -236,232 +233,57 @@ function MenClothingConverter() {
     if (inputMethod === "measurement" && !measureValue) return [];
 
     if (clothingType === "innerwear") {
-      if (inputMethod === "size") {
-        const row = MEN_INNERWEAR_DATA.find(r => r.alpha === sizeSelect);
-        if (!row) return [];
-        return [
-          { label: "Size", value: row.alpha },
-          { label: "Waist (cm)", value: `${row.waistMin}-${row.waistMax} cm` },
-          { label: "Waist (inch)", value: `${(row.waistMin / 2.54).toFixed(1)}-${(row.waistMax / 2.54).toFixed(1)} in` },
-          { label: "India", value: row.india },
-          { label: "US", value: row.us },
-          { label: "UK", value: row.uk },
-          { label: "EU", value: row.eu },
-        ];
-      }
-      if (inputMethod === "number") {
-        const num = parseFloat(numericInput);
-        if (isNaN(num)) return [];
-        const row = MEN_INNERWEAR_DATA.find(r => num >= r.waistMin && num <= r.waistMax);
-        if (!row) return [{ label: "Status", value: "No match. Waist range: 71-121 cm" }];
-        return [
-          { label: "Recommended Size", value: row.alpha },
-          { label: "Waist Range", value: `${row.waistMin}-${row.waistMax} cm` },
-          { label: "India", value: row.india },
-          { label: "US", value: row.us },
-          { label: "UK", value: row.uk },
-          { label: "EU", value: row.eu },
-        ];
-      }
-      if (inputMethod === "measurement") {
-        const val = parseFloat(measureValue);
-        if (isNaN(val)) return [];
-        const cm = convertToCm(val, measureUnit);
-        const row = MEN_INNERWEAR_DATA.find(r => cm >= r.waistMin && cm <= r.waistMax);
-        if (!row) return [{ label: "Status", value: `No match for ${cm.toFixed(1)} cm waist` }];
-        return [
-          { label: "Recommended Size", value: row.alpha },
-          { label: "Your Waist", value: cmToDisplay(cm) },
-          { label: "India", value: row.india },
-          { label: "US", value: row.us },
-          { label: "UK", value: row.uk },
-          { label: "EU", value: row.eu },
-        ];
-      }
+      if (inputMethod === "size") { const row = MEN_INNERWEAR_DATA.find(r => r.alpha === sizeSelect); if (!row) return []; return [{ label: "Size", value: row.alpha }, { label: "Waist (cm)", value: `${row.waistMin}-${row.waistMax} cm` }, { label: "India", value: row.india }, { label: "US", value: row.us }, { label: "UK", value: row.uk }, { label: "EU", value: row.eu }]; }
+      if (inputMethod === "number") { const num = parseFloat(numericInput); if (isNaN(num)) return []; const row = MEN_INNERWEAR_DATA.find(r => num >= r.waistMin && num <= r.waistMax); if (!row) return [{ label: "Status", value: "No match. Waist range: 71-121 cm" }]; return [{ label: "Recommended", value: row.alpha }, { label: "India", value: row.india }, { label: "US", value: row.us }, { label: "UK", value: row.uk }, { label: "EU", value: row.eu }]; }
+      if (inputMethod === "measurement") { const val = parseFloat(measureValue); if (isNaN(val)) return []; const cm = convertToCm(val, measureUnit); const row = MEN_INNERWEAR_DATA.find(r => cm >= r.waistMin && cm <= r.waistMax); if (!row) return [{ label: "Status", value: `No match for ${cm.toFixed(1)} cm waist` }]; return [{ label: "Recommended", value: row.alpha }, { label: "Your Waist", value: cmToDisplay(cm) }, { label: "India", value: row.india }, { label: "US", value: row.us }, { label: "UK", value: row.uk }, { label: "EU", value: row.eu }]; }
     }
-
     if (clothingType === "vest") {
-      if (inputMethod === "size") {
-        const row = MEN_VEST_DATA.find(r => r.alpha === sizeSelect);
-        if (!row) return [];
-        return [
-          { label: "Size", value: row.alpha },
-          { label: "Chest (cm)", value: `${row.chestMin}-${row.chestMax} cm` },
-          { label: "Chest (inch)", value: `${(row.chestMin / 2.54).toFixed(1)}-${(row.chestMax / 2.54).toFixed(1)} in` },
-          { label: "India", value: row.india },
-          { label: "US", value: row.us },
-          { label: "UK", value: row.uk },
-          { label: "EU", value: row.eu },
-        ];
-      }
-      if (inputMethod === "measurement") {
-        const val = parseFloat(measureValue);
-        if (isNaN(val)) return [];
-        const cm = convertToCm(val, measureUnit);
-        const row = MEN_VEST_DATA.find(r => cm >= r.chestMin && cm <= r.chestMax);
-        if (!row) return [{ label: "Status", value: `No match for ${cm.toFixed(1)} cm chest` }];
-        return [
-          { label: "Recommended Size", value: row.alpha },
-          { label: "Your Chest", value: cmToDisplay(cm) },
-          { label: "India", value: row.india },
-          { label: "US", value: row.us },
-          { label: "UK", value: row.uk },
-          { label: "EU", value: row.eu },
-        ];
-      }
+      if (inputMethod === "size") { const row = MEN_VEST_DATA.find(r => r.alpha === sizeSelect); if (!row) return []; return [{ label: "Size", value: row.alpha }, { label: "Chest (cm)", value: `${row.chestMin}-${row.chestMax} cm` }, { label: "India", value: row.india }, { label: "US", value: row.us }, { label: "UK", value: row.uk }, { label: "EU", value: row.eu }]; }
+      if (inputMethod === "measurement") { const val = parseFloat(measureValue); if (isNaN(val)) return []; const cm = convertToCm(val, measureUnit); const row = MEN_VEST_DATA.find(r => cm >= r.chestMin && cm <= r.chestMax); if (!row) return [{ label: "Status", value: `No match for ${cm.toFixed(1)} cm chest` }]; return [{ label: "Recommended", value: row.alpha }, { label: "Your Chest", value: cmToDisplay(cm) }, { label: "India", value: row.india }, { label: "US", value: row.us }, { label: "UK", value: row.uk }, { label: "EU", value: row.eu }]; }
     }
-
     if (clothingType === "pants") {
       const data = MEN_PANTS_DATA;
-      if (inputMethod === "size") {
-        const parts = sizeSelect.split("-");
-        const numeric = parseInt(parts[1] || parts[0]);
-        const row = data.find(r => r.numeric === numeric) || data.find(r => r.alpha === parts[0]);
-        if (!row) return [];
-        return [
-          { label: "Size", value: `${row.alpha} / ${row.numeric}` },
-          { label: "Waist (cm)", value: `${row.waistMin}-${row.waistMax} cm` },
-          { label: "Waist (inch)", value: `${(row.waistMin / 2.54).toFixed(1)}-${(row.waistMax / 2.54).toFixed(1)} in` },
-          { label: "India", value: row.india },
-          { label: "US", value: row.us },
-          { label: "UK", value: row.uk },
-          { label: "EU", value: row.eu },
-          { label: "Japan", value: row.japan },
-          { label: "China", value: row.china },
-        ];
-      }
-      if (inputMethod === "number") {
-        const num = parseInt(numericInput);
-        if (isNaN(num)) return [];
-        const row = data.find(r => r.numeric === num);
-        if (!row) return [{ label: "Status", value: "No match. Try: 28, 30, 32, 34, 36, 38, 40, 42, 44" }];
-        return [
-          { label: "Size", value: `${row.alpha} / ${row.numeric}` },
-          { label: "Waist (cm)", value: `${row.waistMin}-${row.waistMax} cm` },
-          { label: "India", value: row.india },
-          { label: "US", value: row.us },
-          { label: "UK", value: row.uk },
-          { label: "EU", value: row.eu },
-          { label: "Japan", value: row.japan },
-        ];
-      }
-      if (inputMethod === "measurement") {
-        const val = parseFloat(measureValue);
-        if (isNaN(val)) return [];
-        const cm = convertToCm(val, measureUnit);
-        const row = data.find(r => cm >= r.waistMin && cm <= r.waistMax);
-        if (!row) return [{ label: "Status", value: `No match for ${cm.toFixed(1)} cm waist` }];
-        return [
-          { label: "Recommended", value: `${row.alpha} / ${row.numeric}` },
-          { label: "Your Waist", value: cmToDisplay(cm) },
-          { label: "India", value: row.india },
-          { label: "US", value: row.us },
-          { label: "UK", value: row.uk },
-          { label: "EU", value: row.eu },
-        ];
-      }
+      if (inputMethod === "size") { const parts = sizeSelect.split("-"); const numeric = parseInt(parts[1] || parts[0]); const row = data.find(r => r.numeric === numeric) || data.find(r => r.alpha === parts[0]); if (!row) return []; return [{ label: "Size", value: `${row.alpha} / ${row.numeric}` }, { label: "Waist (cm)", value: `${row.waistMin}-${row.waistMax} cm` }, { label: "India", value: row.india }, { label: "US", value: row.us }, { label: "UK", value: row.uk }, { label: "EU", value: row.eu }, { label: "Japan", value: row.japan }, { label: "China", value: row.china }]; }
+      if (inputMethod === "number") { const num = parseInt(numericInput); if (isNaN(num)) return []; const row = data.find(r => r.numeric === num); if (!row) return [{ label: "Status", value: "Try: 28, 30, 32, 34, 36, 38, 40, 42, 44" }]; return [{ label: "Size", value: `${row.alpha} / ${row.numeric}` }, { label: "India", value: row.india }, { label: "US", value: row.us }, { label: "UK", value: row.uk }, { label: "EU", value: row.eu }]; }
+      if (inputMethod === "measurement") { const val = parseFloat(measureValue); if (isNaN(val)) return []; const cm = convertToCm(val, measureUnit); const row = data.find(r => cm >= r.waistMin && cm <= r.waistMax); if (!row) return [{ label: "Status", value: `No match for ${cm.toFixed(1)} cm waist` }]; return [{ label: "Recommended", value: `${row.alpha} / ${row.numeric}` }, { label: "Your Waist", value: cmToDisplay(cm) }, { label: "India", value: row.india }, { label: "US", value: row.us }, { label: "UK", value: row.uk }, { label: "EU", value: row.eu }]; }
     }
-
     const data = MEN_SHIRT_DATA;
-    if (inputMethod === "size") {
-      const row = data.find(r => r.alpha === sizeSelect);
-      if (!row) return [];
-      return [
-        { label: "Size", value: `${row.alpha} / ${row.numeric}` },
-        { label: "Chest (cm)", value: `${row.chestMin}-${row.chestMax} cm` },
-        { label: "Chest (inch)", value: `${(row.chestMin / 2.54).toFixed(1)}-${(row.chestMax / 2.54).toFixed(1)} in` },
-        { label: "India", value: row.india },
-        { label: "US", value: row.us },
-        { label: "UK", value: row.uk },
-        { label: "EU", value: row.eu },
-        { label: "Japan", value: row.japan },
-        { label: "China", value: row.china },
-        { label: "Canada", value: row.canada },
-        { label: "Australia", value: row.aus },
-        { label: "Gulf", value: row.gulf },
-      ];
-    }
-    if (inputMethod === "number") {
-      const num = parseInt(numericInput);
-      if (isNaN(num)) return [];
-      const row = data.find(r => r.numeric === num);
-      if (!row) return [{ label: "Status", value: "No match. Try: 36, 38, 40, 42, 44, 46, 48, 50" }];
-      return [
-        { label: "Size", value: `${row.alpha} / ${row.numeric}` },
-        { label: "Chest (cm)", value: `${row.chestMin}-${row.chestMax} cm` },
-        { label: "India", value: row.india },
-        { label: "US", value: row.us },
-        { label: "UK", value: row.uk },
-        { label: "EU", value: row.eu },
-        { label: "Japan", value: row.japan },
-        { label: "China", value: row.china },
-      ];
-    }
-    if (inputMethod === "measurement") {
-      const val = parseFloat(measureValue);
-      if (isNaN(val)) return [];
-      const cm = convertToCm(val, measureUnit);
-      const row = data.find(r => cm >= r.chestMin && cm <= r.chestMax);
-      if (!row) return [{ label: "Status", value: `No match for ${cm.toFixed(1)} cm chest` }];
-      return [
-        { label: "Recommended Size", value: `${row.alpha} / ${row.numeric}` },
-        { label: "Your Chest", value: cmToDisplay(cm) },
-        { label: "India", value: row.india },
-        { label: "US", value: row.us },
-        { label: "UK", value: row.uk },
-        { label: "EU", value: row.eu },
-        { label: "Japan", value: row.japan },
-        { label: "China", value: row.china },
-      ];
-    }
+    if (inputMethod === "size") { const row = data.find(r => r.alpha === sizeSelect); if (!row) return []; return [{ label: "Size", value: `${row.alpha} / ${row.numeric}` }, { label: "Chest (cm)", value: `${row.chestMin}-${row.chestMax} cm` }, { label: "India", value: row.india }, { label: "US", value: row.us }, { label: "UK", value: row.uk }, { label: "EU", value: row.eu }, { label: "Japan", value: row.japan }, { label: "China", value: row.china }, { label: "Canada", value: row.canada }, { label: "Australia", value: row.aus }, { label: "Gulf", value: row.gulf }]; }
+    if (inputMethod === "number") { const num = parseInt(numericInput); if (isNaN(num)) return []; const row = data.find(r => r.numeric === num); if (!row) return [{ label: "Status", value: "Try: 36, 38, 40, 42, 44, 46, 48, 50" }]; return [{ label: "Size", value: `${row.alpha} / ${row.numeric}` }, { label: "India", value: row.india }, { label: "US", value: row.us }, { label: "UK", value: row.uk }, { label: "EU", value: row.eu }, { label: "Japan", value: row.japan }, { label: "China", value: row.china }]; }
+    if (inputMethod === "measurement") { const val = parseFloat(measureValue); if (isNaN(val)) return []; const cm = convertToCm(val, measureUnit); const row = data.find(r => cm >= r.chestMin && cm <= r.chestMax); if (!row) return [{ label: "Status", value: `No match for ${cm.toFixed(1)} cm chest` }]; return [{ label: "Recommended", value: `${row.alpha} / ${row.numeric}` }, { label: "Your Chest", value: cmToDisplay(cm) }, { label: "India", value: row.india }, { label: "US", value: row.us }, { label: "UK", value: row.uk }, { label: "EU", value: row.eu }, { label: "Japan", value: row.japan }, { label: "China", value: row.china }]; }
     return [];
   }, [clothingType, inputMethod, sizeSelect, numericInput, measureValue, measureUnit]);
 
   const resetInputs = () => { setSizeSelect(""); setNumericInput(""); setMeasureValue(""); };
 
   return (
-    <ToolCard title="Men's Clothing" description="Shirt, Pants, Innerwear, Vest & more" icon={Shirt} iconColor="bg-blue-500">
-      <div className="space-y-4">
-        <SelectField label="Clothing Type" value={clothingType} onChange={(v) => { setClothingType(v); resetInputs(); }} options={[
-          { value: "shirt", label: "Shirt / T-Shirt / Jacket" },
-          { value: "pants", label: "Pants / Jeans / Trousers" },
-          { value: "kurta", label: "Kurta / Ethnic Wear" },
-          { value: "innerwear", label: "Briefs / Boxers / Trunks" },
-          { value: "vest", label: "Vest / Undershirt / Banian" },
-        ]} testId="select-men-clothing-type" />
-
-        <SelectField label="How do you want to enter size?" value={inputMethod} onChange={(v) => { setInputMethod(v); resetInputs(); }} options={[
-          { value: "size", label: "Select Size (S, M, L, XL...)" },
-          { value: "number", label: "Enter Size Number (36, 38, 40...)" },
-          { value: "measurement", label: "Enter Body Measurement" },
-        ]} testId="select-men-input-method" />
-
-        {inputMethod === "size" && (
-          <SelectField label="Select Your Size" value={sizeSelect} onChange={setSizeSelect} options={[
-            { value: "", label: "-- Choose Size --" },
-            ...sizeOptions,
-          ]} testId="select-men-size" />
-        )}
-
-        {inputMethod === "number" && (
-          <NumberInput label={clothingType === "pants" ? "Waist Size Number" : "Shirt Number (UK/India)"} value={numericInput} onChange={setNumericInput} placeholder={clothingType === "pants" ? "e.g. 32, 34, 36" : "e.g. 38, 40, 42"} testId="input-men-number" />
-        )}
-
-        {inputMethod === "measurement" && (
-          <div className="space-y-3">
-            <SelectField label="Measurement Unit" value={measureUnit} onChange={(v) => setMeasureUnit(v as MeasurementUnit)} options={[
-              { value: "cm", label: "Centimeters (cm)" },
-              { value: "inch", label: "Inches (inch)" },
-              { value: "mm", label: "Millimeters (mm)" },
-              { value: "ft", label: "Feet (ft)" },
-            ]} testId="select-men-unit" />
-            <NumberInput label={clothingType === "pants" || clothingType === "innerwear" ? `Waist Size (${measureUnit})` : `Chest Size (${measureUnit})`} value={measureValue} onChange={setMeasureValue} placeholder={`Enter value in ${measureUnit}`} testId="input-men-measurement" />
-          </div>
-        )}
-
-        <ResultsGrid results={results} />
-      </div>
-    </ToolCard>
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Men's Clothing" icon={Shirt} iconColor="bg-blue-500">
+          <SelectField label="Clothing Type" value={clothingType} onChange={(v) => { setClothingType(v); resetInputs(); }} options={[
+            { value: "shirt", label: "Shirt / T-Shirt / Jacket" },
+            { value: "pants", label: "Pants / Jeans / Trousers" },
+            { value: "kurta", label: "Kurta / Ethnic Wear" },
+            { value: "innerwear", label: "Briefs / Boxers / Trunks" },
+            { value: "vest", label: "Vest / Undershirt / Banian" },
+          ]} testId="select-men-clothing-type" />
+          <SelectField label="How do you want to enter size?" value={inputMethod} onChange={(v) => { setInputMethod(v); resetInputs(); }} options={[
+            { value: "size", label: "Select Size (S, M, L, XL...)" },
+            { value: "number", label: "Enter Size Number (36, 38, 40...)" },
+            { value: "measurement", label: "Enter Body Measurement" },
+          ]} testId="select-men-input-method" />
+          {inputMethod === "size" && <SelectField label="Select Your Size" value={sizeSelect} onChange={setSizeSelect} options={[{ value: "", label: "-- Choose Size --" }, ...sizeOptions]} testId="select-men-size" />}
+          {inputMethod === "number" && <NumberInput label={clothingType === "pants" ? "Waist Size Number" : "Shirt Number (UK/India)"} value={numericInput} onChange={setNumericInput} placeholder={clothingType === "pants" ? "e.g. 32, 34, 36" : "e.g. 38, 40, 42"} testId="input-men-number" />}
+          {inputMethod === "measurement" && (
+            <div className="space-y-3">
+              <SelectField label="Measurement Unit" value={measureUnit} onChange={(v) => setMeasureUnit(v as MeasurementUnit)} options={[{ value: "cm", label: "Centimeters (cm)" }, { value: "inch", label: "Inches (inch)" }, { value: "mm", label: "Millimeters (mm)" }, { value: "ft", label: "Feet (ft)" }]} testId="select-men-unit" />
+              <NumberInput label={clothingType === "pants" || clothingType === "innerwear" ? `Waist Size (${measureUnit})` : `Chest Size (${measureUnit})`} value={measureValue} onChange={setMeasureValue} placeholder={`Enter value in ${measureUnit}`} testId="input-men-measurement" />
+            </div>
+          )}
+        </InputPanel>
+      }
+      results={<ResultsPanel results={results} />}
+    />
   );
 }
 
@@ -487,170 +309,60 @@ function WomenClothingConverter() {
       if (!row) return [];
       const cupKey = `bust${braCup}` as keyof typeof row;
       const bustVal = row[cupKey] as number;
-      return [
-        { label: "Your Size", value: `${row.band}${braCup}` },
-        { label: "Band (underbust)", value: `${row.bandCm} cm / ${(row.bandCm / 2.54).toFixed(1)} in` },
-        { label: "Bust", value: `${bustVal} cm / ${(bustVal / 2.54).toFixed(1)} in` },
-        { label: "India", value: `${row.india}${braCup}` },
-        { label: "US", value: `${row.us}${braCup}` },
-        { label: "UK", value: `${row.uk}${braCup}` },
-        { label: "EU", value: `${row.eu}${braCup}` },
-      ];
+      return [{ label: "Your Size", value: `${row.band}${braCup}` }, { label: "Band", value: `${row.bandCm} cm` }, { label: "Bust", value: `${bustVal} cm` }, { label: "India", value: `${row.india}${braCup}` }, { label: "US", value: `${row.us}${braCup}` }, { label: "UK", value: `${row.uk}${braCup}` }, { label: "EU", value: `${row.eu}${braCup}` }];
     }
-
     if (clothingType === "panty") {
       if (inputMethod === "size" && !sizeSelect) return [];
       if (inputMethod === "measurement" && !measureValue) return [];
-      if (inputMethod === "size") {
-        const row = WOMEN_PANTY_DATA.find(r => r.alpha === sizeSelect);
-        if (!row) return [];
-        return [
-          { label: "Size", value: row.alpha },
-          { label: "Hip (cm)", value: `${row.hipMin}-${row.hipMax} cm` },
-          { label: "Hip (inch)", value: `${(row.hipMin / 2.54).toFixed(1)}-${(row.hipMax / 2.54).toFixed(1)} in` },
-          { label: "India", value: row.india },
-          { label: "US", value: row.us },
-          { label: "UK", value: row.uk },
-          { label: "EU", value: row.eu },
-        ];
-      }
-      if (inputMethod === "measurement") {
-        const val = parseFloat(measureValue);
-        if (isNaN(val)) return [];
-        const cm = convertToCm(val, measureUnit);
-        const row = WOMEN_PANTY_DATA.find(r => cm >= r.hipMin && cm <= r.hipMax);
-        if (!row) return [{ label: "Status", value: `No match for ${cm.toFixed(1)} cm hip` }];
-        return [
-          { label: "Recommended Size", value: row.alpha },
-          { label: "Your Hip", value: cmToDisplay(cm) },
-          { label: "India", value: row.india },
-          { label: "US", value: row.us },
-          { label: "UK", value: row.uk },
-          { label: "EU", value: row.eu },
-        ];
-      }
+      if (inputMethod === "size") { const row = WOMEN_PANTY_DATA.find(r => r.alpha === sizeSelect); if (!row) return []; return [{ label: "Size", value: row.alpha }, { label: "Hip (cm)", value: `${row.hipMin}-${row.hipMax} cm` }, { label: "India", value: row.india }, { label: "US", value: row.us }, { label: "UK", value: row.uk }, { label: "EU", value: row.eu }]; }
+      if (inputMethod === "measurement") { const val = parseFloat(measureValue); if (isNaN(val)) return []; const cm = convertToCm(val, measureUnit); const row = WOMEN_PANTY_DATA.find(r => cm >= r.hipMin && cm <= r.hipMax); if (!row) return [{ label: "Status", value: `No match for ${cm.toFixed(1)} cm hip` }]; return [{ label: "Recommended", value: row.alpha }, { label: "Your Hip", value: cmToDisplay(cm) }, { label: "India", value: row.india }, { label: "US", value: row.us }, { label: "UK", value: row.uk }, { label: "EU", value: row.eu }]; }
       return [];
     }
-
     if (inputMethod === "size" && !sizeSelect) return [];
     if (inputMethod === "number" && !numericInput) return [];
     if (inputMethod === "measurement" && !measureValue) return [];
-
     const data = WOMEN_TOP_DATA;
-    if (inputMethod === "size") {
-      const row = data.find(r => r.alpha === sizeSelect);
-      if (!row) return [];
-      return [
-        { label: "Size", value: `${row.alpha} / UK ${row.numeric}` },
-        { label: "Bust (cm)", value: `${row.bustMin}-${row.bustMax} cm` },
-        { label: "Bust (inch)", value: `${(row.bustMin / 2.54).toFixed(1)}-${(row.bustMax / 2.54).toFixed(1)} in` },
-        { label: "India", value: row.india },
-        { label: "US", value: row.us },
-        { label: "UK", value: row.uk },
-        { label: "EU", value: row.eu },
-        { label: "Japan", value: row.japan },
-        { label: "China", value: row.china },
-        { label: "Canada", value: row.canada },
-        { label: "Australia", value: row.aus },
-      ];
-    }
-    if (inputMethod === "number") {
-      const num = parseInt(numericInput);
-      if (isNaN(num)) return [];
-      const row = data.find(r => r.numeric === num);
-      if (!row) return [{ label: "Status", value: "No match. Try: 6, 8, 10, 12, 14, 16, 18" }];
-      return [
-        { label: "Size", value: `${row.alpha} / UK ${row.numeric}` },
-        { label: "Bust (cm)", value: `${row.bustMin}-${row.bustMax} cm` },
-        { label: "India", value: row.india },
-        { label: "US", value: row.us },
-        { label: "UK", value: row.uk },
-        { label: "EU", value: row.eu },
-        { label: "Japan", value: row.japan },
-      ];
-    }
-    if (inputMethod === "measurement") {
-      const val = parseFloat(measureValue);
-      if (isNaN(val)) return [];
-      const cm = convertToCm(val, measureUnit);
-      const row = data.find(r => cm >= r.bustMin && cm <= r.bustMax);
-      if (!row) return [{ label: "Status", value: `No match for ${cm.toFixed(1)} cm bust` }];
-      return [
-        { label: "Recommended Size", value: `${row.alpha} / UK ${row.numeric}` },
-        { label: "Your Bust", value: cmToDisplay(cm) },
-        { label: "India", value: row.india },
-        { label: "US", value: row.us },
-        { label: "UK", value: row.uk },
-        { label: "EU", value: row.eu },
-        { label: "Japan", value: row.japan },
-        { label: "China", value: row.china },
-      ];
-    }
+    if (inputMethod === "size") { const row = data.find(r => r.alpha === sizeSelect); if (!row) return []; return [{ label: "Size", value: `${row.alpha} / UK ${row.numeric}` }, { label: "Bust (cm)", value: `${row.bustMin}-${row.bustMax} cm` }, { label: "India", value: row.india }, { label: "US", value: row.us }, { label: "UK", value: row.uk }, { label: "EU", value: row.eu }, { label: "Japan", value: row.japan }, { label: "China", value: row.china }, { label: "Canada", value: row.canada }, { label: "Australia", value: row.aus }]; }
+    if (inputMethod === "number") { const num = parseInt(numericInput); if (isNaN(num)) return []; const row = data.find(r => r.numeric === num); if (!row) return [{ label: "Status", value: "Try: 6, 8, 10, 12, 14, 16, 18" }]; return [{ label: "Size", value: `${row.alpha} / UK ${row.numeric}` }, { label: "Bust (cm)", value: `${row.bustMin}-${row.bustMax} cm` }, { label: "India", value: row.india }, { label: "US", value: row.us }, { label: "UK", value: row.uk }, { label: "EU", value: row.eu }, { label: "Japan", value: row.japan }]; }
+    if (inputMethod === "measurement") { const val = parseFloat(measureValue); if (isNaN(val)) return []; const cm = convertToCm(val, measureUnit); const row = data.find(r => cm >= r.bustMin && cm <= r.bustMax); if (!row) return [{ label: "Status", value: `No match for ${cm.toFixed(1)} cm bust` }]; return [{ label: "Recommended", value: `${row.alpha} / UK ${row.numeric}` }, { label: "Your Bust", value: cmToDisplay(cm) }, { label: "India", value: row.india }, { label: "US", value: row.us }, { label: "UK", value: row.uk }, { label: "EU", value: row.eu }, { label: "Japan", value: row.japan }, { label: "China", value: row.china }]; }
     return [];
   }, [clothingType, inputMethod, sizeSelect, numericInput, measureValue, measureUnit, braBand, braCup]);
 
   const resetInputs = () => { setSizeSelect(""); setNumericInput(""); setMeasureValue(""); setBraBand(""); };
 
   return (
-    <ToolCard title="Women's Clothing" description="Top, Dress, Bra, Panty & more" icon={Scissors} iconColor="bg-pink-500">
-      <div className="space-y-4">
-        <SelectField label="Clothing Type" value={clothingType} onChange={(v) => { setClothingType(v); resetInputs(); }} options={[
-          { value: "top", label: "Top / Blouse / T-Shirt" },
-          { value: "dress", label: "Dress / Gown / Kurti" },
-          { value: "jacket", label: "Jacket / Coat" },
-          { value: "bra", label: "Bra / Sports Bra" },
-          { value: "panty", label: "Panty / Briefs / Hipster" },
-        ]} testId="select-women-clothing-type" />
-
-        {clothingType === "bra" ? (
-          <>
-            <SelectField label="Band Size (Underbust)" value={braBand} onChange={setBraBand} options={[
-              { value: "", label: "-- Select Band --" },
-              ...WOMEN_BRA_DATA.map(r => ({ value: String(r.band), label: `${r.band} (${r.bandCm} cm / ${(r.bandCm / 2.54).toFixed(0)} in)` })),
-            ]} testId="select-bra-band" />
-            <SelectField label="Cup Size" value={braCup} onChange={setBraCup} options={[
-              { value: "A", label: "A Cup" },
-              { value: "B", label: "B Cup" },
-              { value: "C", label: "C Cup" },
-              { value: "D", label: "D Cup" },
-            ]} testId="select-bra-cup" />
-          </>
-        ) : (
-          <>
-            <SelectField label="How do you want to enter size?" value={inputMethod} onChange={(v) => { setInputMethod(v); resetInputs(); }} options={[
-              { value: "size", label: "Select Size (XS, S, M, L...)" },
-              { value: "number", label: "Enter Size Number (6, 8, 10...)" },
-              { value: "measurement", label: "Enter Body Measurement" },
-            ]} testId="select-women-input-method" />
-
-            {inputMethod === "size" && (
-              <SelectField label="Select Your Size" value={sizeSelect} onChange={setSizeSelect} options={[
-                { value: "", label: "-- Choose Size --" },
-                ...sizeOptions,
-              ]} testId="select-women-size" />
-            )}
-
-            {inputMethod === "number" && (
-              <NumberInput label="UK / Number Size" value={numericInput} onChange={setNumericInput} placeholder="e.g. 8, 10, 12" testId="input-women-number" />
-            )}
-
-            {inputMethod === "measurement" && (
-              <div className="space-y-3">
-                <SelectField label="Measurement Unit" value={measureUnit} onChange={(v) => setMeasureUnit(v as MeasurementUnit)} options={[
-                  { value: "cm", label: "Centimeters (cm)" },
-                  { value: "inch", label: "Inches (inch)" },
-                  { value: "mm", label: "Millimeters (mm)" },
-                  { value: "ft", label: "Feet (ft)" },
-                ]} testId="select-women-unit" />
-                <NumberInput label={clothingType === "panty" ? `Hip Size (${measureUnit})` : `Bust Size (${measureUnit})`} value={measureValue} onChange={setMeasureValue} placeholder={`Enter value in ${measureUnit}`} testId="input-women-measurement" />
-              </div>
-            )}
-          </>
-        )}
-
-        <ResultsGrid results={results} />
-      </div>
-    </ToolCard>
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Women's Clothing" icon={Scissors} iconColor="bg-pink-500">
+          <SelectField label="Clothing Type" value={clothingType} onChange={(v) => { setClothingType(v); resetInputs(); }} options={[
+            { value: "top", label: "Top / Blouse / T-Shirt" },
+            { value: "dress", label: "Dress / Gown / Kurti" },
+            { value: "jacket", label: "Jacket / Coat" },
+            { value: "bra", label: "Bra / Sports Bra" },
+            { value: "panty", label: "Panty / Briefs / Hipster" },
+          ]} testId="select-women-clothing-type" />
+          {clothingType === "bra" ? (
+            <>
+              <SelectField label="Band Size (Underbust)" value={braBand} onChange={setBraBand} options={[{ value: "", label: "-- Select Band --" }, ...WOMEN_BRA_DATA.map(r => ({ value: String(r.band), label: `${r.band} (${r.bandCm} cm / ${(r.bandCm / 2.54).toFixed(0)} in)` }))]} testId="select-bra-band" />
+              <SelectField label="Cup Size" value={braCup} onChange={setBraCup} options={[{ value: "A", label: "A Cup" }, { value: "B", label: "B Cup" }, { value: "C", label: "C Cup" }, { value: "D", label: "D Cup" }]} testId="select-bra-cup" />
+            </>
+          ) : (
+            <>
+              <SelectField label="How do you want to enter size?" value={inputMethod} onChange={(v) => { setInputMethod(v); resetInputs(); }} options={[{ value: "size", label: "Select Size (XS, S, M, L...)" }, { value: "number", label: "Enter Size Number (6, 8, 10...)" }, { value: "measurement", label: "Enter Body Measurement" }]} testId="select-women-input-method" />
+              {inputMethod === "size" && <SelectField label="Select Your Size" value={sizeSelect} onChange={setSizeSelect} options={[{ value: "", label: "-- Choose Size --" }, ...sizeOptions]} testId="select-women-size" />}
+              {inputMethod === "number" && <NumberInput label="UK / Number Size" value={numericInput} onChange={setNumericInput} placeholder="e.g. 8, 10, 12" testId="input-women-number" />}
+              {inputMethod === "measurement" && (
+                <div className="space-y-3">
+                  <SelectField label="Measurement Unit" value={measureUnit} onChange={(v) => setMeasureUnit(v as MeasurementUnit)} options={[{ value: "cm", label: "Centimeters (cm)" }, { value: "inch", label: "Inches (inch)" }, { value: "mm", label: "Millimeters (mm)" }, { value: "ft", label: "Feet (ft)" }]} testId="select-women-unit" />
+                  <NumberInput label={clothingType === "panty" ? `Hip Size (${measureUnit})` : `Bust Size (${measureUnit})`} value={measureValue} onChange={setMeasureValue} placeholder={`Enter value in ${measureUnit}`} testId="input-women-measurement" />
+                </div>
+              )}
+            </>
+          )}
+        </InputPanel>
+      }
+      results={<ResultsPanel results={results} />}
+    />
   );
 }
 
@@ -662,114 +374,29 @@ function KidsClothingConverter() {
   const [measureUnit, setMeasureUnit] = useState<MeasurementUnit>("cm");
 
   const results = useMemo(() => {
-    if (inputMethod === "age") {
-      const age = parseFloat(ageInput);
-      if (isNaN(age)) return [];
-      const row = KIDS_CLOTHING_DATA.find(r => age >= r.ageMin && age <= r.ageMax);
-      if (!row) return [{ label: "Status", value: "No match. Age range: 1-14 years" }];
-      return [
-        { label: "Recommended Size", value: row.alpha },
-        { label: "Age Range", value: `${row.ageMin}-${row.ageMax} years` },
-        { label: "Height", value: `${row.heightMin}-${row.heightMax} cm` },
-        { label: "Chest", value: `${row.chestMin}-${row.chestMax} cm` },
-        { label: "India", value: row.india },
-        { label: "US", value: row.us },
-        { label: "UK", value: row.uk },
-        { label: "EU", value: row.eu },
-        { label: "Japan", value: row.japan },
-        { label: "China", value: row.china },
-      ];
-    }
-    if (inputMethod === "size") {
-      if (!sizeSelect) return [];
-      const row = KIDS_CLOTHING_DATA.find(r => r.alpha === sizeSelect);
-      if (!row) return [];
-      return [
-        { label: "Size", value: row.alpha },
-        { label: "Age Range", value: `${row.ageMin}-${row.ageMax} years` },
-        { label: "Height", value: `${row.heightMin}-${row.heightMax} cm / ${(row.heightMin / 2.54).toFixed(0)}-${(row.heightMax / 2.54).toFixed(0)} in` },
-        { label: "Chest", value: `${row.chestMin}-${row.chestMax} cm / ${(row.chestMin / 2.54).toFixed(0)}-${(row.chestMax / 2.54).toFixed(0)} in` },
-        { label: "India", value: row.india },
-        { label: "US", value: row.us },
-        { label: "UK", value: row.uk },
-        { label: "EU", value: row.eu },
-        { label: "Japan", value: row.japan },
-        { label: "China", value: row.china },
-      ];
-    }
-    if (inputMethod === "height") {
-      const val = parseFloat(measureValue);
-      if (isNaN(val)) return [];
-      const cm = convertToCm(val, measureUnit);
-      const row = KIDS_CLOTHING_DATA.find(r => cm >= r.heightMin && cm <= r.heightMax);
-      if (!row) return [{ label: "Status", value: `No match for ${cm.toFixed(0)} cm height` }];
-      return [
-        { label: "Recommended Size", value: row.alpha },
-        { label: "Your Height", value: cmToDisplay(cm) },
-        { label: "Age Range", value: `${row.ageMin}-${row.ageMax} years` },
-        { label: "India", value: row.india },
-        { label: "US", value: row.us },
-        { label: "UK", value: row.uk },
-        { label: "EU", value: row.eu },
-        { label: "Japan", value: row.japan },
-        { label: "China", value: row.china },
-      ];
-    }
-    if (inputMethod === "chest") {
-      const val = parseFloat(measureValue);
-      if (isNaN(val)) return [];
-      const cm = convertToCm(val, measureUnit);
-      const row = KIDS_CLOTHING_DATA.find(r => cm >= r.chestMin && cm <= r.chestMax);
-      if (!row) return [{ label: "Status", value: `No match for ${cm.toFixed(0)} cm chest` }];
-      return [
-        { label: "Recommended Size", value: row.alpha },
-        { label: "Your Chest", value: cmToDisplay(cm) },
-        { label: "Age Range", value: `${row.ageMin}-${row.ageMax} years` },
-        { label: "India", value: row.india },
-        { label: "US", value: row.us },
-        { label: "UK", value: row.uk },
-        { label: "EU", value: row.eu },
-      ];
-    }
+    if (inputMethod === "age") { const age = parseFloat(ageInput); if (isNaN(age)) return []; const row = KIDS_CLOTHING_DATA.find(r => age >= r.ageMin && age <= r.ageMax); if (!row) return [{ label: "Status", value: "No match. Age range: 1-14 years" }]; return [{ label: "Recommended Size", value: row.alpha }, { label: "Age Range", value: `${row.ageMin}-${row.ageMax} years` }, { label: "Height", value: `${row.heightMin}-${row.heightMax} cm` }, { label: "India", value: row.india }, { label: "US", value: row.us }, { label: "UK", value: row.uk }, { label: "EU", value: row.eu }, { label: "Japan", value: row.japan }, { label: "China", value: row.china }]; }
+    if (inputMethod === "size") { if (!sizeSelect) return []; const row = KIDS_CLOTHING_DATA.find(r => r.alpha === sizeSelect); if (!row) return []; return [{ label: "Size", value: row.alpha }, { label: "Age Range", value: `${row.ageMin}-${row.ageMax} years` }, { label: "Height", value: `${row.heightMin}-${row.heightMax} cm` }, { label: "India", value: row.india }, { label: "US", value: row.us }, { label: "UK", value: row.uk }, { label: "EU", value: row.eu }, { label: "Japan", value: row.japan }, { label: "China", value: row.china }]; }
+    if (inputMethod === "height" || inputMethod === "chest") { const val = parseFloat(measureValue); if (isNaN(val)) return []; const cm = convertToCm(val, measureUnit); const row = inputMethod === "height" ? KIDS_CLOTHING_DATA.find(r => cm >= r.heightMin && cm <= r.heightMax) : KIDS_CLOTHING_DATA.find(r => cm >= r.chestMin && cm <= r.chestMax); if (!row) return [{ label: "Status", value: `No match for ${cm.toFixed(0)} cm` }]; return [{ label: "Recommended Size", value: row.alpha }, { label: "Age Range", value: `${row.ageMin}-${row.ageMax} years` }, { label: "India", value: row.india }, { label: "US", value: row.us }, { label: "UK", value: row.uk }, { label: "EU", value: row.eu }, { label: "Japan", value: row.japan }]; }
     return [];
   }, [inputMethod, ageInput, sizeSelect, measureValue, measureUnit]);
 
   return (
-    <ToolCard title="Kids Clothing" description="Baby, Toddler, Kids (1-14 yrs)" icon={Baby} iconColor="bg-amber-500">
-      <div className="space-y-4">
-        <SelectField label="How do you want to find size?" value={inputMethod} onChange={(v) => { setInputMethod(v); setAgeInput(""); setSizeSelect(""); setMeasureValue(""); }} options={[
-          { value: "age", label: "Enter Age (years)" },
-          { value: "size", label: "Select Size" },
-          { value: "height", label: "Enter Height" },
-          { value: "chest", label: "Enter Chest Measurement" },
-        ]} testId="select-kids-input-method" />
-
-        {inputMethod === "age" && (
-          <NumberInput label="Child's Age (years)" value={ageInput} onChange={setAgeInput} placeholder="e.g. 3, 5, 8, 10" testId="input-kids-age" />
-        )}
-
-        {inputMethod === "size" && (
-          <SelectField label="Select Size" value={sizeSelect} onChange={setSizeSelect} options={[
-            { value: "", label: "-- Choose Size --" },
-            ...KIDS_CLOTHING_DATA.map(r => ({ value: r.alpha, label: `${r.alpha} (Age ${r.ageMin}-${r.ageMax}, Height ${r.heightMin}-${r.heightMax} cm)` })),
-          ]} testId="select-kids-size" />
-        )}
-
-        {(inputMethod === "height" || inputMethod === "chest") && (
-          <div className="space-y-3">
-            <SelectField label="Measurement Unit" value={measureUnit} onChange={(v) => setMeasureUnit(v as MeasurementUnit)} options={[
-              { value: "cm", label: "Centimeters (cm)" },
-              { value: "inch", label: "Inches (inch)" },
-              { value: "mm", label: "Millimeters (mm)" },
-              { value: "ft", label: "Feet (ft)" },
-            ]} testId="select-kids-unit" />
-            <NumberInput label={inputMethod === "height" ? `Height (${measureUnit})` : `Chest (${measureUnit})`} value={measureValue} onChange={setMeasureValue} placeholder={`Enter value in ${measureUnit}`} testId="input-kids-measurement" />
-          </div>
-        )}
-
-        <ResultsGrid results={results} />
-      </div>
-    </ToolCard>
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Kids Clothing" icon={Baby} iconColor="bg-amber-500">
+          <SelectField label="How do you want to find size?" value={inputMethod} onChange={(v) => { setInputMethod(v); setAgeInput(""); setSizeSelect(""); setMeasureValue(""); }} options={[{ value: "age", label: "Enter Age (years)" }, { value: "size", label: "Select Size" }, { value: "height", label: "Enter Height" }, { value: "chest", label: "Enter Chest Measurement" }]} testId="select-kids-input-method" />
+          {inputMethod === "age" && <NumberInput label="Child's Age (years)" value={ageInput} onChange={setAgeInput} placeholder="e.g. 3, 5, 8, 10" testId="input-kids-age" />}
+          {inputMethod === "size" && <SelectField label="Select Size" value={sizeSelect} onChange={setSizeSelect} options={[{ value: "", label: "-- Choose Size --" }, ...KIDS_CLOTHING_DATA.map(r => ({ value: r.alpha, label: `${r.alpha} (Age ${r.ageMin}-${r.ageMax}, Ht ${r.heightMin}-${r.heightMax} cm)` }))]} testId="select-kids-size" />}
+          {(inputMethod === "height" || inputMethod === "chest") && (
+            <div className="space-y-3">
+              <SelectField label="Measurement Unit" value={measureUnit} onChange={(v) => setMeasureUnit(v as MeasurementUnit)} options={[{ value: "cm", label: "Centimeters (cm)" }, { value: "inch", label: "Inches (inch)" }, { value: "mm", label: "Millimeters (mm)" }, { value: "ft", label: "Feet (ft)" }]} testId="select-kids-unit" />
+              <NumberInput label={inputMethod === "height" ? `Height (${measureUnit})` : `Chest (${measureUnit})`} value={measureValue} onChange={setMeasureValue} placeholder={`Enter value in ${measureUnit}`} testId="input-kids-measurement" />
+            </div>
+          )}
+        </InputPanel>
+      }
+      results={<ResultsPanel results={results} />}
+    />
   );
 }
 
@@ -782,159 +409,71 @@ function ShoeConverter({ gender }: { gender: "men" | "women" | "kids" }) {
   const [kidsAge, setKidsAge] = useState("");
 
   const data = gender === "kids" ? KIDS_SHOES_DATA : gender === "women" ? WOMEN_SHOES_DATA : MEN_SHOES_DATA;
-
-  const titles: Record<string, { title: string; desc: string }> = {
-    men: { title: "Men's Shoes", desc: "Formal, Sports, Casual, Sneakers" },
-    women: { title: "Women's Shoes", desc: "Heels, Flats, Sneakers, Boots" },
-    kids: { title: "Kids' Shoes", desc: "Baby, Toddler & Kids (0-12 yrs)" },
-  };
+  const titles = { men: { title: "Men's Shoes", icon: Footprints, color: "bg-blue-500" }, women: { title: "Women's Shoes", icon: Footprints, color: "bg-pink-500" }, kids: { title: "Kids' Shoes", icon: Baby, color: "bg-amber-500" } };
 
   const results = useMemo(() => {
     if (inputMethod === "footlength") {
-      const val = parseFloat(measureValue);
-      if (isNaN(val)) return [];
+      const val = parseFloat(measureValue); if (isNaN(val)) return [];
       const cm = convertToCm(val, measureUnit);
       const row = data.find(r => cm >= r.footLenMin && cm <= r.footLenMax);
       if (!row) {
-        const closest = data.reduce((prev, curr) => {
-          const pd = Math.min(Math.abs(cm - prev.footLenMin), Math.abs(cm - prev.footLenMax));
-          const cd = Math.min(Math.abs(cm - curr.footLenMin), Math.abs(cm - curr.footLenMax));
-          return cd < pd ? curr : prev;
-        });
-        const res = [
-          { label: "Closest Match", value: `~${cm.toFixed(1)} cm foot` },
-          { label: "India", value: closest.india },
-          { label: "US", value: closest.us },
-          { label: "UK", value: closest.uk },
-          { label: "EU", value: closest.eu },
-        ];
+        const closest = data.reduce((prev, curr) => { const pd = Math.min(Math.abs(cm - prev.footLenMin), Math.abs(cm - prev.footLenMax)); const cd = Math.min(Math.abs(cm - curr.footLenMin), Math.abs(cm - curr.footLenMax)); return cd < pd ? curr : prev; });
+        const res = [{ label: "Closest Match", value: `~${cm.toFixed(1)} cm` }, { label: "India", value: closest.india }, { label: "US", value: closest.us }, { label: "UK", value: closest.uk }, { label: "EU", value: closest.eu }];
         if ("ageRange" in closest) res.push({ label: "Age", value: (closest as any).ageRange });
         return res;
       }
-      const res = [
-        { label: "Foot Length", value: cmToDisplay(cm) },
-        { label: "India", value: row.india },
-        { label: "US", value: row.us },
-        { label: "UK", value: row.uk },
-        { label: "EU", value: row.eu },
-        { label: "Japan", value: row.japan },
-        { label: "China", value: row.china },
-      ];
+      const res = [{ label: "Foot Length", value: cmToDisplay(cm) }, { label: "India", value: row.india }, { label: "US", value: row.us }, { label: "UK", value: row.uk }, { label: "EU", value: row.eu }, { label: "Japan", value: row.japan }, { label: "China", value: row.china }];
       if ("canada" in row) res.push({ label: "Canada", value: (row as any).canada });
       if ("gulf" in row) res.push({ label: "Gulf", value: (row as any).gulf });
       if ("ageRange" in row) res.push({ label: "Age", value: (row as any).ageRange });
       return res;
     }
-
     if (inputMethod === "sizenumber") {
-      const num = parseFloat(sizeNumber);
-      if (isNaN(num)) return [];
+      const num = parseFloat(sizeNumber); if (isNaN(num)) return [];
       const sysKey = sizeSystem as keyof (typeof data)[0];
-      const row = data.find(r => {
-        if (sysKey in r) {
-          const rowVal = parseFloat(String(r[sysKey]));
-          return !isNaN(rowVal) && Math.abs(rowVal - num) < 0.6;
-        }
-        return false;
-      });
+      const row = data.find(r => { if (sysKey in r) { const rowVal = parseFloat(String(r[sysKey])); return !isNaN(rowVal) && Math.abs(rowVal - num) < 0.6; } return false; });
       if (!row) return [{ label: "Status", value: `No match for ${sizeSystem.toUpperCase()} ${num}` }];
-      const res = [
-        { label: "Matched", value: `${sizeSystem.toUpperCase()} ${num}` },
-        { label: "Foot Length", value: `${row.footLenMin}-${row.footLenMax} cm` },
-        { label: "India", value: row.india },
-        { label: "US", value: row.us },
-        { label: "UK", value: row.uk },
-        { label: "EU", value: row.eu },
-        { label: "Japan", value: row.japan },
-        { label: "China", value: row.china },
-      ];
+      const res = [{ label: "Matched", value: `${sizeSystem.toUpperCase()} ${num}` }, { label: "Foot Length", value: `${row.footLenMin}-${row.footLenMax} cm` }, { label: "India", value: row.india }, { label: "US", value: row.us }, { label: "UK", value: row.uk }, { label: "EU", value: row.eu }, { label: "Japan", value: row.japan }, { label: "China", value: row.china }];
       if ("canada" in row) res.push({ label: "Canada", value: (row as any).canada });
       if ("gulf" in row) res.push({ label: "Gulf", value: (row as any).gulf });
       if ("ageRange" in row) res.push({ label: "Age", value: (row as any).ageRange });
       return res;
     }
-
     if (inputMethod === "age" && gender === "kids") {
-      const age = parseFloat(kidsAge);
-      if (isNaN(age)) return [];
-      const row = KIDS_SHOES_DATA.find(r => {
-        const ageStr = r.ageRange;
-        if (ageStr.includes("mo")) return age < 1;
-        const ageNum = parseInt(ageStr);
-        return !isNaN(ageNum) && Math.abs(ageNum - age) <= 0.5;
-      });
+      const age = parseFloat(kidsAge); if (isNaN(age)) return [];
+      const row = KIDS_SHOES_DATA.find(r => { const ageStr = r.ageRange; if (ageStr.includes("mo")) return age < 1; const ageNum = parseInt(ageStr); return !isNaN(ageNum) && Math.abs(ageNum - age) <= 0.5; });
       if (!row) return [{ label: "Status", value: "No match. Age range: 0-12 years" }];
-      return [
-        { label: "Age", value: row.ageRange },
-        { label: "Foot Length", value: `${row.footLenMin}-${row.footLenMax} cm` },
-        { label: "India", value: row.india },
-        { label: "US", value: row.us },
-        { label: "UK", value: row.uk },
-        { label: "EU", value: row.eu },
-        { label: "Japan", value: row.japan },
-        { label: "China", value: row.china },
-      ];
+      return [{ label: "Age", value: row.ageRange }, { label: "Foot Length", value: `${row.footLenMin}-${row.footLenMax} cm` }, { label: "India", value: row.india }, { label: "US", value: row.us }, { label: "UK", value: row.uk }, { label: "EU", value: row.eu }, { label: "Japan", value: row.japan }, { label: "China", value: row.china }];
     }
-
     return [];
   }, [inputMethod, measureValue, measureUnit, sizeSystem, sizeNumber, kidsAge, data, gender]);
 
-  const iconMap = { men: Footprints, women: Footprints, kids: Baby };
-  const colorMap = { men: "bg-blue-500", women: "bg-pink-500", kids: "bg-amber-500" };
-
-  const inputOptions = [
-    { value: "footlength", label: "Enter Foot Length (Measured)" },
-    { value: "sizenumber", label: "Enter Size Number (UK/US/EU...)" },
-  ];
+  const inputOptions = [{ value: "footlength", label: "Enter Foot Length (Measured)" }, { value: "sizenumber", label: "Enter Size Number (UK/US/EU...)" }];
   if (gender === "kids") inputOptions.push({ value: "age", label: "Enter Age (years)" });
 
   return (
-    <ToolCard title={titles[gender].title} description={titles[gender].desc} icon={iconMap[gender]} iconColor={colorMap[gender]}>
-      <div className="space-y-4">
-        <SelectField label="How do you want to find size?" value={inputMethod} onChange={(v) => { setInputMethod(v); setMeasureValue(""); setSizeNumber(""); setKidsAge(""); }} options={inputOptions} testId={`select-${gender}-shoe-input`} />
-
-        {inputMethod === "footlength" && (
-          <div className="space-y-3">
-            <SelectField label="Measurement Unit" value={measureUnit} onChange={(v) => setMeasureUnit(v as MeasurementUnit)} options={[
-              { value: "cm", label: "Centimeters (cm)" },
-              { value: "inch", label: "Inches (inch)" },
-              { value: "mm", label: "Millimeters (mm)" },
-              { value: "ft", label: "Feet (ft)" },
-            ]} testId={`select-${gender}-shoe-unit`} />
-            <NumberInput label={`Foot Length (${measureUnit})`} value={measureValue} onChange={setMeasureValue} placeholder={measureUnit === "cm" ? "e.g. 25.5" : measureUnit === "inch" ? "e.g. 10.0" : "e.g. 255"} testId={`input-${gender}-shoe-length`} />
-            <div className="bg-muted/30 rounded-xl p-3">
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Stand on paper, mark your heel and longest toe, then measure the distance.
-              </p>
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title={titles[gender].title} icon={titles[gender].icon} iconColor={titles[gender].color}>
+          <SelectField label="How do you want to find size?" value={inputMethod} onChange={(v) => { setInputMethod(v); setMeasureValue(""); setSizeNumber(""); setKidsAge(""); }} options={inputOptions} testId={`select-${gender}-shoe-input`} />
+          {inputMethod === "footlength" && (
+            <div className="space-y-3">
+              <SelectField label="Measurement Unit" value={measureUnit} onChange={(v) => setMeasureUnit(v as MeasurementUnit)} options={[{ value: "cm", label: "Centimeters (cm)" }, { value: "inch", label: "Inches (inch)" }, { value: "mm", label: "Millimeters (mm)" }, { value: "ft", label: "Feet (ft)" }]} testId={`select-${gender}-shoe-unit`} />
+              <NumberInput label={`Foot Length (${measureUnit})`} value={measureValue} onChange={setMeasureValue} placeholder={measureUnit === "cm" ? "e.g. 25.5" : "e.g. 10.0"} testId={`input-${gender}-shoe-length`} />
+              <div className="bg-muted/30 rounded-xl p-3"><p className="text-xs text-muted-foreground">Stand on paper, mark heel to longest toe, then measure.</p></div>
             </div>
-          </div>
-        )}
-
-        {inputMethod === "sizenumber" && (
-          <div className="space-y-3">
-            <SelectField label="Size System / Country" value={sizeSystem} onChange={setSizeSystem} options={[
-              { value: "india", label: "India" },
-              { value: "us", label: "US / USA" },
-              { value: "uk", label: "UK" },
-              { value: "eu", label: "EU / Europe" },
-              { value: "japan", label: "Japan" },
-              { value: "china", label: "China" },
-              ...(gender !== "kids" ? [
-                { value: "canada", label: "Canada" },
-                { value: "gulf", label: "Gulf / Middle East" },
-              ] : []),
-            ]} testId={`select-${gender}-shoe-system`} />
-            <NumberInput label={`${sizeSystem.toUpperCase()} Size Number`} value={sizeNumber} onChange={setSizeNumber} placeholder="e.g. 8, 9, 42" testId={`input-${gender}-shoe-number`} />
-          </div>
-        )}
-
-        {inputMethod === "age" && gender === "kids" && (
-          <NumberInput label="Child's Age (years)" value={kidsAge} onChange={setKidsAge} placeholder="e.g. 3, 5, 8" testId="input-kids-shoe-age" />
-        )}
-
-        <ResultsGrid results={results} />
-      </div>
-    </ToolCard>
+          )}
+          {inputMethod === "sizenumber" && (
+            <div className="space-y-3">
+              <SelectField label="Size System / Country" value={sizeSystem} onChange={setSizeSystem} options={[{ value: "india", label: "India" }, { value: "us", label: "US / USA" }, { value: "uk", label: "UK" }, { value: "eu", label: "EU / Europe" }, { value: "japan", label: "Japan" }, { value: "china", label: "China" }, ...(gender !== "kids" ? [{ value: "canada", label: "Canada" }, { value: "gulf", label: "Gulf / Middle East" }] : [])]} testId={`select-${gender}-shoe-system`} />
+              <NumberInput label={`${sizeSystem.toUpperCase()} Size Number`} value={sizeNumber} onChange={setSizeNumber} placeholder="e.g. 8, 9, 42" testId={`input-${gender}-shoe-number`} />
+            </div>
+          )}
+          {inputMethod === "age" && gender === "kids" && <NumberInput label="Child's Age (years)" value={kidsAge} onChange={setKidsAge} placeholder="e.g. 3, 5, 8" testId="input-kids-shoe-age" />}
+        </InputPanel>
+      }
+      results={<ResultsPanel results={results} />}
+    />
   );
 }
 
@@ -948,122 +487,60 @@ function SlippersConverter() {
 
   const results = useMemo(() => {
     const data = userType === "kids" ? KIDS_SHOES_DATA : SLIPPERS_DATA;
-
     if (inputMethod === "footlength") {
-      const val = parseFloat(measureValue);
-      if (isNaN(val)) return [];
+      const val = parseFloat(measureValue); if (isNaN(val)) return [];
       const cm = convertToCm(val, measureUnit);
       const row = data.find(r => cm >= r.footLenMin && cm <= r.footLenMax);
       if (!row) {
-        const closest = data.reduce((prev, curr) => {
-          const pd = Math.min(Math.abs(cm - prev.footLenMin), Math.abs(cm - prev.footLenMax));
-          const cd = Math.min(Math.abs(cm - curr.footLenMin), Math.abs(cm - curr.footLenMax));
-          return cd < pd ? curr : prev;
-        });
+        const closest = data.reduce((prev, curr) => { const pd = Math.min(Math.abs(cm - prev.footLenMin), Math.abs(cm - prev.footLenMax)); const cd = Math.min(Math.abs(cm - curr.footLenMin), Math.abs(cm - curr.footLenMax)); return cd < pd ? curr : prev; });
         const res = [{ label: "Closest Match", value: `~${cm.toFixed(1)} cm` }, { label: "India", value: closest.india }];
-        if ("usMen" in closest) {
-          res.push({ label: "US (Men)", value: (closest as any).usMen });
-          res.push({ label: "US (Women)", value: (closest as any).usWomen });
-        } else {
-          res.push({ label: "US", value: (closest as any).us });
-        }
-        res.push({ label: "UK", value: closest.uk });
-        res.push({ label: "EU", value: closest.eu });
+        if ("usMen" in closest) { res.push({ label: "US (Men)", value: (closest as any).usMen }); res.push({ label: "US (Women)", value: (closest as any).usWomen }); } else { res.push({ label: "US", value: (closest as any).us }); }
+        res.push({ label: "UK", value: closest.uk }); res.push({ label: "EU", value: closest.eu });
         if ("ageRange" in closest) res.push({ label: "Age", value: (closest as any).ageRange });
         return res;
       }
-      const res = [
-        { label: "Foot Length", value: cmToDisplay(cm) },
-        { label: "India", value: row.india },
-      ];
-      if ("usMen" in row) {
-        res.push({ label: "US (Men)", value: (row as any).usMen });
-        res.push({ label: "US (Women)", value: (row as any).usWomen });
-      } else {
-        res.push({ label: "US", value: (row as any).us });
-      }
-      res.push({ label: "UK", value: row.uk });
-      res.push({ label: "EU", value: row.eu });
-      res.push({ label: "Japan", value: row.japan });
-      res.push({ label: "China", value: row.china });
+      const res = [{ label: "Foot Length", value: cmToDisplay(cm) }, { label: "India", value: row.india }];
+      if ("usMen" in row) { res.push({ label: "US (Men)", value: (row as any).usMen }); res.push({ label: "US (Women)", value: (row as any).usWomen }); } else { res.push({ label: "US", value: (row as any).us }); }
+      res.push({ label: "UK", value: row.uk }); res.push({ label: "EU", value: row.eu }); res.push({ label: "Japan", value: row.japan }); res.push({ label: "China", value: row.china });
       if ("ageRange" in row) res.push({ label: "Age", value: (row as any).ageRange });
       return res;
     }
-
     if (inputMethod === "sizenumber") {
-      const num = parseFloat(sizeNumber);
-      if (isNaN(num)) return [];
+      const num = parseFloat(sizeNumber); if (isNaN(num)) return [];
       const sysKey = sizeSystem as keyof (typeof data)[0];
-      const row = data.find(r => {
-        if (sysKey in r) {
-          const rowVal = parseFloat(String(r[sysKey]));
-          return !isNaN(rowVal) && Math.abs(rowVal - num) < 0.6;
-        }
-        return false;
-      });
+      const row = data.find(r => { if (sysKey in r) { const rowVal = parseFloat(String(r[sysKey])); return !isNaN(rowVal) && Math.abs(rowVal - num) < 0.6; } return false; });
       if (!row) return [{ label: "Status", value: `No match for ${sizeSystem.toUpperCase()} ${num}` }];
-      const res = [
-        { label: "Matched", value: `${sizeSystem.toUpperCase()} ${num}` },
-        { label: "Foot Length", value: `${row.footLenMin}-${row.footLenMax} cm` },
-        { label: "India", value: row.india },
-      ];
-      if ("usMen" in row) {
-        res.push({ label: "US (Men)", value: (row as any).usMen });
-        res.push({ label: "US (Women)", value: (row as any).usWomen });
-      } else {
-        res.push({ label: "US", value: (row as any).us });
-      }
-      res.push({ label: "UK", value: row.uk });
-      res.push({ label: "EU", value: row.eu });
+      const res = [{ label: "Matched", value: `${sizeSystem.toUpperCase()} ${num}` }, { label: "India", value: row.india }];
+      if ("usMen" in row) { res.push({ label: "US (Men)", value: (row as any).usMen }); res.push({ label: "US (Women)", value: (row as any).usWomen }); } else { res.push({ label: "US", value: (row as any).us }); }
+      res.push({ label: "UK", value: row.uk }); res.push({ label: "EU", value: row.eu });
       if ("ageRange" in row) res.push({ label: "Age", value: (row as any).ageRange });
       return res;
     }
-
     return [];
   }, [userType, inputMethod, measureValue, measureUnit, sizeSystem, sizeNumber]);
 
   return (
-    <ToolCard title="Slippers / Sandals" description="Flip-flops, Slides, Sandals" icon={Footprints} iconColor="bg-teal-500">
-      <div className="space-y-4">
-        <SelectField label="For Whom?" value={userType} onChange={(v) => { setUserType(v); setMeasureValue(""); setSizeNumber(""); }} options={[
-          { value: "adult", label: "Adult (Men & Women)" },
-          { value: "kids", label: "Kids (0-12 years)" },
-        ]} testId="select-slipper-user" />
-
-        <SelectField label="How do you want to find size?" value={inputMethod} onChange={(v) => { setInputMethod(v); setMeasureValue(""); setSizeNumber(""); }} options={[
-          { value: "footlength", label: "Enter Foot Length (Measured)" },
-          { value: "sizenumber", label: "Enter Size Number (India/UK/US...)" },
-        ]} testId="select-slipper-input" />
-
-        {inputMethod === "footlength" && (
-          <div className="space-y-3">
-            <SelectField label="Measurement Unit" value={measureUnit} onChange={(v) => setMeasureUnit(v as MeasurementUnit)} options={[
-              { value: "cm", label: "Centimeters (cm)" },
-              { value: "inch", label: "Inches (inch)" },
-              { value: "mm", label: "Millimeters (mm)" },
-              { value: "ft", label: "Feet (ft)" },
-            ]} testId="select-slipper-unit" />
-            <NumberInput label={`Foot Length (${measureUnit})`} value={measureValue} onChange={setMeasureValue} placeholder={measureUnit === "cm" ? "e.g. 26.0" : "e.g. 10.2"} testId="input-slipper-length" />
-          </div>
-        )}
-
-        {inputMethod === "sizenumber" && (
-          <div className="space-y-3">
-            <SelectField label="Size System / Country" value={sizeSystem} onChange={setSizeSystem} options={[
-              { value: "india", label: "India" },
-              ...(userType === "adult" ? [{ value: "usMen", label: "US (Men)" }, { value: "usWomen", label: "US (Women)" }] : [{ value: "us", label: "US" }]),
-              { value: "uk", label: "UK" },
-              { value: "eu", label: "EU / Europe" },
-              { value: "japan", label: "Japan" },
-              { value: "china", label: "China" },
-            ]} testId="select-slipper-system" />
-            <NumberInput label={`${sizeSystem.toUpperCase()} Size Number`} value={sizeNumber} onChange={setSizeNumber} placeholder="e.g. 7, 8, 42" testId="input-slipper-number" />
-          </div>
-        )}
-
-        <ResultsGrid results={results} />
-      </div>
-    </ToolCard>
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Slippers / Sandals" icon={Footprints} iconColor="bg-teal-500">
+          <SelectField label="For Whom?" value={userType} onChange={(v) => { setUserType(v); setMeasureValue(""); setSizeNumber(""); }} options={[{ value: "adult", label: "Adult (Men & Women)" }, { value: "kids", label: "Kids (0-12 years)" }]} testId="select-slipper-user" />
+          <SelectField label="How do you want to find size?" value={inputMethod} onChange={(v) => { setInputMethod(v); setMeasureValue(""); setSizeNumber(""); }} options={[{ value: "footlength", label: "Enter Foot Length (Measured)" }, { value: "sizenumber", label: "Enter Size Number (India/UK/US...)" }]} testId="select-slipper-input" />
+          {inputMethod === "footlength" && (
+            <div className="space-y-3">
+              <SelectField label="Measurement Unit" value={measureUnit} onChange={(v) => setMeasureUnit(v as MeasurementUnit)} options={[{ value: "cm", label: "Centimeters (cm)" }, { value: "inch", label: "Inches (inch)" }, { value: "mm", label: "Millimeters (mm)" }, { value: "ft", label: "Feet (ft)" }]} testId="select-slipper-unit" />
+              <NumberInput label={`Foot Length (${measureUnit})`} value={measureValue} onChange={setMeasureValue} placeholder={measureUnit === "cm" ? "e.g. 26.0" : "e.g. 10.2"} testId="input-slipper-length" />
+            </div>
+          )}
+          {inputMethod === "sizenumber" && (
+            <div className="space-y-3">
+              <SelectField label="Size System / Country" value={sizeSystem} onChange={setSizeSystem} options={[{ value: "india", label: "India" }, ...(userType === "adult" ? [{ value: "usMen", label: "US (Men)" }, { value: "usWomen", label: "US (Women)" }] : [{ value: "us", label: "US" }]), { value: "uk", label: "UK" }, { value: "eu", label: "EU / Europe" }, { value: "japan", label: "Japan" }, { value: "china", label: "China" }]} testId="select-slipper-system" />
+              <NumberInput label={`${sizeSystem.toUpperCase()} Size Number`} value={sizeNumber} onChange={setSizeNumber} placeholder="e.g. 7, 8, 42" testId="input-slipper-number" />
+            </div>
+          )}
+        </InputPanel>
+      }
+      results={<ResultsPanel results={results} />}
+    />
   );
 }
 
