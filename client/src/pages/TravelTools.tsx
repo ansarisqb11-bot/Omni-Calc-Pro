@@ -1,9 +1,9 @@
 import { useState } from "react";
 import {
   Plane, Car, Fuel, Luggage, Globe, Clock, Train,
-  Gauge, Zap, Route, Scale, Map, Package, ArrowRightLeft, Plus, Trash2, Calculator
+  Gauge, Zap, Route, Scale, Map, Package, Plus, Trash2, Calculator
 } from "lucide-react";
-import { ToolCard } from "@/components/ToolCard";
+import { DesktopToolGrid, InputPanel } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
 
 type ToolType =
@@ -27,7 +27,6 @@ function cvtUnit(val:number, from:string, to:string, table:{v:string;l:string;f:
   return fromBase(toBase(val, from, table), to, table);
 }
 
-// Speed to km/h and back
 const toKmh  = (v:number, u:string) => toBase(v, u, SPEED_UNITS);
 const frmKmh = (v:number, u:string) => fromBase(v, u, SPEED_UNITS);
 const toKm   = (v:number, u:string) => toBase(v, u, DIST_UNITS);
@@ -52,7 +51,7 @@ const to24 = (h:number, m:number, ap:string) => {
   let hh=h; if(ap==="AM"){if(hh===12)hh=0;}else{if(hh!==12)hh+=12;} return {h:hh,m};
 };
 
-// ─── Timezones (offline, no DST) ─────────────────────────────────────────────
+// ─── Timezones ────────────────────────────────────────────────────────────────
 const ZONES = [
   {l:"IST — India (New Delhi, Mumbai, Kolkata)",o:5.5},
   {l:"UTC — Universal Time",o:0},
@@ -91,7 +90,7 @@ const ZONES = [
   {l:"HST — Hawaii",o:-10},
 ];
 
-// ─── Shared UI components ─────────────────────────────────────────────────────
+// ─── Shared UI helpers ────────────────────────────────────────────────────────
 function UnitField({label, value, onChange, unit, onUnitChange, units, hint}: {
   label:string; value:string; onChange:(v:string)=>void;
   unit:string; onUnitChange:(u:string)=>void;
@@ -218,6 +217,15 @@ function Highlight({label, value, color="text-sky-400", sub}: {label:string; val
   );
 }
 
+function ResultCard({title, children}: {title:string; children:React.ReactNode}) {
+  return (
+    <div className="bg-card rounded-2xl border border-border shadow-sm p-5">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">{title}</p>
+      {children}
+    </div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function TravelTools() {
   const [activeTool, setActiveTool] = useState<ToolType>("travel-time");
@@ -280,83 +288,83 @@ function TravelTimeCalc() {
   const durMinsInput = (parseInt(durH)||0)*60 + (parseInt(durM2)||0) + extraMins;
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ModeToggle mode={mode} onChange={setMode} modes={[
-        {key:"a",label:"→ Arrival"},
-        {key:"b",label:"→ Duration"},
-        {key:"c",label:"→ Speed"},
-        {key:"d",label:"→ Departure"},
-      ]} />
-      <ToolCard title="Travel Time Calculator" icon={Clock} iconColor="bg-sky-500">
-        <div className="space-y-4">
-          {(mode==="a"||mode==="b"||mode==="d") && (
-            <TimeInput label={mode==="d"?"Arrival Time":"Departure Time"}
-              hour={mode==="d"?arrH:depH} min={mode==="d"?arrM:depM} ampm={mode==="d"?arrAp:depAp}
-              onHour={mode==="d"?setArrH:setDepH} onMin={mode==="d"?setArrM:setDepM} onAmpm={mode==="d"?setArrAp:setDepAp} />
-          )}
-          {(mode==="b") && (
-            <TimeInput label="Arrival Time" hour={arrH} min={arrM} ampm={arrAp} onHour={setArrH} onMin={setArrM} onAmpm={setArrAp} />
-          )}
-          {(mode==="a"||mode==="c") && (
-            <UnitField label="Distance" value={dist} onChange={setDist} unit={distU} onUnitChange={setDistU} units={DIST_UNITS} />
-          )}
-          {(mode==="a"||mode==="c") && (
-            <UnitField label={mode==="c"?"Travel Time (hours)":`Speed`} value={mode==="c"?durH:speed}
-              onChange={mode==="c"?setDurH:setSpeed} unit={mode==="c"?"kmh":speedU}
-              onUnitChange={mode==="c"?()=>{}:setSpeedU} units={mode==="c"?[{v:"kmh",l:"hrs",f:1}]:SPEED_UNITS}
-              hint={mode==="c"?"Enter total hours":"Avg. speed"} />
-          )}
-          {mode==="d" && (
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Travel Time Calculator" icon={Clock} iconColor="bg-sky-500">
+          <ModeToggle mode={mode} onChange={setMode} modes={[
+            {key:"a",label:"→ Arrival"},
+            {key:"b",label:"→ Duration"},
+            {key:"c",label:"→ Speed"},
+            {key:"d",label:"→ Departure"},
+          ]} />
+          <div className="space-y-4">
+            {(mode==="a"||mode==="b"||mode==="d") && (
+              <TimeInput label={mode==="d"?"Arrival Time":"Departure Time"}
+                hour={mode==="d"?arrH:depH} min={mode==="d"?arrM:depM} ampm={mode==="d"?arrAp:depAp}
+                onHour={mode==="d"?setArrH:setDepH} onMin={mode==="d"?setArrM:setDepM} onAmpm={mode==="d"?setArrAp:setDepAp} />
+            )}
+            {(mode==="b") && (
+              <TimeInput label="Arrival Time" hour={arrH} min={arrM} ampm={arrAp} onHour={setArrH} onMin={setArrM} onAmpm={setArrAp} />
+            )}
+            {(mode==="a"||mode==="c") && (
+              <UnitField label="Distance" value={dist} onChange={setDist} unit={distU} onUnitChange={setDistU} units={DIST_UNITS} />
+            )}
+            {(mode==="a"||mode==="c") && (
+              <UnitField label={mode==="c"?"Travel Time (hours)":"Speed"} value={mode==="c"?durH:speed}
+                onChange={mode==="c"?setDurH:setSpeed} unit={mode==="c"?"kmh":speedU}
+                onUnitChange={mode==="c"?()=>{}:setSpeedU} units={mode==="c"?[{v:"kmh",l:"hrs",f:1}]:SPEED_UNITS}
+                hint={mode==="c"?"Enter total hours":"Avg. speed"} />
+            )}
+            {mode==="d" && (
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Duration Hours" value={durH} onChange={setDurH} suffix="h" />
+                <Field label="Duration Mins"  value={durM2} onChange={setDurM2} suffix="m" />
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Duration Hours" value={durH} onChange={setDurH} suffix="h" />
-              <Field label="Duration Mins"  value={durM2} onChange={setDurM2} suffix="m" />
+              <Field label="Stops / Breaks" value={stopTime} onChange={setStopTime} suffix="min" />
+              <Field label="Traffic Delay"  value={delay}    onChange={setDelay}    suffix="min" />
+            </div>
+          </div>
+        </InputPanel>
+      }
+      results={
+        <ResultCard title="Result">
+          {mode==="a" && (
+            <div className="space-y-1">
+              <Step label="Travel time (driving)" value={fmtDur(distKm/spdKmh*60)} />
+              <Step label="Stops + delays" value={`+ ${fmtDur(extraMins)}`} />
+              <Highlight label="Estimated Arrival" value={fmt12(Math.floor((depMins+travelMins)/60)%24, Math.round((depMins+travelMins)%60))} />
             </div>
           )}
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Stops / Breaks" value={stopTime} onChange={setStopTime} suffix="min" />
-            <Field label="Traffic Delay"  value={delay}    onChange={setDelay}    suffix="min" />
-          </div>
-        </div>
-      </ToolCard>
-      <ToolCard title="Result" icon={Calculator} iconColor="bg-emerald-500">
-        {mode==="a" && (
-          <div className="space-y-1">
-            <Step label="Travel time (driving)" value={fmtDur(distKm/spdKmh*60)} />
-            <Step label="Stops + delays" value={`+ ${fmtDur(extraMins)}`} />
-            <Highlight label="Estimated Arrival" value={fmt12(Math.floor((depMins+travelMins)/60)%24, Math.round((depMins+travelMins)%60))} />
-          </div>
-        )}
-        {mode==="b" && (() => {
-          let diff = arrMins - depMins; if(diff<0) diff+=1440;
-          return (
-            <div className="space-y-1">
-              <Highlight label="Travel Duration" value={fmtDur(diff)} />
-            </div>
-          );
-        })()}
-        {mode==="c" && (() => {
-          const hrs = (parseInt(durH)||1); const avgKmh = distKm/hrs;
-          return (
-            <div className="space-y-1">
-              <Step label="Distance" value={`${n1(distKm)} km`} />
-              <Step label="Time" value={`${durH} hours`} />
-              <Highlight label="Average Speed" value={`${n1(avgKmh)} km/h  ·  ${n1(frmKmh(avgKmh,"mph"))} mph`} />
-            </div>
-          );
-        })()}
-        {mode==="d" && (() => {
-          const depCalcMins = arrMins - durMinsInput; 
-          const d24h = Math.floor(((depCalcMins%1440)+1440)%1440/60);
-          const d24m = Math.round(((depCalcMins%1440)+1440)%1440%60);
-          return (
-            <div className="space-y-1">
-              <Step label="Duration + extras" value={fmtDur(durMinsInput)} />
-              <Highlight label="Latest Departure" value={fmt12(d24h, d24m)} />
-            </div>
-          );
-        })()}
-      </ToolCard>
-    </div>
+          {mode==="b" && (() => {
+            let diff = arrMins - depMins; if(diff<0) diff+=1440;
+            return <div className="space-y-1"><Highlight label="Travel Duration" value={fmtDur(diff)} /></div>;
+          })()}
+          {mode==="c" && (() => {
+            const hrs = (parseInt(durH)||1); const avgKmh = distKm/hrs;
+            return (
+              <div className="space-y-1">
+                <Step label="Distance" value={`${n1(distKm)} km`} />
+                <Step label="Time" value={`${durH} hours`} />
+                <Highlight label="Average Speed" value={`${n1(avgKmh)} km/h  ·  ${n1(frmKmh(avgKmh,"mph"))} mph`} />
+              </div>
+            );
+          })()}
+          {mode==="d" && (() => {
+            const depCalcMins = arrMins - durMinsInput;
+            const d24h = Math.floor(((depCalcMins%1440)+1440)%1440/60);
+            const d24m = Math.round(((depCalcMins%1440)+1440)%1440%60);
+            return (
+              <div className="space-y-1">
+                <Step label="Duration + extras" value={fmtDur(durMinsInput)} />
+                <Highlight label="Latest Departure" value={fmt12(d24h, d24m)} />
+              </div>
+            );
+          })()}
+        </ResultCard>
+      }
+    />
   );
 }
 
@@ -385,67 +393,71 @@ function TrainCalc() {
   const scheduleArr = depMins + calcTimeMins;
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ModeToggle mode={mode} onChange={setMode} modes={[
-        {key:"a",label:"→ Speed"},
-        {key:"b",label:"→ Time"},
-        {key:"c",label:"→ Arrival"},
-        {key:"d",label:"Delay Adjust"},
-      ]} />
-      <ToolCard title="Train Schedule Calculator" icon={Train} iconColor="bg-blue-600">
-        <div className="space-y-4">
-          <UnitField label="Distance" value={dist} onChange={setDist} unit={distU} onUnitChange={setDistU} units={DIST_UNITS} />
-          {(mode==="a") && <Field label="Total Journey Time" value={travelH} onChange={setTravelH} suffix="hours" hint="e.g. 6 for 6 hours" />}
-          {(mode==="b"||mode==="c"||mode==="d") && (
-            <UnitField label="Train Speed" value={speed} onChange={setSpeed} unit={speedU} onUnitChange={setSpeedU} units={SPEED_UNITS} hint="Average speed" />
-          )}
-          {(mode==="c"||mode==="d") && (
-            <TimeInput label="Departure Time" hour={depH} min={depM} ampm={depAp} onHour={setDepH} onMin={setDepM} onAmpm={setDepAp} />
-          )}
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Station Stops" value={stops} onChange={setStops} suffix="stops" />
-            <Field label="Time per Stop" value={stopDur} onChange={setStopDur} suffix="min" />
-          </div>
-          {mode==="d" && <Field label="Delay" value={delay} onChange={setDelay} suffix="min" />}
-        </div>
-      </ToolCard>
-      <ToolCard title="Result" icon={Calculator} iconColor="bg-emerald-500">
-        {mode==="a" && (
-          <div className="space-y-1">
-            <Step label="Distance" value={`${n1(distKm)} km`} />
-            <Step label="Journey time" value={`${travelH} h`} />
-            <Highlight label="Average Train Speed" value={`${n1(calcSpeed)} km/h`} sub={`${n1(frmKmh(calcSpeed,"mph"))} mph`} />
-          </div>
-        )}
-        {mode==="b" && (
-          <div className="space-y-1">
-            <Step label="Driving time" value={fmtDur(distKm/spdKmh*60)} />
-            <Step label="Station stops" value={`+${fmtDur(stopMin)}`} />
-            <Highlight label="Total Travel Time" value={fmtDur(calcTimeMins)} />
-          </div>
-        )}
-        {mode==="c" && (() => {
-          const arrH = Math.floor(((arrMinsA%1440)+1440)%1440/60);
-          const arrM = Math.round(((arrMinsA%1440)+1440)%1440%60);
-          return (
-            <div className="space-y-1">
-              <Step label="Travel + stops" value={fmtDur(calcTimeMins)} />
-              <Highlight label="Scheduled Arrival" value={fmt12(Math.floor(scheduleArr/60)%24, Math.round(scheduleArr%60))} />
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Train Schedule Calculator" icon={Train} iconColor="bg-blue-600">
+          <ModeToggle mode={mode} onChange={setMode} modes={[
+            {key:"a",label:"→ Speed"},
+            {key:"b",label:"→ Time"},
+            {key:"c",label:"→ Arrival"},
+            {key:"d",label:"Delay Adjust"},
+          ]} />
+          <div className="space-y-4">
+            <UnitField label="Distance" value={dist} onChange={setDist} unit={distU} onUnitChange={setDistU} units={DIST_UNITS} />
+            {(mode==="a") && <Field label="Total Journey Time" value={travelH} onChange={setTravelH} suffix="hours" hint="e.g. 6 for 6 hours" />}
+            {(mode==="b"||mode==="c"||mode==="d") && (
+              <UnitField label="Train Speed" value={speed} onChange={setSpeed} unit={speedU} onUnitChange={setSpeedU} units={SPEED_UNITS} hint="Average speed" />
+            )}
+            {(mode==="c"||mode==="d") && (
+              <TimeInput label="Departure Time" hour={depH} min={depM} ampm={depAp} onHour={setDepH} onMin={setDepM} onAmpm={setDepAp} />
+            )}
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Station Stops" value={stops} onChange={setStops} suffix="stops" />
+              <Field label="Time per Stop" value={stopDur} onChange={setStopDur} suffix="min" />
             </div>
-          );
-        })()}
-        {mode==="d" && (() => {
-          const newArr = arrMinsA;
-          return (
+            {mode==="d" && <Field label="Delay" value={delay} onChange={setDelay} suffix="min" />}
+          </div>
+        </InputPanel>
+      }
+      results={
+        <ResultCard title="Result">
+          {mode==="a" && (
             <div className="space-y-1">
-              <Step label="Scheduled arrival" value={fmt12(Math.floor(scheduleArr/60)%24, Math.round(scheduleArr%60))} />
-              <Step label="Delay" value={`+${delay} min`} />
-              <Highlight label="New Arrival (with delay)" value={fmt12(Math.floor(((newArr%1440)+1440)%1440/60), Math.round(((newArr%1440)+1440)%1440%60))} color="text-red-400" />
+              <Step label="Distance" value={`${n1(distKm)} km`} />
+              <Step label="Journey time" value={`${travelH} h`} />
+              <Highlight label="Average Train Speed" value={`${n1(calcSpeed)} km/h`} sub={`${n1(frmKmh(calcSpeed,"mph"))} mph`} />
             </div>
-          );
-        })()}
-      </ToolCard>
-    </div>
+          )}
+          {mode==="b" && (
+            <div className="space-y-1">
+              <Step label="Driving time" value={fmtDur(distKm/spdKmh*60)} />
+              <Step label="Station stops" value={`+${fmtDur(stopMin)}`} />
+              <Highlight label="Total Travel Time" value={fmtDur(calcTimeMins)} />
+            </div>
+          )}
+          {mode==="c" && (() => {
+            const arrH = Math.floor(((arrMinsA%1440)+1440)%1440/60);
+            const arrM = Math.round(((arrMinsA%1440)+1440)%1440%60);
+            return (
+              <div className="space-y-1">
+                <Step label="Travel + stops" value={fmtDur(calcTimeMins)} />
+                <Highlight label="Scheduled Arrival" value={fmt12(Math.floor(scheduleArr/60)%24, Math.round(scheduleArr%60))} />
+              </div>
+            );
+          })()}
+          {mode==="d" && (() => {
+            const newArr = arrMinsA;
+            return (
+              <div className="space-y-1">
+                <Step label="Scheduled arrival" value={fmt12(Math.floor(scheduleArr/60)%24, Math.round(scheduleArr%60))} />
+                <Step label="Delay" value={`+${delay} min`} />
+                <Highlight label="New Arrival (with delay)" value={fmt12(Math.floor(((newArr%1440)+1440)%1440/60), Math.round(((newArr%1440)+1440)%1440%60))} color="text-red-400" />
+              </div>
+            );
+          })()}
+        </ResultCard>
+      }
+    />
   );
 }
 
@@ -453,11 +465,10 @@ function TrainCalc() {
 function FuelCostCalc() {
   const [mode, setMode] = useState("a");
   const [dist, setDist] = useState("500"); const [distU, setDistU] = useState("km");
-  const [mileage, setMileage] = useState("15"); const [mileU, setMileU] = useState("km");
+  const [mileage, setMileage] = useState("15");
   const [fuelPrice, setFuelPrice] = useState("105");
   const [currency, setCurrency] = useState("₹");
   const [fuelType, setFuelType] = useState("petrol");
-  const [priceUnit, setPriceUnit] = useState("L");
   const [budget, setBudget] = useState("500");
   const [fuelAvail, setFuelAvail] = useState("30"); const [fuelAvailU, setFuelAvailU] = useState("L");
   const [roundTrip, setRoundTrip] = useState(false);
@@ -472,85 +483,89 @@ function FuelCostCalc() {
   const distFromFuel = toBase(parseFloat(fuelAvail)||0, fuelAvailU, FUEL_VOL) * mpLInKm;
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ModeToggle mode={mode} onChange={setMode} modes={[
-        {key:"a",label:"Trip Cost"},
-        {key:"b",label:"Budget → Dist"},
-        {key:"c",label:"Fuel → Dist"},
-      ]} color="bg-orange-500" />
-      <ToolCard title="Trip Fuel Cost Calculator" icon={Fuel} iconColor="bg-orange-500">
-        <div className="space-y-4">
-          {mode==="a" && <UnitField label="Trip Distance" value={dist} onChange={setDist} unit={distU} onUnitChange={setDistU} units={DIST_UNITS} />}
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Trip Fuel Cost Calculator" icon={Fuel} iconColor="bg-orange-500">
+          <ModeToggle mode={mode} onChange={setMode} modes={[
+            {key:"a",label:"Trip Cost"},
+            {key:"b",label:"Budget → Dist"},
+            {key:"c",label:"Fuel → Dist"},
+          ]} color="bg-orange-500" />
+          <div className="space-y-4">
+            {mode==="a" && <UnitField label="Trip Distance" value={dist} onChange={setDist} unit={distU} onUnitChange={setDistU} units={DIST_UNITS} />}
+            {mode==="b" && (
+              <div className="flex gap-2">
+                <div className="w-20"><Field label="Currency" value={currency} onChange={setCurrency} /></div>
+                <div className="flex-1"><Field label="Budget" value={budget} onChange={setBudget} /></div>
+              </div>
+            )}
+            {mode==="c" && (
+              <UnitField label="Fuel Available" value={fuelAvail} onChange={setFuelAvail} unit={fuelAvailU} onUnitChange={setFuelAvailU} units={FUEL_VOL} />
+            )}
+            <SelectField label="Fuel Type" value={fuelType} onChange={setFuelType} options={[
+              {value:"petrol",   label:"Petrol"},
+              {value:"diesel",   label:"Diesel"},
+              {value:"cng",      label:"CNG"},
+              {value:"electric", label:"Electric (per kWh)"},
+              {value:"lpg",      label:"LPG"},
+            ]} />
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Mileage" value={mileage} onChange={setMileage} suffix={`km/${fuelType==="cng"?"kg":fuelType==="electric"?"kWh":"L"}`} />
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground mb-1 block uppercase tracking-wide">
+                  {fuelType==="electric"?"Elec Price":"Fuel Price"}
+                </label>
+                <div className="flex rounded-xl border border-border overflow-hidden focus-within:ring-2 focus-within:ring-primary/40">
+                  <input type="number" value={fuelPrice} onChange={e=>setFuelPrice(e.target.value)}
+                    className="flex-1 min-w-0 bg-muted/50 px-3 py-2.5 text-foreground text-sm focus:outline-none" />
+                  <select value={currency} onChange={e=>setCurrency(e.target.value)}
+                    className="bg-muted border-l border-border px-2 py-2.5 text-sm font-bold text-muted-foreground focus:outline-none cursor-pointer">
+                    {["₹","$","€","£","¥","AED","SGD","BDT","NPR","PKR"].map(c=><option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+              </div>
+            </div>
+            {mode==="a" && (
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={roundTrip} onChange={e=>setRoundTrip(e.target.checked)}
+                  className="w-4 h-4 rounded" data-testid="input-round-trip" />
+                <span className="text-sm text-muted-foreground">Round Trip</span>
+              </label>
+            )}
+          </div>
+        </InputPanel>
+      }
+      results={
+        <ResultCard title="Result">
+          {mode==="a" && (
+            <div className="space-y-1">
+              <Step label={`Distance${roundTrip?" (×2)":""}`} value={`${n1(distKm)} km`} />
+              <Step label="Fuel Needed" value={`${n1(fuelNeeded)} ${fuelType==="cng"?"kg":fuelType==="electric"?"kWh":"L"}`} />
+              <Step label="Fuel Rate" value={`${currency}${fuelPrice}/${fuelType==="cng"?"kg":fuelType==="electric"?"kWh":"L"}`} />
+              <Highlight label="Total Fuel Cost" value={`${currency}${Math.ceil(tripCost)}`} color="text-orange-400" />
+            </div>
+          )}
           {mode==="b" && (
-            <div className="flex gap-2">
-              <div className="w-20"><Field label="Currency" value={currency} onChange={setCurrency} /></div>
-              <div className="flex-1"><Field label="Budget" value={budget} onChange={setBudget} /></div>
+            <div className="space-y-1">
+              <Step label="Budget" value={`${currency}${budget}`} />
+              <Step label="Mileage" value={`${mileage} km/unit`} />
+              <Highlight label="Max Distance" value={`${n1(maxDist)} km  ·  ${n1(frmKm(maxDist,"mi"))} mi`} color="text-orange-400" />
             </div>
           )}
           {mode==="c" && (
-            <UnitField label="Fuel Available" value={fuelAvail} onChange={setFuelAvail} unit={fuelAvailU} onUnitChange={setFuelAvailU} units={FUEL_VOL} />
-          )}
-          <SelectField label="Fuel Type" value={fuelType} onChange={setFuelType} options={[
-            {value:"petrol",   label:"Petrol"},
-            {value:"diesel",   label:"Diesel"},
-            {value:"cng",      label:"CNG"},
-            {value:"electric", label:"Electric (per kWh)"},
-            {value:"lpg",      label:"LPG"},
-          ]} />
-          <div className="grid grid-cols-2 gap-3">
-            <Field label={`Mileage`} value={mileage} onChange={setMileage} suffix={`km/${fuelType==="cng"?"kg":fuelType==="electric"?"kWh":"L"}`} />
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground mb-1 block uppercase tracking-wide">
-                {fuelType==="electric"?"Elec Price":"Fuel Price"}
-              </label>
-              <div className="flex rounded-xl border border-border overflow-hidden focus-within:ring-2 focus-within:ring-primary/40">
-                <input type="number" value={fuelPrice} onChange={e=>setFuelPrice(e.target.value)}
-                  className="flex-1 min-w-0 bg-muted/50 px-3 py-2.5 text-foreground text-sm focus:outline-none" />
-                <select value={currency} onChange={e=>setCurrency(e.target.value)}
-                  className="bg-muted border-l border-border px-2 py-2.5 text-sm font-bold text-muted-foreground focus:outline-none cursor-pointer">
-                  {["₹","$","€","£","¥","AED","SGD","BDT","NPR","PKR"].map(c=><option key={c} value={c}>{c}</option>)}
-                </select>
-              </div>
+            <div className="space-y-1">
+              <Step label="Fuel Available" value={`${fuelAvail} ${fuelAvailU}`} />
+              <Step label="Mileage" value={`${mileage} km/unit`} />
+              <Highlight label="Distance Possible" value={`${n1(distFromFuel)} km`} color="text-orange-400" />
             </div>
-          </div>
-          {mode==="a" && (
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={roundTrip} onChange={e=>setRoundTrip(e.target.checked)}
-                className="w-4 h-4 rounded" data-testid="input-round-trip" />
-              <span className="text-sm text-muted-foreground">Round Trip</span>
-            </label>
           )}
-        </div>
-      </ToolCard>
-      <ToolCard title="Result" icon={Calculator} iconColor="bg-emerald-500">
-        {mode==="a" && (
-          <div className="space-y-1">
-            <Step label={`Distance${roundTrip?" (×2)":""}`} value={`${n1(distKm)} km`} />
-            <Step label="Fuel Needed" value={`${n1(fuelNeeded)} ${fuelType==="cng"?"kg":fuelType==="electric"?"kWh":"L"}`} />
-            <Step label="Fuel Rate" value={`${currency}${fuelPrice}/${fuelType==="cng"?"kg":fuelType==="electric"?"kWh":"L"}`} />
-            <Highlight label="Total Fuel Cost" value={`${currency}${Math.ceil(tripCost)}`} color="text-orange-400" />
-          </div>
-        )}
-        {mode==="b" && (
-          <div className="space-y-1">
-            <Step label="Budget" value={`${currency}${budget}`} />
-            <Step label="Mileage" value={`${mileage} km/unit`} />
-            <Highlight label="Max Distance" value={`${n1(maxDist)} km  ·  ${n1(frmKm(maxDist,"mi"))} mi`} color="text-orange-400" />
-          </div>
-        )}
-        {mode==="c" && (
-          <div className="space-y-1">
-            <Step label="Fuel Available" value={`${fuelAvail} ${fuelAvailU}`} />
-            <Step label="Mileage" value={`${mileage} km/unit`} />
-            <Highlight label="Distance Possible" value={`${n1(distFromFuel)} km`} color="text-orange-400" />
-          </div>
-        )}
-      </ToolCard>
-    </div>
+        </ResultCard>
+      }
+    />
   );
 }
 
-// ─── 4. Luggage Weight Calculator ────────────────────────────────────────────
+// ─── 4. Luggage Weight Calculator ─────────────────────────────────────────────
 function LuggageCalc() {
   const [bags, setBags] = useState([
     {name:"Bag 1", weight:"12", unit:"kg"},
@@ -594,76 +609,80 @@ function LuggageCalc() {
   const updateBag = (i:number, field:string, value:string) => setBags(prev=>prev.map((b,idx)=>idx===i?{...b,[field]:value}:b));
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Luggage Weight Calculator" icon={Luggage} iconColor="bg-violet-500">
-        <div className="space-y-4">
-          <SelectField label="Airline Preset" value={airline} onChange={handleAirlineChange}
-            options={Object.entries(airlines).map(([k,v])=>({value:k,label:v.name}))} />
-          <div className="grid grid-cols-2 gap-3">
-            <UnitField label="Baggage Limit" value={limit} onChange={setLimit} unit={limitU} onUnitChange={setLimitU} units={UNITS} />
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Luggage Weight Calculator" icon={Luggage} iconColor="bg-violet-500">
+          <div className="space-y-4">
+            <SelectField label="Airline Preset" value={airline} onChange={handleAirlineChange}
+              options={Object.entries(airlines).map(([k,v])=>({value:k,label:v.name}))} />
+            <div className="grid grid-cols-2 gap-3">
+              <UnitField label="Baggage Limit" value={limit} onChange={setLimit} unit={limitU} onUnitChange={setLimitU} units={UNITS} />
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground mb-1 block uppercase tracking-wide">Overweight Fee / kg</label>
+                <div className="flex rounded-xl border border-border overflow-hidden">
+                  <input type="number" value={fee} onChange={e=>setFee(e.target.value)}
+                    className="flex-1 bg-muted/50 px-3 py-2.5 text-foreground text-sm focus:outline-none" />
+                  <select value={currency} onChange={e=>setCurrency(e.target.value)}
+                    className="bg-muted border-l border-border px-2 py-2.5 text-sm font-bold text-muted-foreground focus:outline-none">
+                    {["₹","$","€","£","AED"].map(c=><option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+              </div>
+            </div>
             <div>
-              <label className="text-xs font-semibold text-muted-foreground mb-1 block uppercase tracking-wide">Overweight Fee / kg</label>
-              <div className="flex rounded-xl border border-border overflow-hidden">
-                <input type="number" value={fee} onChange={e=>setFee(e.target.value)}
-                  className="flex-1 bg-muted/50 px-3 py-2.5 text-foreground text-sm focus:outline-none" />
-                <select value={currency} onChange={e=>setCurrency(e.target.value)}
-                  className="bg-muted border-l border-border px-2 py-2.5 text-sm font-bold text-muted-foreground focus:outline-none">
-                  {["₹","$","€","£","AED"].map(c=><option key={c} value={c}>{c}</option>)}
-                </select>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Your Bags</p>
+                <button onClick={addBag} className="flex items-center gap-1 px-3 py-1 bg-sky-500 text-white rounded-lg text-xs font-bold" data-testid="button-add-bag">
+                  <Plus className="w-3 h-3" /> Add Bag
+                </button>
+              </div>
+              <div className="space-y-2">
+                {bags.map((bag,i)=>(
+                  <div key={i} className="flex gap-2 items-end">
+                    <div className="flex-1">
+                      <Field label={`Bag ${i+1} Name`} value={bag.name} onChange={v=>updateBag(i,"name",v)} type="text" />
+                    </div>
+                    <div className="w-36">
+                      <UnitField label="Weight" value={bag.weight} onChange={v=>updateBag(i,"weight",v)}
+                        unit={bag.unit} onUnitChange={v=>updateBag(i,"unit",v)} units={UNITS} />
+                    </div>
+                    <button onClick={()=>removeBag(i)} className="mb-0.5 p-2.5 text-red-400 hover:bg-red-500/20 rounded-lg" data-testid={`button-remove-bag-${i}`}>
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Your Bags</p>
-              <button onClick={addBag} className="flex items-center gap-1 px-3 py-1 bg-sky-500 text-white rounded-lg text-xs font-bold" data-testid="button-add-bag">
-                <Plus className="w-3 h-3" /> Add Bag
-              </button>
+        </InputPanel>
+      }
+      results={
+        <ResultCard title="Weight Summary">
+          <div className="space-y-1">
+            {bags.map((b,i)=>(
+              <Step key={i} label={b.name||`Bag ${i+1}`} value={`${b.weight} ${b.unit}  (${n2(toKg(parseFloat(b.weight)||0,b.unit))} kg)`} />
+            ))}
+            <div className="border-t border-border pt-2 mt-2">
+              <Step label="Total Weight" value={`${n2(totalKg)} kg  ·  ${n2(frmKg(totalKg,"lb"))} lb`} />
+              <Step label="Allowed Limit" value={`${limit} ${limitU}  (${n2(limitKg)} kg)`} />
             </div>
-            <div className="space-y-2">
-              {bags.map((bag,i)=>(
-                <div key={i} className="flex gap-2 items-end">
-                  <div className="flex-1">
-                    <Field label={`Bag ${i+1} Name`} value={bag.name} onChange={v=>updateBag(i,"name",v)} type="text" />
-                  </div>
-                  <div className="w-36">
-                    <UnitField label="Weight" value={bag.weight} onChange={v=>updateBag(i,"weight",v)}
-                      unit={bag.unit} onUnitChange={v=>updateBag(i,"unit",v)} units={UNITS} />
-                  </div>
-                  <button onClick={()=>removeBag(i)} className="mb-0.5 p-2.5 text-red-400 hover:bg-red-500/20 rounded-lg" data-testid={`button-remove-bag-${i}`}>
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
+            {within ? (
+              <div className="bg-emerald-500/20 text-emerald-400 rounded-xl p-3 text-center text-sm font-semibold mt-2">
+                ✓ Within limit — {n2(limitKg-totalKg)} kg spare
+              </div>
+            ) : (
+              <div className="space-y-1">
+                <Highlight label="Excess Weight" value={`${n2(excessKg)} kg over`} color="text-red-400" sub={`Overweight fee: ${currency}${Math.ceil(feeTotal)}`} />
+              </div>
+            )}
           </div>
-        </div>
-      </ToolCard>
-      <ToolCard title="Weight Summary" icon={Calculator} iconColor="bg-emerald-500">
-        <div className="space-y-1">
-          {bags.map((b,i)=>(
-            <Step key={i} label={b.name||`Bag ${i+1}`} value={`${b.weight} ${b.unit}  (${n2(toKg(parseFloat(b.weight)||0,b.unit))} kg)`} />
-          ))}
-          <div className="border-t border-border pt-2 mt-2">
-            <Step label="Total Weight" value={`${n2(totalKg)} kg  ·  ${n2(frmKg(totalKg,"lb"))} lb`} />
-            <Step label="Allowed Limit" value={`${limit} ${limitU}  (${n2(limitKg)} kg)`} />
-          </div>
-          {within ? (
-            <div className="bg-emerald-500/20 text-emerald-400 rounded-xl p-3 text-center text-sm font-semibold mt-2">
-              ✓ Within limit — {n2(limitKg-totalKg)} kg spare
-            </div>
-          ) : (
-            <div className="space-y-1">
-              <Highlight label={`Excess Weight`} value={`${n2(excessKg)} kg over`} color="text-red-400" sub={`Overweight fee: ${currency}${Math.ceil(feeTotal)}`} />
-            </div>
-          )}
-        </div>
-      </ToolCard>
-    </div>
+        </ResultCard>
+      }
+    />
   );
 }
 
-// ─── 5. Distance Converter ───────────────────────────────────────────────────
+// ─── 5. Distance Converter ────────────────────────────────────────────────────
 function DistanceConverter() {
   const [val, setVal] = useState("100");
   const [fromU, setFromU] = useState("km");
@@ -680,10 +699,11 @@ function DistanceConverter() {
     {v:"league",l:"League",       f:4.828},
   ];
   const baseKm = toBase(parseFloat(val)||0, fromU, UNITS_EXT);
+
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Distance Converter" icon={Route} iconColor="bg-teal-500">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Distance Converter" icon={Route} iconColor="bg-teal-500">
           <div>
             <label className="text-xs font-semibold text-muted-foreground mb-1 block uppercase tracking-wide">Enter Value</label>
             <div className="flex rounded-xl border border-border overflow-hidden focus-within:ring-2 focus-within:ring-primary/40">
@@ -695,16 +715,18 @@ function DistanceConverter() {
               </select>
             </div>
           </div>
-        </div>
-      </ToolCard>
-      <ToolCard title="All Conversions" icon={ArrowRightLeft} iconColor="bg-emerald-500">
-        <div className="space-y-1">
-          {UNITS_EXT.filter(u=>u.v!==fromU).map(u=>(
-            <Step key={u.v} label={u.l} value={`${parseFloat((baseKm/u.f).toPrecision(6))} ${u.v}`} />
-          ))}
-        </div>
-      </ToolCard>
-    </div>
+        </InputPanel>
+      }
+      results={
+        <ResultCard title="All Conversions">
+          <div className="space-y-1">
+            {UNITS_EXT.filter(u=>u.v!==fromU).map(u=>(
+              <Step key={u.v} label={u.l} value={`${parseFloat((baseKm/u.f).toPrecision(6))} ${u.v}`} />
+            ))}
+          </div>
+        </ResultCard>
+      }
+    />
   );
 }
 
@@ -728,39 +750,45 @@ function TimeZoneConverter() {
   const diffLabel = diffH===0?"Same time": diffH>0?`+${diffH} hrs`:`${diffH} hrs`;
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Time Zone Converter" icon={Globe} iconColor="bg-indigo-500">
-        <div className="space-y-4">
-          <SelectField label="From Time Zone" value={fromZ} onChange={setFromZ}
-            options={ZONES.map(z=>({value:z.l,label:`UTC${z.o>=0?"+":""}${z.o}  ${z.l}`}))} />
-          <TimeInput label="Time" hour={hour} min={min} ampm={ampm} onHour={setHour} onMin={setMin} onAmpm={setAmpm} />
-          <SelectField label="To Time Zone" value={toZ} onChange={setToZ}
-            options={ZONES.map(z=>({value:z.l,label:`UTC${z.o>=0?"+":""}${z.o}  ${z.l}`}))} />
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Time Zone Converter" icon={Globe} iconColor="bg-indigo-500">
+          <div className="space-y-4">
+            <SelectField label="From Time Zone" value={fromZ} onChange={setFromZ}
+              options={ZONES.map(z=>({value:z.l,label:`UTC${z.o>=0?"+":""}${z.o}  ${z.l}`}))} />
+            <TimeInput label="Time" hour={hour} min={min} ampm={ampm} onHour={setHour} onMin={setMin} onAmpm={setAmpm} />
+            <SelectField label="To Time Zone" value={toZ} onChange={setToZ}
+              options={ZONES.map(z=>({value:z.l,label:`UTC${z.o>=0?"+":""}${z.o}  ${z.l}`}))} />
+          </div>
+        </InputPanel>
+      }
+      results={
+        <div className="flex flex-col gap-4">
+          <ResultCard title="Result">
+            <div className="space-y-1">
+              <Step label="Input time" value={`${fmt12(h24, m24)}  (UTC${fOffset>=0?"+":""}${fOffset})`} />
+              <Step label="UTC time" value={fmt12(Math.floor(((utcMins%1440)+1440)%1440/60), Math.round(((utcMins%1440)+1440)%1440%60))} />
+              <Step label="Offset difference" value={diffLabel} />
+              {nextDay && <p className="text-xs text-amber-400 font-medium mt-1">⚠ Time crosses midnight (next/previous day)</p>}
+              <Highlight label={toZ.split("—")[0].trim()} value={fmt12(dH, dM)} color="text-indigo-400" />
+            </div>
+          </ResultCard>
+          <ResultCard title="Quick Reference: IST to World">
+            <div className="space-y-1">
+              {[
+                {l:"London (GMT)",o:0},{l:"Dubai",o:4},{l:"Singapore",o:8},
+                {l:"Tokyo",o:9},{l:"New York (EST)",o:-5},{l:"New York (EDT)",o:-4},
+                {l:"Los Angeles (PST)",o:-8},{l:"Sydney (AEST)",o:10},
+              ].map(z=>{
+                let dest = totalMins - fOffset*60 + z.o*60;
+                dest = ((dest%1440)+1440)%1440;
+                return <Step key={z.l} label={z.l} value={fmt12(Math.floor(dest/60), Math.round(dest%60))} />;
+              })}
+            </div>
+          </ResultCard>
         </div>
-      </ToolCard>
-      <ToolCard title="Result" icon={Calculator} iconColor="bg-emerald-500">
-        <div className="space-y-1">
-          <Step label="Input time" value={`${fmt12(h24, m24)}  (UTC${fOffset>=0?"+":""}${fOffset})`} />
-          <Step label="UTC time" value={fmt12(Math.floor(((utcMins%1440)+1440)%1440/60), Math.round(((utcMins%1440)+1440)%1440%60))} />
-          <Step label="Offset difference" value={diffLabel} />
-          {nextDay && <p className="text-xs text-amber-400 font-medium">⚠ Time crosses midnight (next/previous day)</p>}
-          <Highlight label={toZ.split("—")[0].trim()} value={fmt12(dH, dM)} color="text-indigo-400" />
-        </div>
-      </ToolCard>
-      <ToolCard title="Quick Reference: IST to World" icon={Map} iconColor="bg-sky-500">
-        <div className="space-y-1">
-          {[
-            {l:"London (GMT)",o:0},{l:"Dubai",o:4},{l:"Singapore",o:8},
-            {l:"Tokyo",o:9},{l:"New York (EST)",o:-5},{l:"New York (EDT)",o:-4},
-            {l:"Los Angeles (PST)",o:-8},{l:"Sydney (AEST)",o:10},
-          ].map(z=>{
-            let dest = totalMins - fOffset*60 + z.o*60;
-            dest = ((dest%1440)+1440)%1440;
-            return <Step key={z.l} label={z.l} value={fmt12(Math.floor(dest/60), Math.round(dest%60))} />;
-          })}
-        </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -790,60 +818,64 @@ function FlightCalc() {
   const arrLocal = ((arrUTC + tOffset*60)%1440+1440)%1440;
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ModeToggle mode={mode} onChange={setMode} modes={[
-        {key:"a",label:"Dist → Duration"},
-        {key:"b",label:"Dep + Dur → Arrival"},
-        {key:"c",label:"With Timezones"},
-      ]} color="bg-sky-600" />
-      <ToolCard title="Flight Duration Calculator" icon={Plane} iconColor="bg-sky-600">
-        <div className="space-y-4">
-          <UnitField label="Flight Distance" value={dist} onChange={setDist} unit={distU} onUnitChange={setDistU} units={DIST_UNITS} />
-          <UnitField label="Aircraft Speed" value={speed} onChange={setSpeed} unit={speedU} onUnitChange={setSpeedU} units={SPEED_UNITS} hint="Commercial jet: ~850–950 km/h" />
-          {(mode==="b"||mode==="c") && (
-            <TimeInput label="Departure Time" hour={depH} min={depM} ampm={depAp} onHour={setDepH} onMin={setDepM} onAmpm={setDepAp} />
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Flight Duration Calculator" icon={Plane} iconColor="bg-sky-600">
+          <ModeToggle mode={mode} onChange={setMode} modes={[
+            {key:"a",label:"Dist → Duration"},
+            {key:"b",label:"Dep + Dur → Arrival"},
+            {key:"c",label:"With Timezones"},
+          ]} color="bg-sky-600" />
+          <div className="space-y-4">
+            <UnitField label="Flight Distance" value={dist} onChange={setDist} unit={distU} onUnitChange={setDistU} units={DIST_UNITS} />
+            <UnitField label="Aircraft Speed" value={speed} onChange={setSpeed} unit={speedU} onUnitChange={setSpeedU} units={SPEED_UNITS} hint="Commercial jet: ~850–950 km/h" />
+            {(mode==="b"||mode==="c") && (
+              <TimeInput label="Departure Time" hour={depH} min={depM} ampm={depAp} onHour={setDepH} onMin={setDepM} onAmpm={setDepAp} />
+            )}
+            {mode==="b" && (
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Flight Hours"   value={durH}  onChange={setDurH}  suffix="h" />
+                <Field label="Flight Minutes" value={durM2} onChange={setDurM2} suffix="m" />
+              </div>
+            )}
+            {mode==="c" && (
+              <>
+                <SelectField label="Departure Timezone" value={fromZ} onChange={setFromZ}
+                  options={ZONES.map(z=>({value:z.l,label:`UTC${z.o>=0?"+":""}${z.o}  ${z.l}`}))} />
+                <SelectField label="Arrival Timezone" value={toZ} onChange={setToZ}
+                  options={ZONES.map(z=>({value:z.l,label:`UTC${z.o>=0?"+":""}${z.o}  ${z.l}`}))} />
+              </>
+            )}
+          </div>
+        </InputPanel>
+      }
+      results={
+        <ResultCard title="Result">
+          {mode==="a" && (
+            <div className="space-y-1">
+              <Step label="Distance" value={`${n0(distKm)} km  ·  ${n0(frmKm(distKm,"mi"))} mi`} />
+              <Step label="Speed" value={`${speed} ${speedU}`} />
+              <Highlight label="Flight Duration" value={`${flightH}h ${flightM}m`} />
+            </div>
           )}
           {mode==="b" && (
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Flight Hours"   value={durH}  onChange={setDurH}  suffix="h" />
-              <Field label="Flight Minutes" value={durM2} onChange={setDurM2} suffix="m" />
+            <div className="space-y-1">
+              <Step label="Departure" value={fmt12(dep24.h, dep24.m)} />
+              <Step label="Flight time" value={`${durH}h ${durM2}m`} />
+              <Highlight label="Arrival (same timezone)" value={fmt12(Math.floor(((depMins+durMinsInput)%1440)/60), Math.round((depMins+durMinsInput)%1440%60))} />
             </div>
           )}
           {mode==="c" && (
-            <>
-              <SelectField label="Departure Timezone" value={fromZ} onChange={setFromZ}
-                options={ZONES.map(z=>({value:z.l,label:`UTC${z.o>=0?"+":""}${z.o}  ${z.l}`}))} />
-              <SelectField label="Arrival Timezone" value={toZ} onChange={setToZ}
-                options={ZONES.map(z=>({value:z.l,label:`UTC${z.o>=0?"+":""}${z.o}  ${z.l}`}))} />
-            </>
+            <div className="space-y-1">
+              <Step label="Departure" value={`${fmt12(dep24.h, dep24.m)}  (${fromZ.split("—")[0].trim()})`} />
+              <Step label="Flight time" value={`${flightH}h ${flightM}m`} />
+              <Step label="Timezone change" value={`${tOffset-fOffset>=0?"+":""}${tOffset-fOffset} hrs`} />
+              <Highlight label={`Arrival — ${toZ.split("—")[0].trim()}`} value={fmt12(Math.floor(arrLocal/60), Math.round(arrLocal%60))} color="text-sky-400" />
+            </div>
           )}
-        </div>
-      </ToolCard>
-      <ToolCard title="Result" icon={Calculator} iconColor="bg-emerald-500">
-        {mode==="a" && (
-          <div className="space-y-1">
-            <Step label="Distance" value={`${n0(distKm)} km  ·  ${n0(frmKm(distKm,"mi"))} mi`} />
-            <Step label="Speed" value={`${speed} ${speedU}`} />
-            <Highlight label="Flight Duration" value={`${flightH}h ${flightM}m`} />
-          </div>
-        )}
-        {mode==="b" && (
-          <div className="space-y-1">
-            <Step label="Departure" value={fmt12(dep24.h, dep24.m)} />
-            <Step label="Flight time" value={`${durH}h ${durM2}m`} />
-            <Highlight label="Arrival (same timezone)" value={fmt12(Math.floor(((depMins+durMinsInput)%1440)/60), Math.round((depMins+durMinsInput)%1440%60))} />
-          </div>
-        )}
-        {mode==="c" && (
-          <div className="space-y-1">
-            <Step label="Departure" value={`${fmt12(dep24.h, dep24.m)}  (${fromZ.split("—")[0].trim()})`} />
-            <Step label="Flight time" value={`${flightH}h ${flightM}m`} />
-            <Step label="Timezone change" value={`${tOffset-fOffset>=0?"+":""}${tOffset-fOffset} hrs`} />
-            <Highlight label={`Arrival — ${toZ.split("—")[0].trim()}`} value={fmt12(Math.floor(arrLocal/60), Math.round(arrLocal%60))} color="text-sky-400" />
-          </div>
-        )}
-      </ToolCard>
-    </div>
+        </ResultCard>
+      }
+    />
   );
 }
 
@@ -872,73 +904,77 @@ function PackingList() {
   const updateItem = (i:number, f:string, v:string) => setItems(prev=>prev.map((it,idx)=>idx===i?{...it,[f]:v}:it));
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Packing List Weight Planner" icon={Package} iconColor="bg-purple-500">
-        <div className="space-y-4">
-          <UnitField label="Weight Limit (cabin / check-in)" value={limit} onChange={setLimit} unit={limitU} onUnitChange={setLimitU} units={UNITS} />
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Items ({items.length})</p>
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Packing List Weight Planner" icon={Package} iconColor="bg-purple-500">
+          <div className="space-y-4">
+            <UnitField label="Weight Limit (cabin / check-in)" value={limit} onChange={setLimit} unit={limitU} onUnitChange={setLimitU} units={UNITS} />
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Items ({items.length})</p>
+              </div>
+              <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                {items.map((it,i)=>(
+                  <div key={i} className="flex gap-2 items-end">
+                    <div className="flex-1">
+                      <Field label="Item" value={it.name} onChange={v=>updateItem(i,"name",v)} type="text" />
+                    </div>
+                    <div className="w-36">
+                      <UnitField label="Weight" value={it.weight} onChange={v=>updateItem(i,"weight",v)}
+                        unit={it.unit} onUnitChange={v=>updateItem(i,"unit",v)} units={UNITS} />
+                    </div>
+                    <button onClick={()=>removeItem(i)} className="mb-0.5 p-2.5 text-red-400 hover:bg-red-500/20 rounded-lg" data-testid={`button-remove-item-${i}`}>
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+            <div className="bg-muted/30 rounded-xl p-3 space-y-3">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Add New Item</p>
+              <Field label="Item Name" value={newName} onChange={setNewName} type="text" hint="e.g. Laptop, Clothes" />
+              <UnitField label="Weight" value={newW} onChange={setNewW} unit={newWU} onUnitChange={setNewWU} units={UNITS} />
+              <button onClick={addItem}
+                className="w-full flex items-center justify-center gap-2 py-2.5 bg-purple-500 hover:bg-purple-600 text-white rounded-xl text-sm font-semibold"
+                data-testid="button-add-item">
+                <Plus className="w-4 h-4" /> Add Item
+              </button>
+            </div>
+          </div>
+        </InputPanel>
+      }
+      results={
+        <ResultCard title="Weight Summary">
+          <div className="space-y-3">
+            <div className="flex justify-between text-sm mb-1">
+              <span className="text-muted-foreground">Total</span>
+              <span className="font-bold">{n2(totalKg)} kg / {n2(limitKg)} kg</span>
+            </div>
+            <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
+              <div className={`h-full rounded-full transition-all ${pct>100?"bg-red-500":pct>85?"bg-amber-400":"bg-emerald-500"}`}
+                style={{width:`${Math.min(100,pct)}%`}} />
+            </div>
+            <div className="space-y-1">
               {items.map((it,i)=>(
-                <div key={i} className="flex gap-2 items-end">
-                  <div className="flex-1">
-                    <Field label="Item" value={it.name} onChange={v=>updateItem(i,"name",v)} type="text" />
-                  </div>
-                  <div className="w-36">
-                    <UnitField label="Weight" value={it.weight} onChange={v=>updateItem(i,"weight",v)}
-                      unit={it.unit} onUnitChange={v=>updateItem(i,"unit",v)} units={UNITS} />
-                  </div>
-                  <button onClick={()=>removeItem(i)} className="mb-0.5 p-2.5 text-red-400 hover:bg-red-500/20 rounded-lg" data-testid={`button-remove-item-${i}`}>
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
+                <Step key={i} label={it.name||`Item ${i+1}`} value={`${it.weight} ${it.unit}  (${n2(toKg(parseFloat(it.weight)||0,it.unit))} kg)`} />
               ))}
+              <div className="border-t border-border pt-2">
+                <Step label="Total" value={`${n2(totalKg)} kg  ·  ${n2(frmKg(totalKg,"lb"))} lb`} />
+              </div>
             </div>
+            {totalKg <= limitKg ? (
+              <div className="bg-emerald-500/20 text-emerald-400 rounded-xl p-3 text-center text-sm font-semibold">
+                ✓ OK — {n2(limitKg-totalKg)} kg remaining
+              </div>
+            ) : (
+              <div className="bg-red-500/20 text-red-400 rounded-xl p-3 text-center text-sm font-semibold">
+                ✗ Over limit by {n2(totalKg-limitKg)} kg — remove some items
+              </div>
+            )}
           </div>
-          <div className="bg-muted/30 rounded-xl p-3 space-y-3">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Add New Item</p>
-            <Field label="Item Name" value={newName} onChange={setNewName} type="text" hint="e.g. Laptop, Clothes" />
-            <UnitField label="Weight" value={newW} onChange={setNewW} unit={newWU} onUnitChange={setNewWU} units={UNITS} />
-            <button onClick={addItem}
-              className="w-full flex items-center justify-center gap-2 py-2.5 bg-purple-500 hover:bg-purple-600 text-white rounded-xl text-sm font-semibold"
-              data-testid="button-add-item">
-              <Plus className="w-4 h-4" /> Add Item
-            </button>
-          </div>
-        </div>
-      </ToolCard>
-      <ToolCard title="Weight Summary" icon={Scale} iconColor="bg-emerald-500">
-        <div className="space-y-3">
-          <div className="flex justify-between text-sm mb-1">
-            <span className="text-muted-foreground">Total</span>
-            <span className="font-bold">{n2(totalKg)} kg / {n2(limitKg)} kg</span>
-          </div>
-          <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
-            <div className={`h-full rounded-full transition-all ${pct>100?"bg-red-500":pct>85?"bg-amber-400":"bg-emerald-500"}`}
-              style={{width:`${Math.min(100,pct)}%`}} />
-          </div>
-          <div className="space-y-1">
-            {items.map((it,i)=>(
-              <Step key={i} label={it.name||`Item ${i+1}`} value={`${it.weight} ${it.unit}  (${n2(toKg(parseFloat(it.weight)||0,it.unit))} kg)`} />
-            ))}
-            <div className="border-t border-border pt-2">
-              <Step label="Total" value={`${n2(totalKg)} kg  ·  ${n2(frmKg(totalKg,"lb"))} lb`} />
-            </div>
-          </div>
-          {totalKg <= limitKg ? (
-            <div className="bg-emerald-500/20 text-emerald-400 rounded-xl p-3 text-center text-sm font-semibold">
-              ✓ OK — {n2(limitKg-totalKg)} kg remaining
-            </div>
-          ) : (
-            <div className="bg-red-500/20 text-red-400 rounded-xl p-3 text-center text-sm font-semibold">
-              ✗ Over limit by {n2(totalKg-limitKg)} kg — remove some items
-            </div>
-          )}
-        </div>
-      </ToolCard>
-    </div>
+        </ResultCard>
+      }
+    />
   );
 }
 
@@ -973,57 +1009,61 @@ function VehicleRange() {
   };
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ModeToggle mode={mode} onChange={setMode} modes={[
-        {key:"fuel",    label:"Petrol / Diesel"},
-        {key:"electric",label:"Electric (EV)"},
-      ]} color="bg-green-500" />
-      <ToolCard title="Vehicle Range Calculator" icon={Gauge} iconColor="bg-green-500">
-        <div className="space-y-4">
-          {mode==="fuel" ? (
-            <>
-              <SelectField label="Vehicle Type (presets)" value={vehicle} onChange={handleVehicle}
-                options={Object.entries(presets).map(([k,v])=>({value:k,label:v.label}))} />
-              <UnitField label="Fuel Available" value={fuel} onChange={setFuel} unit={fuelU} onUnitChange={setFuelU} units={FUEL_U} />
-              <div>
-                <label className="text-xs font-semibold text-muted-foreground mb-1 block uppercase tracking-wide">Fuel Efficiency</label>
-                <div className="flex rounded-xl border border-border overflow-hidden focus-within:ring-2 focus-within:ring-primary/40">
-                  <input type="number" value={eff} onChange={e=>setEff(e.target.value)}
-                    className="flex-1 bg-muted/50 px-3 py-2.5 text-foreground text-sm focus:outline-none" />
-                  <select value={effU} onChange={e=>setEffU(e.target.value)}
-                    className="bg-muted border-l border-border px-2 py-2.5 text-sm font-bold text-muted-foreground focus:outline-none cursor-pointer">
-                    <option value="kmh">km/L</option>
-                    <option value="mph">mi/gal</option>
-                    <option value="kmkg">km/kg (CNG)</option>
-                  </select>
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Vehicle Range Calculator" icon={Gauge} iconColor="bg-green-500">
+          <ModeToggle mode={mode} onChange={setMode} modes={[
+            {key:"fuel",    label:"Petrol / Diesel"},
+            {key:"electric",label:"Electric (EV)"},
+          ]} color="bg-green-500" />
+          <div className="space-y-4">
+            {mode==="fuel" ? (
+              <>
+                <SelectField label="Vehicle Type (presets)" value={vehicle} onChange={handleVehicle}
+                  options={Object.entries(presets).map(([k,v])=>({value:k,label:v.label}))} />
+                <UnitField label="Fuel Available" value={fuel} onChange={setFuel} unit={fuelU} onUnitChange={setFuelU} units={FUEL_U} />
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground mb-1 block uppercase tracking-wide">Fuel Efficiency</label>
+                  <div className="flex rounded-xl border border-border overflow-hidden focus-within:ring-2 focus-within:ring-primary/40">
+                    <input type="number" value={eff} onChange={e=>setEff(e.target.value)}
+                      className="flex-1 bg-muted/50 px-3 py-2.5 text-foreground text-sm focus:outline-none" />
+                    <select value={effU} onChange={e=>setEffU(e.target.value)}
+                      className="bg-muted border-l border-border px-2 py-2.5 text-sm font-bold text-muted-foreground focus:outline-none cursor-pointer">
+                      <option value="kmh">km/L</option>
+                      <option value="mph">mi/gal</option>
+                      <option value="kmkg">km/kg (CNG)</option>
+                    </select>
+                  </div>
                 </div>
-              </div>
-            </>
-          ) : (
-            <>
-              <Field label="Battery Capacity (kWh)" value={battery} onChange={setBattery} suffix="kWh" hint="e.g. Tata Nexon EV = 30 kWh" />
-              <Field label="Efficiency (km/kWh)" value={evEff} onChange={setEvEff} suffix="km/kWh" hint="Typical EV: 5–8 km/kWh" />
-            </>
-          )}
-        </div>
-      </ToolCard>
-      <ToolCard title="Range Result" icon={Calculator} iconColor="bg-emerald-500">
-        <div className="space-y-1">
-          {mode==="fuel" ? (
-            <>
-              <Step label="Fuel available" value={`${fuel} ${fuelU}`} />
-              <Step label="Efficiency" value={`${eff} ${effU==="kmh"?"km/L":effU==="mph"?"mi/gal":"km/kg"}`} />
-            </>
-          ) : (
-            <>
-              <Step label="Battery capacity" value={`${battery} kWh`} />
-              <Step label="Efficiency" value={`${evEff} km/kWh`} />
-            </>
-          )}
-          <Highlight label="Estimated Range" value={`${n0(rangeKm)} km  ·  ${n0(frmKm(rangeKm,"mi"))} mi`} color="text-green-400" />
-        </div>
-      </ToolCard>
-    </div>
+              </>
+            ) : (
+              <>
+                <Field label="Battery Capacity (kWh)" value={battery} onChange={setBattery} suffix="kWh" hint="e.g. Tata Nexon EV = 30 kWh" />
+                <Field label="Efficiency (km/kWh)" value={evEff} onChange={setEvEff} suffix="km/kWh" hint="Typical EV: 5–8 km/kWh" />
+              </>
+            )}
+          </div>
+        </InputPanel>
+      }
+      results={
+        <ResultCard title="Range Result">
+          <div className="space-y-1">
+            {mode==="fuel" ? (
+              <>
+                <Step label="Fuel available" value={`${fuel} ${fuelU}`} />
+                <Step label="Efficiency" value={`${eff} ${effU==="kmh"?"km/L":effU==="mph"?"mi/gal":"km/kg"}`} />
+              </>
+            ) : (
+              <>
+                <Step label="Battery capacity" value={`${battery} kWh`} />
+                <Step label="Efficiency" value={`${evEff} km/kWh`} />
+              </>
+            )}
+            <Highlight label="Estimated Range" value={`${n0(rangeKm)} km  ·  ${n0(frmKm(rangeKm,"mi"))} mi`} color="text-green-400" />
+          </div>
+        </ResultCard>
+      }
+    />
   );
 }
 
@@ -1063,107 +1103,113 @@ function FuelCompare() {
   const breakEven= cheapest && savingsKm>0 ? parseFloat(cngKit)/savingsKm : 0;
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Fuel Cost & Mileage Comparison" icon={Scale} iconColor="bg-emerald-600">
-        <div className="space-y-4">
-          <div className="flex gap-2">
-            <div className="w-20">
-              <label className="text-xs font-semibold text-muted-foreground mb-1 block uppercase tracking-wide">Currency</label>
-              <select value={currency} onChange={e=>setCurrency(e.target.value)}
-                className="w-full bg-muted/50 border border-border rounded-xl px-3 py-2.5 text-foreground focus:outline-none text-sm">
-                {["₹","$","€","£","AED","SGD"].map(c=><option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-            <div className="flex-1">
-              <Field label="Trip Distance" value={tripDist} onChange={setTripDist} suffix="km" />
-            </div>
-            <div className="flex-1">
-              <Field label="Daily Travel" value={dailyDist} onChange={setDailyDist} suffix="km" />
-            </div>
-          </div>
-          {fuels.map((f,i)=>(
-            <div key={f.type} className={`rounded-xl border p-3 space-y-2 transition-all ${f.on?"border-border":"border-border/30 opacity-50"}`}>
-              <div className="flex items-center justify-between">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={f.on} onChange={e=>updateFuel(i,"on",e.target.checked)}
-                    className="w-4 h-4" data-testid={`input-${f.type.toLowerCase()}-toggle`} />
-                  <span className="text-sm font-bold text-foreground">{f.type}</span>
-                </label>
-                <span className="text-xs text-muted-foreground">{f.unit}</span>
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Fuel Cost & Mileage Comparison" icon={Scale} iconColor="bg-emerald-600">
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <div className="w-20">
+                <label className="text-xs font-semibold text-muted-foreground mb-1 block uppercase tracking-wide">Currency</label>
+                <select value={currency} onChange={e=>setCurrency(e.target.value)}
+                  className="w-full bg-muted/50 border border-border rounded-xl px-3 py-2.5 text-foreground focus:outline-none text-sm">
+                  {["₹","$","€","£","AED","SGD"].map(c=><option key={c} value={c}>{c}</option>)}
+                </select>
               </div>
-              {f.on && (
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Price ({currency}/{f.unit==="km/kg"?"kg":f.unit==="km/kWh"?"kWh":"L"})</label>
-                    <input type="number" value={f.price} onChange={e=>updateFuel(i,"price",e.target.value)}
-                      className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none" />
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Mileage ({f.unit})</label>
-                    <input type="number" value={f.mileage} onChange={e=>updateFuel(i,"mileage",e.target.value)}
-                      className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none" />
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </ToolCard>
-      {results.length > 0 && (
-        <>
-          <ToolCard title="Cost per km Comparison" icon={Calculator} iconColor="bg-sky-500">
-            <div className="space-y-1">
-              {sorted.map((f,i)=>(
-                <div key={f.type} className={`flex justify-between items-center py-2 border-b border-border/40 last:border-0 ${i===0?"text-emerald-400":""}`}>
-                  <span className="text-sm font-medium">{i===0?"🏆 ":""}{f.type}</span>
-                  <div className="text-right">
-                    <span className="font-bold text-sm">{currency}{f.costPerKm.toFixed(2)}/km</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </ToolCard>
-          <ToolCard title="Trip & Monthly Cost" icon={Fuel} iconColor="bg-orange-500">
-            <div className="space-y-2">
-              <div className="grid grid-cols-3 gap-1 text-xs text-muted-foreground font-semibold uppercase mb-1">
-                <span>Fuel</span><span className="text-right">Trip ({tripDist}km)</span><span className="text-right">Monthly ({dailyDist}km/day)</span>
+              <div className="flex-1">
+                <Field label="Trip Distance" value={tripDist} onChange={setTripDist} suffix="km" />
               </div>
-              {sorted.map((f,i)=>(
-                <div key={f.type} className={`grid grid-cols-3 gap-1 py-1.5 border-b border-border/40 last:border-0 ${i===0?"text-emerald-400":""}`}>
-                  <span className="text-sm font-medium">{f.type}</span>
-                  <span className="text-right font-bold text-sm">{currency}{Math.ceil(f.tripCost)}</span>
-                  <span className="text-right font-bold text-sm">{currency}{Math.ceil(f.monthlyCost)}</span>
-                </div>
-              ))}
+              <div className="flex-1">
+                <Field label="Daily Travel" value={dailyDist} onChange={setDailyDist} suffix="km" />
+              </div>
             </div>
-          </ToolCard>
-          {cheapest && dearest && cheapest.type!==dearest.type && (
-            <ToolCard title="Smart Recommendation" icon={Zap} iconColor="bg-yellow-500">
-              <div className="space-y-3">
-                <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-3">
-                  <p className="text-xs text-muted-foreground mb-1">Most Economical Fuel</p>
-                  <p className="text-lg font-black text-emerald-400">🏆 {cheapest.type}</p>
-                  <p className="text-xs text-muted-foreground mt-1">Saves {currency}{savingsKm.toFixed(2)}/km vs {dearest.type}</p>
+            {fuels.map((f,i)=>(
+              <div key={f.type} className={`rounded-xl border p-3 space-y-2 transition-all ${f.on?"border-border":"border-border/30 opacity-50"}`}>
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={f.on} onChange={e=>updateFuel(i,"on",e.target.checked)}
+                      className="w-4 h-4" data-testid={`input-${f.type.toLowerCase()}-toggle`} />
+                    <span className="text-sm font-bold text-foreground">{f.type}</span>
+                  </label>
+                  <span className="text-xs text-muted-foreground">{f.unit}</span>
                 </div>
-                <div className="bg-muted/40 rounded-xl p-3">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">Monthly Savings (if switching from {dearest.type})</p>
-                  <p className="text-xl font-black text-sky-400">{currency}{Math.ceil((dearest.monthlyCost-cheapest.monthlyCost))}</p>
-                </div>
-                {cheapest.type==="CNG" && (
-                  <div className="space-y-2">
-                    <Field label={`CNG Kit Cost (${currency})`} value={cngKit} onChange={setCngKit} suffix={currency} />
-                    <div className="bg-muted/40 rounded-xl p-3">
-                      <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">Break-Even Distance</p>
-                      <p className="text-xl font-black text-amber-400">{isFinite(breakEven)?`${n0(breakEven)} km`:"—"}</p>
-                      <p className="text-xs text-muted-foreground mt-1">After this distance, CNG is cheaper overall</p>
+                {f.on && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 block">Price ({currency}/{f.unit==="km/kg"?"kg":f.unit==="km/kWh"?"kWh":"L"})</label>
+                      <input type="number" value={f.price} onChange={e=>updateFuel(i,"price",e.target.value)}
+                        className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 block">Mileage ({f.unit})</label>
+                      <input type="number" value={f.mileage} onChange={e=>updateFuel(i,"mileage",e.target.value)}
+                        className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none" />
                     </div>
                   </div>
                 )}
               </div>
-            </ToolCard>
-          )}
-        </>
-      )}
-    </div>
+            ))}
+          </div>
+        </InputPanel>
+      }
+      results={
+        results.length > 0 ? (
+          <div className="flex flex-col gap-4">
+            <ResultCard title="Cost per km Comparison">
+              <div className="space-y-1">
+                {sorted.map((f,i)=>(
+                  <div key={f.type} className={`flex justify-between items-center py-2 border-b border-border/40 last:border-0 ${i===0?"text-emerald-400":""}`}>
+                    <span className="text-sm font-medium">{i===0?"🏆 ":""}{f.type}</span>
+                    <span className="font-bold text-sm">{currency}{f.costPerKm.toFixed(2)}/km</span>
+                  </div>
+                ))}
+              </div>
+            </ResultCard>
+            <ResultCard title={`Trip & Monthly Cost`}>
+              <div className="space-y-2">
+                <div className="grid grid-cols-3 gap-1 text-xs text-muted-foreground font-semibold uppercase mb-1">
+                  <span>Fuel</span><span className="text-right">Trip ({tripDist}km)</span><span className="text-right">Monthly ({dailyDist}km/day)</span>
+                </div>
+                {sorted.map((f,i)=>(
+                  <div key={f.type} className={`grid grid-cols-3 gap-1 py-1.5 border-b border-border/40 last:border-0 ${i===0?"text-emerald-400":""}`}>
+                    <span className="text-sm font-medium">{f.type}</span>
+                    <span className="text-right font-bold text-sm">{currency}{Math.ceil(f.tripCost)}</span>
+                    <span className="text-right font-bold text-sm">{currency}{Math.ceil(f.monthlyCost)}</span>
+                  </div>
+                ))}
+              </div>
+            </ResultCard>
+            {cheapest && dearest && cheapest.type!==dearest.type && (
+              <ResultCard title="Smart Recommendation">
+                <div className="space-y-3">
+                  <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-3">
+                    <p className="text-xs text-muted-foreground mb-1">Most Economical Fuel</p>
+                    <p className="text-lg font-black text-emerald-400">🏆 {cheapest.type}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Saves {currency}{savingsKm.toFixed(2)}/km vs {dearest.type}</p>
+                  </div>
+                  <div className="bg-muted/40 rounded-xl p-3">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">Monthly Savings (if switching from {dearest.type})</p>
+                    <p className="text-xl font-black text-sky-400">{currency}{Math.ceil((dearest.monthlyCost-cheapest.monthlyCost))}</p>
+                  </div>
+                  {cheapest.type==="CNG" && (
+                    <div className="space-y-2">
+                      <Field label={`CNG Kit Cost (${currency})`} value={cngKit} onChange={setCngKit} suffix={currency} />
+                      <div className="bg-muted/40 rounded-xl p-3">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">Break-Even Distance</p>
+                        <p className="text-xl font-black text-amber-400">{isFinite(breakEven)?`${n0(breakEven)} km`:"—"}</p>
+                        <p className="text-xs text-muted-foreground mt-1">After this distance, CNG is cheaper overall</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </ResultCard>
+            )}
+          </div>
+        ) : (
+          <ResultCard title="Comparison Results">
+            <p className="text-sm text-muted-foreground text-center py-8">Enable at least one fuel type to see comparison</p>
+          </ResultCard>
+        )
+      }
+    />
   );
 }

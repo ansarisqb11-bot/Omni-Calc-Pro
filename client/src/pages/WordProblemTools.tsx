@@ -15,7 +15,7 @@ import {
   Droplets,
   Weight,
 } from "lucide-react";
-import { ToolCard } from "@/components/ToolCard";
+import { DesktopToolGrid, InputPanel } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
 
 type ToolType = "unit-price" | "ratio" | "speed" | "age" | "percentage" | "profit-loss" | "time-work" | "average" | "mixture" | "rate" | "basic" | "volume" | "length" | "weight";
@@ -74,6 +74,7 @@ export default function WordProblemTools() {
   );
 }
 
+// ─── Shared helpers ───────────────────────────────────────────────────────────
 function ModeToggle({ modes, mode, setMode }: { modes: { id: string; label: string }[]; mode: string; setMode: (m: string) => void }) {
   return (
     <div className="flex gap-2 p-1 bg-muted rounded-xl mb-4 flex-wrap">
@@ -182,6 +183,67 @@ function fmt(n: number, decimals = 2): string {
   return parseFloat(n.toFixed(decimals)).toLocaleString();
 }
 
+function SolverCard({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Solution</p>
+      {children}
+    </div>
+  );
+}
+
+// ─── Unit Tables ──────────────────────────────────────────────────────────────
+const VOLUME_UNITS = [
+  { value: "ml", label: "Milliliter (ml)", factor: 0.001 },
+  { value: "l", label: "Liter (L)", factor: 1 },
+  { value: "cl", label: "Centiliter (cl)", factor: 0.01 },
+  { value: "dl", label: "Deciliter (dl)", factor: 0.1 },
+  { value: "kl", label: "Kiloliter (kL)", factor: 1000 },
+  { value: "gal_us", label: "US Gallon", factor: 3.78541 },
+  { value: "gal_uk", label: "UK Gallon", factor: 4.54609 },
+  { value: "qt", label: "Quart (US)", factor: 0.946353 },
+  { value: "pt", label: "Pint (US)", factor: 0.473176 },
+  { value: "cup", label: "Cup (US)", factor: 0.236588 },
+  { value: "fl_oz", label: "Fluid Ounce (US)", factor: 0.0295735 },
+  { value: "tbsp", label: "Tablespoon", factor: 0.0147868 },
+  { value: "tsp", label: "Teaspoon", factor: 0.00492892 },
+  { value: "m3", label: "Cubic Meter (m³)", factor: 1000 },
+  { value: "cm3", label: "Cubic cm (cm³)", factor: 0.001 },
+  { value: "ft3", label: "Cubic Foot (ft³)", factor: 28.3168 },
+  { value: "in3", label: "Cubic Inch (in³)", factor: 0.0163871 },
+];
+
+const LENGTH_UNITS = [
+  { value: "mm", label: "Millimeter (mm)", factor: 0.001 },
+  { value: "cm", label: "Centimeter (cm)", factor: 0.01 },
+  { value: "m", label: "Meter (m)", factor: 1 },
+  { value: "km", label: "Kilometer (km)", factor: 1000 },
+  { value: "in", label: "Inch (in)", factor: 0.0254 },
+  { value: "ft", label: "Foot (ft)", factor: 0.3048 },
+  { value: "yd", label: "Yard (yd)", factor: 0.9144 },
+  { value: "mi", label: "Mile (mi)", factor: 1609.34 },
+  { value: "nm", label: "Nautical Mile", factor: 1852 },
+  { value: "dm", label: "Decimeter (dm)", factor: 0.1 },
+  { value: "µm", label: "Micrometer (µm)", factor: 0.000001 },
+  { value: "ly", label: "Light Year", factor: 9.461e15 },
+];
+
+const WEIGHT_UNITS = [
+  { value: "mg", label: "Milligram (mg)", factor: 0.000001 },
+  { value: "g", label: "Gram (g)", factor: 0.001 },
+  { value: "kg", label: "Kilogram (kg)", factor: 1 },
+  { value: "quintal", label: "Quintal", factor: 100 },
+  { value: "ton_m", label: "Metric Ton", factor: 1000 },
+  { value: "oz", label: "Ounce (oz)", factor: 0.0283495 },
+  { value: "lb", label: "Pound (lb)", factor: 0.453592 },
+  { value: "st", label: "Stone (st)", factor: 6.35029 },
+  { value: "ton_us", label: "US Ton (short)", factor: 907.185 },
+  { value: "ton_uk", label: "UK Ton (long)", factor: 1016.05 },
+  { value: "ct", label: "Carat (ct)", factor: 0.0002 },
+  { value: "tola", label: "Tola (India)", factor: 0.01166 },
+];
+
+// ─── 1. Unit Price Solver ─────────────────────────────────────────────────────
 function UnitPriceSolver() {
   const [mode, setMode] = useState("find-price");
   const [currency, setCurrency] = useState("₹");
@@ -222,42 +284,47 @@ function UnitPriceSolver() {
   }, [mode, qty, price, requiredQty, budget, unit, currency]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Unit Price & Quantity Solver" icon={ShoppingCart} iconColor="bg-orange-500">
-        <ModeToggle
-          modes={[{ id: "find-price", label: "Find Price" }, { id: "find-quantity", label: "Find Quantity" }]}
-          mode={mode} setMode={setMode}
-        />
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-sm font-medium text-muted-foreground">Currency</span>
-          <CurrencySelector currency={currency} setCurrency={setCurrency} />
-        </div>
-        <div className="space-y-3">
-          <SolverSelect label="Unit Type" value={unit} onChange={setUnit} options={[
-            { value: "pieces", label: "Pieces" }, { value: "kg", label: "Kilograms" },
-            { value: "g", label: "Grams" }, { value: "liter", label: "Liters" },
-            { value: "ml", label: "Milliliters" }, { value: "dozen", label: "Dozen" },
-            { value: "pack", label: "Pack" },
-          ]} />
-          <div className="grid grid-cols-2 gap-3">
-            <SolverInput label="Known Quantity" value={qty} onChange={setQty} placeholder="e.g. 5" />
-            <SolverInput label={`Price (${currency})`} value={price} onChange={setPrice} placeholder="e.g. 40" />
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Unit Price & Quantity Solver" icon={ShoppingCart} iconColor="bg-orange-500">
+          <ModeToggle
+            modes={[{ id: "find-price", label: "Find Price" }, { id: "find-quantity", label: "Find Quantity" }]}
+            mode={mode} setMode={setMode}
+          />
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-sm font-medium text-muted-foreground">Currency</span>
+            <CurrencySelector currency={currency} setCurrency={setCurrency} />
           </div>
-          {mode === "find-price" ? (
-            <SolverInput label="Required Quantity" value={requiredQty} onChange={setRequiredQty} placeholder="e.g. 8" />
-          ) : (
-            <SolverInput label={`Budget (${currency})`} value={budget} onChange={setBudget} placeholder="e.g. 100" />
-          )}
-        </div>
-        <div className="mt-4 space-y-3">
+          <div className="space-y-3">
+            <SolverSelect label="Unit Type" value={unit} onChange={setUnit} options={[
+              { value: "pieces", label: "Pieces" }, { value: "kg", label: "Kilograms" },
+              { value: "g", label: "Grams" }, { value: "liter", label: "Liters" },
+              { value: "ml", label: "Milliliters" }, { value: "dozen", label: "Dozen" },
+              { value: "pack", label: "Pack" },
+            ]} />
+            <div className="grid grid-cols-2 gap-3">
+              <SolverInput label="Known Quantity" value={qty} onChange={setQty} placeholder="e.g. 5" />
+              <SolverInput label={`Price (${currency})`} value={price} onChange={setPrice} placeholder="e.g. 40" />
+            </div>
+            {mode === "find-price" ? (
+              <SolverInput label="Required Quantity" value={requiredQty} onChange={setRequiredQty} placeholder="e.g. 8" />
+            ) : (
+              <SolverInput label={`Budget (${currency})`} value={budget} onChange={setBudget} placeholder="e.g. 100" />
+            )}
+          </div>
+        </InputPanel>
+      }
+      results={
+        <SolverCard>
           <StepsDisplay steps={result.steps} />
           <ResultBox label={mode === "find-price" ? "Total Cost" : "You Can Buy"} value={result.value} />
-        </div>
-      </ToolCard>
-    </div>
+        </SolverCard>
+      }
+    />
   );
 }
 
+// ─── 2. Ratio Solver ──────────────────────────────────────────────────────────
 function RatioSolver() {
   const [mode, setMode] = useState("divide");
   const [currency, setCurrency] = useState("₹");
@@ -318,54 +385,59 @@ function RatioSolver() {
   }, [mode, ratioA, ratioB, total, knownPart, workers1, days1, workers2, currency]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Ratio & Proportion Solver" icon={Scale} iconColor="bg-orange-500">
-        <ModeToggle
-          modes={[
-            { id: "divide", label: "Divide Amount" },
-            { id: "find-part", label: "Find Part" },
-            { id: "workers", label: "Workers/Days" },
-          ]}
-          mode={mode} setMode={setMode}
-        />
-        {mode !== "workers" && (
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-medium text-muted-foreground">Currency</span>
-            <CurrencySelector currency={currency} setCurrency={setCurrency} />
-          </div>
-        )}
-        <div className="space-y-3">
-          {mode === "workers" ? (
-            <>
-              <div className="grid grid-cols-2 gap-3">
-                <SolverInput label="Workers (Group 1)" value={workers1} onChange={setWorkers1} />
-                <SolverInput label="Days (Group 1)" value={days1} onChange={setDays1} />
-              </div>
-              <SolverInput label="Workers (Group 2)" value={workers2} onChange={setWorkers2} />
-            </>
-          ) : (
-            <>
-              <div className="grid grid-cols-2 gap-3">
-                <SolverInput label="Ratio A" value={ratioA} onChange={setRatioA} placeholder="2" />
-                <SolverInput label="Ratio B" value={ratioB} onChange={setRatioB} placeholder="3" />
-              </div>
-              {mode === "divide" ? (
-                <SolverInput label={`Total Amount (${currency})`} value={total} onChange={setTotal} placeholder="500" />
-              ) : (
-                <SolverInput label={`Known Part A (${currency})`} value={knownPart} onChange={setKnownPart} placeholder="200" />
-              )}
-            </>
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Ratio & Proportion Solver" icon={Scale} iconColor="bg-orange-500">
+          <ModeToggle
+            modes={[
+              { id: "divide", label: "Divide Amount" },
+              { id: "find-part", label: "Find Part" },
+              { id: "workers", label: "Workers/Days" },
+            ]}
+            mode={mode} setMode={setMode}
+          />
+          {mode !== "workers" && (
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-sm font-medium text-muted-foreground">Currency</span>
+              <CurrencySelector currency={currency} setCurrency={setCurrency} />
+            </div>
           )}
-        </div>
-        <div className="mt-4 space-y-3">
+          <div className="space-y-3">
+            {mode === "workers" ? (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <SolverInput label="Workers (Group 1)" value={workers1} onChange={setWorkers1} />
+                  <SolverInput label="Days (Group 1)" value={days1} onChange={setDays1} />
+                </div>
+                <SolverInput label="Workers (Group 2)" value={workers2} onChange={setWorkers2} />
+              </>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <SolverInput label="Ratio A" value={ratioA} onChange={setRatioA} placeholder="2" />
+                  <SolverInput label="Ratio B" value={ratioB} onChange={setRatioB} placeholder="3" />
+                </div>
+                {mode === "divide" ? (
+                  <SolverInput label={`Total Amount (${currency})`} value={total} onChange={setTotal} placeholder="500" />
+                ) : (
+                  <SolverInput label={`Known Part A (${currency})`} value={knownPart} onChange={setKnownPart} placeholder="200" />
+                )}
+              </>
+            )}
+          </div>
+        </InputPanel>
+      }
+      results={
+        <SolverCard>
           <StepsDisplay steps={result.steps} />
           <ResultBox label="Result" value={result.value} />
-        </div>
-      </ToolCard>
-    </div>
+        </SolverCard>
+      }
+    />
   );
 }
 
+// ─── 3. Speed Solver ──────────────────────────────────────────────────────────
 function SpeedSolver() {
   const [mode, setMode] = useState("find-distance");
   const [speed, setSpeed] = useState("60");
@@ -493,103 +565,108 @@ function SpeedSolver() {
   }, [mode, speed, time, distance, speedUnit, distUnit, timeUnit, speed2, trainLength, streamSpeed]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Speed-Time-Distance Solver" icon={Gauge} iconColor="bg-orange-500">
-        <ModeToggle
-          modes={[
-            { id: "find-distance", label: "Distance" },
-            { id: "find-speed", label: "Speed" },
-            { id: "find-time", label: "Time" },
-            { id: "relative", label: "Relative" },
-            { id: "average-speed", label: "Avg Speed" },
-            { id: "train", label: "Train" },
-            { id: "boat", label: "Boat" },
-          ]}
-          mode={mode} setMode={setMode}
-        />
-        <div className="space-y-3">
-          {mode === "find-distance" && (
-            <>
-              <div className="grid grid-cols-2 gap-3">
-                <SolverInput label="Speed" value={speed} onChange={setSpeed} />
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Speed-Time-Distance Solver" icon={Gauge} iconColor="bg-orange-500">
+          <ModeToggle
+            modes={[
+              { id: "find-distance", label: "Distance" },
+              { id: "find-speed", label: "Speed" },
+              { id: "find-time", label: "Time" },
+              { id: "relative", label: "Relative" },
+              { id: "average-speed", label: "Avg Speed" },
+              { id: "train", label: "Train" },
+              { id: "boat", label: "Boat" },
+            ]}
+            mode={mode} setMode={setMode}
+          />
+          <div className="space-y-3">
+            {mode === "find-distance" && (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <SolverInput label="Speed" value={speed} onChange={setSpeed} />
+                  <SolverSelect label="Speed Unit" value={speedUnit} onChange={setSpeedUnit} options={speedOpts} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <SolverInput label="Time" value={time} onChange={setTime} />
+                  <SolverSelect label="Time Unit" value={timeUnit} onChange={setTimeUnit} options={timeOpts} />
+                </div>
+              </>
+            )}
+            {mode === "find-speed" && (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <SolverInput label="Distance" value={distance} onChange={setDistance} />
+                  <SolverSelect label="Dist Unit" value={distUnit} onChange={setDistUnit} options={distOpts} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <SolverInput label="Time" value={time} onChange={setTime} />
+                  <SolverSelect label="Time Unit" value={timeUnit} onChange={setTimeUnit} options={timeOpts} />
+                </div>
+              </>
+            )}
+            {mode === "find-time" && (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <SolverInput label="Distance" value={distance} onChange={setDistance} />
+                  <SolverSelect label="Dist Unit" value={distUnit} onChange={setDistUnit} options={distOpts} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <SolverInput label="Speed" value={speed} onChange={setSpeed} />
+                  <SolverSelect label="Speed Unit" value={speedUnit} onChange={setSpeedUnit} options={speedOpts} />
+                </div>
+              </>
+            )}
+            {mode === "relative" && (
+              <>
+                <SolverInput label="Speed A" value={speed} onChange={setSpeed} />
+                <SolverInput label="Speed B" value={speed2} onChange={setSpeed2} />
                 <SolverSelect label="Speed Unit" value={speedUnit} onChange={setSpeedUnit} options={speedOpts} />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <SolverInput label="Time" value={time} onChange={setTime} />
-                <SolverSelect label="Time Unit" value={timeUnit} onChange={setTimeUnit} options={timeOpts} />
-              </div>
-            </>
-          )}
-          {mode === "find-speed" && (
-            <>
-              <div className="grid grid-cols-2 gap-3">
-                <SolverInput label="Distance" value={distance} onChange={setDistance} />
-                <SolverSelect label="Dist Unit" value={distUnit} onChange={setDistUnit} options={distOpts} />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <SolverInput label="Time" value={time} onChange={setTime} />
-                <SolverSelect label="Time Unit" value={timeUnit} onChange={setTimeUnit} options={timeOpts} />
-              </div>
-            </>
-          )}
-          {mode === "find-time" && (
-            <>
-              <div className="grid grid-cols-2 gap-3">
-                <SolverInput label="Distance" value={distance} onChange={setDistance} />
-                <SolverSelect label="Dist Unit" value={distUnit} onChange={setDistUnit} options={distOpts} />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <SolverInput label="Speed" value={speed} onChange={setSpeed} />
+              </>
+            )}
+            {mode === "average-speed" && (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <SolverInput label="Distance 1" value={distance} onChange={setDistance} />
+                  <SolverInput label="Speed 1" value={speed} onChange={setSpeed} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <SolverInput label="Distance 2" value={time} onChange={setTime} />
+                  <SolverInput label="Speed 2" value={speed2} onChange={setSpeed2} />
+                </div>
                 <SolverSelect label="Speed Unit" value={speedUnit} onChange={setSpeedUnit} options={speedOpts} />
-              </div>
-            </>
-          )}
-          {mode === "relative" && (
-            <>
-              <SolverInput label="Speed A" value={speed} onChange={setSpeed} />
-              <SolverInput label="Speed B" value={speed2} onChange={setSpeed2} />
-              <SolverSelect label="Speed Unit" value={speedUnit} onChange={setSpeedUnit} options={speedOpts} />
-            </>
-          )}
-          {mode === "average-speed" && (
-            <>
-              <div className="grid grid-cols-2 gap-3">
-                <SolverInput label="Distance 1" value={distance} onChange={setDistance} />
-                <SolverInput label="Speed 1" value={speed} onChange={setSpeed} />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <SolverInput label="Distance 2" value={time} onChange={setTime} />
-                <SolverInput label="Speed 2" value={speed2} onChange={setSpeed2} />
-              </div>
-              <SolverSelect label="Speed Unit" value={speedUnit} onChange={setSpeedUnit} options={speedOpts} />
-            </>
-          )}
-          {mode === "train" && (
-            <>
-              <SolverInput label="Train Length (m)" value={trainLength} onChange={setTrainLength} />
-              <div className="grid grid-cols-2 gap-3">
-                <SolverInput label="Speed" value={speed} onChange={setSpeed} />
+              </>
+            )}
+            {mode === "train" && (
+              <>
+                <SolverInput label="Train Length (m)" value={trainLength} onChange={setTrainLength} />
+                <div className="grid grid-cols-2 gap-3">
+                  <SolverInput label="Speed" value={speed} onChange={setSpeed} />
+                  <SolverSelect label="Speed Unit" value={speedUnit} onChange={setSpeedUnit} options={speedOpts} />
+                </div>
+              </>
+            )}
+            {mode === "boat" && (
+              <>
+                <SolverInput label="Speed in Still Water" value={speed} onChange={setSpeed} />
+                <SolverInput label="Stream Speed" value={streamSpeed} onChange={setStreamSpeed} />
                 <SolverSelect label="Speed Unit" value={speedUnit} onChange={setSpeedUnit} options={speedOpts} />
-              </div>
-            </>
-          )}
-          {mode === "boat" && (
-            <>
-              <SolverInput label="Speed in Still Water" value={speed} onChange={setSpeed} />
-              <SolverInput label="Stream Speed" value={streamSpeed} onChange={setStreamSpeed} />
-              <SolverSelect label="Speed Unit" value={speedUnit} onChange={setSpeedUnit} options={speedOpts} />
-            </>
-          )}
-        </div>
-        <div className="mt-4 space-y-3">
+              </>
+            )}
+          </div>
+        </InputPanel>
+      }
+      results={
+        <SolverCard>
           <StepsDisplay steps={result.steps} />
           <ResultBox label="Result" value={result.value} />
-        </div>
-      </ToolCard>
-    </div>
+        </SolverCard>
+      }
+    />
   );
 }
 
+// ─── 4. Age Solver ────────────────────────────────────────────────────────────
 function AgeSolver() {
   const [mode, setMode] = useState("find-age");
   const [age, setAge] = useState("8");
@@ -660,38 +737,43 @@ function AgeSolver() {
   }, [mode, age, multiplier, difference, years]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Age Word Problems Solver" icon={Users} iconColor="bg-orange-500">
-        <ModeToggle
-          modes={[
-            { id: "find-age", label: "Find Age" },
-            { id: "age-diff", label: "Difference" },
-            { id: "after-years", label: "After N Years" },
-            { id: "find-ratio", label: "Find Ratio" },
-          ]}
-          mode={mode} setMode={setMode}
-        />
-        <div className="space-y-3">
-          <SolverInput label="Known Age" value={age} onChange={setAge} placeholder="e.g. 8" />
-          {(mode === "find-age" || mode === "after-years") && (
-            <SolverInput label="Multiplier" value={multiplier} onChange={setMultiplier} placeholder="e.g. 4" />
-          )}
-          {(mode === "age-diff" || mode === "find-ratio") && (
-            <SolverInput label="Age Difference" value={difference} onChange={setDifference} placeholder="e.g. 25" />
-          )}
-          {mode === "after-years" && (
-            <SolverInput label="Years Ahead" value={years} onChange={setYears} placeholder="e.g. 5" />
-          )}
-        </div>
-        <div className="mt-4 space-y-3">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Age Word Problems Solver" icon={Users} iconColor="bg-orange-500">
+          <ModeToggle
+            modes={[
+              { id: "find-age", label: "Find Age" },
+              { id: "age-diff", label: "Difference" },
+              { id: "after-years", label: "After N Years" },
+              { id: "find-ratio", label: "Find Ratio" },
+            ]}
+            mode={mode} setMode={setMode}
+          />
+          <div className="space-y-3">
+            <SolverInput label="Known Age" value={age} onChange={setAge} placeholder="e.g. 8" />
+            {(mode === "find-age" || mode === "after-years") && (
+              <SolverInput label="Multiplier" value={multiplier} onChange={setMultiplier} placeholder="e.g. 4" />
+            )}
+            {(mode === "age-diff" || mode === "find-ratio") && (
+              <SolverInput label="Age Difference" value={difference} onChange={setDifference} placeholder="e.g. 25" />
+            )}
+            {mode === "after-years" && (
+              <SolverInput label="Years Ahead" value={years} onChange={setYears} placeholder="e.g. 5" />
+            )}
+          </div>
+        </InputPanel>
+      }
+      results={
+        <SolverCard>
           <StepsDisplay steps={result.steps} />
           <ResultBox label="Result" value={result.value} />
-        </div>
-      </ToolCard>
-    </div>
+        </SolverCard>
+      }
+    />
   );
 }
 
+// ─── 5. Percentage Solver ─────────────────────────────────────────────────────
 function PercentageSolver() {
   const [mode, setMode] = useState("find-pct");
   const [value, setValue] = useState("250");
@@ -759,43 +841,48 @@ function PercentageSolver() {
   }, [mode, value, percentage, finalValue, currency]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Percentage Problems Solver" icon={Percent} iconColor="bg-orange-500">
-        <ModeToggle
-          modes={[
-            { id: "find-pct", label: "X% of Y" },
-            { id: "increase", label: "Increase %" },
-            { id: "decrease", label: "Decrease %" },
-            { id: "find-original", label: "Find Original" },
-          ]}
-          mode={mode} setMode={setMode}
-        />
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-sm font-medium text-muted-foreground">Currency</span>
-          <CurrencySelector currency={currency} setCurrency={setCurrency} />
-        </div>
-        <div className="space-y-3">
-          {mode === "find-original" ? (
-            <>
-              <SolverInput label={`Final Value (${currency})`} value={finalValue} onChange={setFinalValue} />
-              <SolverInput label="Percentage (%)" value={percentage} onChange={setPercentage} />
-            </>
-          ) : (
-            <>
-              <SolverInput label={`Value (${currency})`} value={value} onChange={setValue} />
-              <SolverInput label="Percentage (%)" value={percentage} onChange={setPercentage} />
-            </>
-          )}
-        </div>
-        <div className="mt-4 space-y-3">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Percentage Problems Solver" icon={Percent} iconColor="bg-orange-500">
+          <ModeToggle
+            modes={[
+              { id: "find-pct", label: "X% of Y" },
+              { id: "increase", label: "Increase %" },
+              { id: "decrease", label: "Decrease %" },
+              { id: "find-original", label: "Find Original" },
+            ]}
+            mode={mode} setMode={setMode}
+          />
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-sm font-medium text-muted-foreground">Currency</span>
+            <CurrencySelector currency={currency} setCurrency={setCurrency} />
+          </div>
+          <div className="space-y-3">
+            {mode === "find-original" ? (
+              <>
+                <SolverInput label={`Final Value (${currency})`} value={finalValue} onChange={setFinalValue} />
+                <SolverInput label="Percentage (%)" value={percentage} onChange={setPercentage} />
+              </>
+            ) : (
+              <>
+                <SolverInput label={`Value (${currency})`} value={value} onChange={setValue} />
+                <SolverInput label="Percentage (%)" value={percentage} onChange={setPercentage} />
+              </>
+            )}
+          </div>
+        </InputPanel>
+      }
+      results={
+        <SolverCard>
           <StepsDisplay steps={result.steps} />
           <ResultBox label="Result" value={result.value} />
-        </div>
-      </ToolCard>
-    </div>
+        </SolverCard>
+      }
+    />
   );
 }
 
+// ─── 6. Profit & Loss Solver ──────────────────────────────────────────────────
 function ProfitLossSolver() {
   const [mode, setMode] = useState("find-pl");
   const [currency, setCurrency] = useState("₹");
@@ -858,55 +945,60 @@ function ProfitLossSolver() {
   }, [mode, cp, sp, plPercent, plType, currency]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Profit & Loss Solver" icon={TrendingUp} iconColor="bg-orange-500">
-        <ModeToggle
-          modes={[
-            { id: "find-pl", label: "Find P/L" },
-            { id: "find-sp", label: "Find SP" },
-            { id: "find-cp", label: "Find CP" },
-          ]}
-          mode={mode} setMode={setMode}
-        />
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-sm font-medium text-muted-foreground">Currency</span>
-          <CurrencySelector currency={currency} setCurrency={setCurrency} />
-        </div>
-        <div className="space-y-3">
-          {mode === "find-pl" && (
-            <>
-              <SolverInput label={`Cost Price (${currency})`} value={cp} onChange={setCp} />
-              <SolverInput label={`Selling Price (${currency})`} value={sp} onChange={setSp} />
-            </>
-          )}
-          {mode === "find-sp" && (
-            <>
-              <SolverInput label={`Cost Price (${currency})`} value={cp} onChange={setCp} />
-              <SolverSelect label="Type" value={plType} onChange={setPlType} options={[
-                { value: "profit", label: "Profit %" }, { value: "loss", label: "Loss %" },
-              ]} />
-              <SolverInput label="Percentage (%)" value={plPercent} onChange={setPlPercent} />
-            </>
-          )}
-          {mode === "find-cp" && (
-            <>
-              <SolverInput label={`Selling Price (${currency})`} value={sp} onChange={setSp} />
-              <SolverSelect label="Type" value={plType} onChange={setPlType} options={[
-                { value: "profit", label: "Profit %" }, { value: "loss", label: "Loss %" },
-              ]} />
-              <SolverInput label="Percentage (%)" value={plPercent} onChange={setPlPercent} />
-            </>
-          )}
-        </div>
-        <div className="mt-4 space-y-3">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Profit & Loss Solver" icon={TrendingUp} iconColor="bg-orange-500">
+          <ModeToggle
+            modes={[
+              { id: "find-pl", label: "Find P/L" },
+              { id: "find-sp", label: "Find SP" },
+              { id: "find-cp", label: "Find CP" },
+            ]}
+            mode={mode} setMode={setMode}
+          />
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-sm font-medium text-muted-foreground">Currency</span>
+            <CurrencySelector currency={currency} setCurrency={setCurrency} />
+          </div>
+          <div className="space-y-3">
+            {mode === "find-pl" && (
+              <>
+                <SolverInput label={`Cost Price (${currency})`} value={cp} onChange={setCp} />
+                <SolverInput label={`Selling Price (${currency})`} value={sp} onChange={setSp} />
+              </>
+            )}
+            {mode === "find-sp" && (
+              <>
+                <SolverInput label={`Cost Price (${currency})`} value={cp} onChange={setCp} />
+                <SolverSelect label="Type" value={plType} onChange={setPlType} options={[
+                  { value: "profit", label: "Profit %" }, { value: "loss", label: "Loss %" },
+                ]} />
+                <SolverInput label="Percentage (%)" value={plPercent} onChange={setPlPercent} />
+              </>
+            )}
+            {mode === "find-cp" && (
+              <>
+                <SolverInput label={`Selling Price (${currency})`} value={sp} onChange={setSp} />
+                <SolverSelect label="Type" value={plType} onChange={setPlType} options={[
+                  { value: "profit", label: "Profit %" }, { value: "loss", label: "Loss %" },
+                ]} />
+                <SolverInput label="Percentage (%)" value={plPercent} onChange={setPlPercent} />
+              </>
+            )}
+          </div>
+        </InputPanel>
+      }
+      results={
+        <SolverCard>
           <StepsDisplay steps={result.steps} />
           <ResultBox label="Result" value={result.value} />
-        </div>
-      </ToolCard>
-    </div>
+        </SolverCard>
+      }
+    />
   );
 }
 
+// ─── 7. Time & Work Solver ────────────────────────────────────────────────────
 function TimeWorkSolver() {
   const [mode, setMode] = useState("combined");
   const [daysA, setDaysA] = useState("10");
@@ -979,45 +1071,50 @@ function TimeWorkSolver() {
   }, [mode, daysA, daysB, togetherDays, fillTime, leakTime]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Time & Work / Pipes Solver" icon={Clock} iconColor="bg-orange-500">
-        <ModeToggle
-          modes={[
-            { id: "combined", label: "Combined Work" },
-            { id: "find-individual", label: "Find Individual" },
-            { id: "pipes", label: "Pipes & Cistern" },
-          ]}
-          mode={mode} setMode={setMode}
-        />
-        <div className="space-y-3">
-          {mode === "combined" && (
-            <>
-              <SolverInput label="A completes in (days)" value={daysA} onChange={setDaysA} />
-              <SolverInput label="B completes in (days)" value={daysB} onChange={setDaysB} />
-            </>
-          )}
-          {mode === "find-individual" && (
-            <>
-              <SolverInput label="Together in (days)" value={togetherDays} onChange={setTogetherDays} />
-              <SolverInput label="A alone in (days)" value={daysA} onChange={setDaysA} />
-            </>
-          )}
-          {mode === "pipes" && (
-            <>
-              <SolverInput label="Fill pipe time (hours)" value={fillTime} onChange={setFillTime} />
-              <SolverInput label="Leak/empty time (hours)" value={leakTime} onChange={setLeakTime} />
-            </>
-          )}
-        </div>
-        <div className="mt-4 space-y-3">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Time & Work / Pipes Solver" icon={Clock} iconColor="bg-orange-500">
+          <ModeToggle
+            modes={[
+              { id: "combined", label: "Combined Work" },
+              { id: "find-individual", label: "Find Individual" },
+              { id: "pipes", label: "Pipes & Cistern" },
+            ]}
+            mode={mode} setMode={setMode}
+          />
+          <div className="space-y-3">
+            {mode === "combined" && (
+              <>
+                <SolverInput label="A completes in (days)" value={daysA} onChange={setDaysA} />
+                <SolverInput label="B completes in (days)" value={daysB} onChange={setDaysB} />
+              </>
+            )}
+            {mode === "find-individual" && (
+              <>
+                <SolverInput label="Together in (days)" value={togetherDays} onChange={setTogetherDays} />
+                <SolverInput label="A alone in (days)" value={daysA} onChange={setDaysA} />
+              </>
+            )}
+            {mode === "pipes" && (
+              <>
+                <SolverInput label="Fill pipe time (hours)" value={fillTime} onChange={setFillTime} />
+                <SolverInput label="Leak/empty time (hours)" value={leakTime} onChange={setLeakTime} />
+              </>
+            )}
+          </div>
+        </InputPanel>
+      }
+      results={
+        <SolverCard>
           <StepsDisplay steps={result.steps} />
           <ResultBox label="Result" value={result.value} />
-        </div>
-      </ToolCard>
-    </div>
+        </SolverCard>
+      }
+    />
   );
 }
 
+// ─── 8. Average Solver ────────────────────────────────────────────────────────
 function AverageSolver() {
   const [mode, setMode] = useState("find-avg");
   const [numbers, setNumbers] = useState("10, 20, 30, 40, 50");
@@ -1100,43 +1197,48 @@ function AverageSolver() {
   }, [mode, numbers, average, count, newNumber, total]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Average Problems Solver" icon={BarChart3} iconColor="bg-orange-500">
-        <ModeToggle
-          modes={[
-            { id: "find-avg", label: "Find Average" },
-            { id: "find-missing", label: "Missing No." },
-            { id: "new-avg", label: "New Average" },
-            { id: "find-count", label: "Find Count" },
-          ]}
-          mode={mode} setMode={setMode}
-        />
-        <div className="space-y-3">
-          {(mode === "find-avg" || mode === "find-missing" || mode === "new-avg") && (
-            <SolverInput label="Numbers (comma-separated)" value={numbers} onChange={setNumbers} type="text" placeholder="10, 20, 30, 40, 50" />
-          )}
-          {mode === "find-missing" && (
-            <SolverInput label="Target Average" value={average} onChange={setAverage} />
-          )}
-          {mode === "new-avg" && (
-            <SolverInput label="New Number to Add" value={newNumber} onChange={setNewNumber} />
-          )}
-          {mode === "find-count" && (
-            <>
-              <SolverInput label="Total Sum" value={total} onChange={setTotal} />
-              <SolverInput label="Average" value={average} onChange={setAverage} />
-            </>
-          )}
-        </div>
-        <div className="mt-4 space-y-3">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Average Problems Solver" icon={BarChart3} iconColor="bg-orange-500">
+          <ModeToggle
+            modes={[
+              { id: "find-avg", label: "Find Average" },
+              { id: "find-missing", label: "Missing No." },
+              { id: "new-avg", label: "New Average" },
+              { id: "find-count", label: "Find Count" },
+            ]}
+            mode={mode} setMode={setMode}
+          />
+          <div className="space-y-3">
+            {(mode === "find-avg" || mode === "find-missing" || mode === "new-avg") && (
+              <SolverInput label="Numbers (comma-separated)" value={numbers} onChange={setNumbers} type="text" placeholder="10, 20, 30, 40, 50" />
+            )}
+            {mode === "find-missing" && (
+              <SolverInput label="Target Average" value={average} onChange={setAverage} />
+            )}
+            {mode === "new-avg" && (
+              <SolverInput label="New Number to Add" value={newNumber} onChange={setNewNumber} />
+            )}
+            {mode === "find-count" && (
+              <>
+                <SolverInput label="Total Sum" value={total} onChange={setTotal} />
+                <SolverInput label="Average" value={average} onChange={setAverage} />
+              </>
+            )}
+          </div>
+        </InputPanel>
+      }
+      results={
+        <SolverCard>
           <StepsDisplay steps={result.steps} />
           <ResultBox label="Result" value={result.value} />
-        </div>
-      </ToolCard>
-    </div>
+        </SolverCard>
+      }
+    />
   );
 }
 
+// ─── 9. Mixture Solver ────────────────────────────────────────────────────────
 function MixtureSolver() {
   const [mode, setMode] = useState("find-mix-price");
   const [currency, setCurrency] = useState("₹");
@@ -1206,59 +1308,64 @@ function MixtureSolver() {
   }, [mode, priceA, priceB, qtyA, qtyB, mixPrice, currency]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Mixture & Alligation Solver" icon={FlaskConical} iconColor="bg-orange-500">
-        <ModeToggle
-          modes={[
-            { id: "find-mix-price", label: "Mix Price" },
-            { id: "find-ratio", label: "Find Ratio" },
-            { id: "dilution", label: "Dilution" },
-          ]}
-          mode={mode} setMode={setMode}
-        />
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-sm font-medium text-muted-foreground">Currency</span>
-          <CurrencySelector currency={currency} setCurrency={setCurrency} />
-        </div>
-        <div className="space-y-3">
-          {mode === "find-mix-price" && (
-            <>
-              <div className="grid grid-cols-2 gap-3">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Mixture & Alligation Solver" icon={FlaskConical} iconColor="bg-orange-500">
+          <ModeToggle
+            modes={[
+              { id: "find-mix-price", label: "Mix Price" },
+              { id: "find-ratio", label: "Find Ratio" },
+              { id: "dilution", label: "Dilution" },
+            ]}
+            mode={mode} setMode={setMode}
+          />
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-sm font-medium text-muted-foreground">Currency</span>
+            <CurrencySelector currency={currency} setCurrency={setCurrency} />
+          </div>
+          <div className="space-y-3">
+            {mode === "find-mix-price" && (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <SolverInput label={`Price A (${currency})`} value={priceA} onChange={setPriceA} />
+                  <SolverInput label="Qty A" value={qtyA} onChange={setQtyA} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <SolverInput label={`Price B (${currency})`} value={priceB} onChange={setPriceB} />
+                  <SolverInput label="Qty B" value={qtyB} onChange={setQtyB} />
+                </div>
+              </>
+            )}
+            {mode === "find-ratio" && (
+              <>
                 <SolverInput label={`Price A (${currency})`} value={priceA} onChange={setPriceA} />
-                <SolverInput label="Qty A" value={qtyA} onChange={setQtyA} />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
                 <SolverInput label={`Price B (${currency})`} value={priceB} onChange={setPriceB} />
-                <SolverInput label="Qty B" value={qtyB} onChange={setQtyB} />
-              </div>
-            </>
-          )}
-          {mode === "find-ratio" && (
-            <>
-              <SolverInput label={`Price A (${currency})`} value={priceA} onChange={setPriceA} />
-              <SolverInput label={`Price B (${currency})`} value={priceB} onChange={setPriceB} />
-              <SolverInput label={`Mixture Price (${currency})`} value={mixPrice} onChange={setMixPrice} />
-            </>
-          )}
-          {mode === "dilution" && (
-            <>
-              <div className="grid grid-cols-2 gap-3">
-                <SolverInput label={`Item Price (${currency})`} value={priceA} onChange={setPriceA} />
-                <SolverInput label="Item Qty" value={qtyA} onChange={setQtyA} />
-              </div>
-              <SolverInput label="Water/Free Qty" value={qtyB} onChange={setQtyB} />
-            </>
-          )}
-        </div>
-        <div className="mt-4 space-y-3">
+                <SolverInput label={`Mixture Price (${currency})`} value={mixPrice} onChange={setMixPrice} />
+              </>
+            )}
+            {mode === "dilution" && (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <SolverInput label={`Item Price (${currency})`} value={priceA} onChange={setPriceA} />
+                  <SolverInput label="Item Qty" value={qtyA} onChange={setQtyA} />
+                </div>
+                <SolverInput label="Water/Free Qty" value={qtyB} onChange={setQtyB} />
+              </>
+            )}
+          </div>
+        </InputPanel>
+      }
+      results={
+        <SolverCard>
           <StepsDisplay steps={result.steps} />
           <ResultBox label="Result" value={result.value} />
-        </div>
-      </ToolCard>
-    </div>
+        </SolverCard>
+      }
+    />
   );
 }
 
+// ─── 10. Rate Solver ──────────────────────────────────────────────────────────
 function RateSolver() {
   const [mode, setMode] = useState("find-rate");
   const [totalVal, setTotalVal] = useState("500");
@@ -1316,46 +1423,51 @@ function RateSolver() {
   }, [mode, totalVal, timeQty, rate, unitLabel]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Rate Solver (General)" icon={Zap} iconColor="bg-orange-500">
-        <ModeToggle
-          modes={[
-            { id: "find-rate", label: "Find Rate" },
-            { id: "find-total", label: "Find Total" },
-            { id: "find-time", label: "Find Time/Qty" },
-          ]}
-          mode={mode} setMode={setMode}
-        />
-        <div className="space-y-3">
-          <SolverSelect label="Unit Label" value={unitLabel} onChange={setUnitLabel} options={unitOpts} />
-          {mode === "find-rate" && (
-            <>
-              <SolverInput label="Total" value={totalVal} onChange={setTotalVal} />
-              <SolverInput label="Time / Quantity" value={timeQty} onChange={setTimeQty} />
-            </>
-          )}
-          {mode === "find-total" && (
-            <>
-              <SolverInput label="Rate" value={rate} onChange={setRate} />
-              <SolverInput label="Time / Quantity" value={timeQty} onChange={setTimeQty} />
-            </>
-          )}
-          {mode === "find-time" && (
-            <>
-              <SolverInput label="Total" value={totalVal} onChange={setTotalVal} />
-              <SolverInput label="Rate" value={rate} onChange={setRate} />
-            </>
-          )}
-        </div>
-        <div className="mt-4 space-y-3">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Rate Solver (General)" icon={Zap} iconColor="bg-orange-500">
+          <ModeToggle
+            modes={[
+              { id: "find-rate", label: "Find Rate" },
+              { id: "find-total", label: "Find Total" },
+              { id: "find-time", label: "Find Time/Qty" },
+            ]}
+            mode={mode} setMode={setMode}
+          />
+          <div className="space-y-3">
+            <SolverSelect label="Unit Label" value={unitLabel} onChange={setUnitLabel} options={unitOpts} />
+            {mode === "find-rate" && (
+              <>
+                <SolverInput label="Total" value={totalVal} onChange={setTotalVal} />
+                <SolverInput label="Time / Quantity" value={timeQty} onChange={setTimeQty} />
+              </>
+            )}
+            {mode === "find-total" && (
+              <>
+                <SolverInput label="Rate" value={rate} onChange={setRate} />
+                <SolverInput label="Time / Quantity" value={timeQty} onChange={setTimeQty} />
+              </>
+            )}
+            {mode === "find-time" && (
+              <>
+                <SolverInput label="Total" value={totalVal} onChange={setTotalVal} />
+                <SolverInput label="Rate" value={rate} onChange={setRate} />
+              </>
+            )}
+          </div>
+        </InputPanel>
+      }
+      results={
+        <SolverCard>
           <StepsDisplay steps={result.steps} />
           <ResultBox label="Result" value={result.value} />
-        </div>
-      </ToolCard>
-    </div>
+        </SolverCard>
+      }
+    />
   );
 }
 
+// ─── 11. Basic Solver ─────────────────────────────────────────────────────────
 function BasicSolver() {
   const [mode, setMode] = useState("grouping");
   const [total, setTotal] = useState("48");
@@ -1429,75 +1541,60 @@ function BasicSolver() {
   }, [mode, total, groupSize, numGroups, perGroup, resultVal, factor]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Basic Word Problems (Level 1)" icon={Calculator} iconColor="bg-orange-500">
-        <ModeToggle
-          modes={[
-            { id: "grouping", label: "Grouping" },
-            { id: "sharing", label: "Sharing" },
-            { id: "multiplication", label: "Multiply" },
-            { id: "reverse", label: "Reverse" },
-          ]}
-          mode={mode} setMode={setMode}
-        />
-        <div className="space-y-3">
-          {mode === "grouping" && (
-            <>
-              <SolverInput label="Total Items" value={total} onChange={setTotal} />
-              <SolverInput label="Group Size" value={groupSize} onChange={setGroupSize} />
-            </>
-          )}
-          {mode === "sharing" && (
-            <>
-              <SolverInput label="Total to Share" value={total} onChange={setTotal} />
-              <SolverInput label="Number of People" value={groupSize} onChange={setGroupSize} />
-            </>
-          )}
-          {mode === "multiplication" && (
-            <>
-              <SolverInput label="Number of Groups" value={numGroups} onChange={setNumGroups} />
-              <SolverInput label="Items per Group" value={perGroup} onChange={setPerGroup} />
-            </>
-          )}
-          {mode === "reverse" && (
-            <>
-              <SolverInput label="Result" value={resultVal} onChange={setResultVal} />
-              <SolverInput label="Known Factor" value={factor} onChange={setFactor} />
-            </>
-          )}
-        </div>
-        <div className="mt-4 space-y-3">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Basic Word Problems (Level 1)" icon={Calculator} iconColor="bg-orange-500">
+          <ModeToggle
+            modes={[
+              { id: "grouping", label: "Grouping" },
+              { id: "sharing", label: "Sharing" },
+              { id: "multiplication", label: "Multiply" },
+              { id: "reverse", label: "Reverse" },
+            ]}
+            mode={mode} setMode={setMode}
+          />
+          <div className="space-y-3">
+            {mode === "grouping" && (
+              <>
+                <SolverInput label="Total Items" value={total} onChange={setTotal} />
+                <SolverInput label="Group Size" value={groupSize} onChange={setGroupSize} />
+              </>
+            )}
+            {mode === "sharing" && (
+              <>
+                <SolverInput label="Total to Share" value={total} onChange={setTotal} />
+                <SolverInput label="Number of People" value={groupSize} onChange={setGroupSize} />
+              </>
+            )}
+            {mode === "multiplication" && (
+              <>
+                <SolverInput label="Number of Groups" value={numGroups} onChange={setNumGroups} />
+                <SolverInput label="Items per Group" value={perGroup} onChange={setPerGroup} />
+              </>
+            )}
+            {mode === "reverse" && (
+              <>
+                <SolverInput label="Result" value={resultVal} onChange={setResultVal} />
+                <SolverInput label="Known Factor" value={factor} onChange={setFactor} />
+              </>
+            )}
+          </div>
+        </InputPanel>
+      }
+      results={
+        <SolverCard>
           <StepsDisplay steps={result.steps} />
           <ResultBox label="Answer" value={result.value} />
-        </div>
-      </ToolCard>
-    </div>
+        </SolverCard>
+      }
+    />
   );
 }
 
-const VOLUME_UNITS = [
-  { value: "ml", label: "Milliliter (ml)", factor: 0.001 },
-  { value: "l", label: "Liter (L)", factor: 1 },
-  { value: "cl", label: "Centiliter (cl)", factor: 0.01 },
-  { value: "dl", label: "Deciliter (dl)", factor: 0.1 },
-  { value: "kl", label: "Kiloliter (kL)", factor: 1000 },
-  { value: "gal_us", label: "US Gallon", factor: 3.78541 },
-  { value: "gal_uk", label: "UK Gallon", factor: 4.54609 },
-  { value: "qt", label: "Quart (US)", factor: 0.946353 },
-  { value: "pt", label: "Pint (US)", factor: 0.473176 },
-  { value: "cup", label: "Cup (US)", factor: 0.236588 },
-  { value: "fl_oz", label: "Fluid Ounce (US)", factor: 0.0295735 },
-  { value: "tbsp", label: "Tablespoon", factor: 0.0147868 },
-  { value: "tsp", label: "Teaspoon", factor: 0.00492892 },
-  { value: "m3", label: "Cubic Meter (m\u00B3)", factor: 1000 },
-  { value: "cm3", label: "Cubic cm (cm\u00B3)", factor: 0.001 },
-  { value: "ft3", label: "Cubic Foot (ft\u00B3)", factor: 28.3168 },
-  { value: "in3", label: "Cubic Inch (in\u00B3)", factor: 0.0163871 },
-];
-
+// ─── 12. Volume Solver ────────────────────────────────────────────────────────
 function VolumeSolver() {
   const [mode, setMode] = useState("convert");
-  const [currency, setCurrency] = useState("\u20B9");
+  const [currency, setCurrency] = useState("₹");
   const [fromUnit, setFromUnit] = useState("l");
   const [toUnit, setToUnit] = useState("ml");
   const [value, setValue] = useState("5");
@@ -1528,8 +1625,8 @@ function VolumeSolver() {
           value: `${fmt(converted)} ${toUnit}`,
           steps: [
             `Input: ${fmt(v)} ${getLabel(fromUnit)}`,
-            `Convert to liters: ${fmt(v)} \u00D7 ${getF(fromUnit)} = ${fmt(liters)} L`,
-            `Convert to ${getLabel(toUnit)}: ${fmt(liters)} \u00F7 ${getF(toUnit)} = ${fmt(converted)}`,
+            `Convert to liters: ${fmt(v)} × ${getF(fromUnit)} = ${fmt(liters)} L`,
+            `Convert to ${getLabel(toUnit)}: ${fmt(liters)} ÷ ${getF(toUnit)} = ${fmt(converted)}`,
           ],
         };
       }
@@ -1537,7 +1634,7 @@ function VolumeSolver() {
         const tv = parseFloat(totalVol) || 0;
         const tp = parseFloat(totalPrice) || 0;
         const rq = parseFloat(reqVol) || 0;
-        if (tv === 0) return { value: "\u2014", steps: [] };
+        if (tv === 0) return { value: "—", steps: [] };
         const pricePerUnit = tp / tv;
         const reqPrice = pricePerUnit * rq;
         return {
@@ -1545,8 +1642,8 @@ function VolumeSolver() {
           steps: [
             `Total volume: ${fmt(tv)} ${fromUnit}`,
             `Total price: ${currency}${fmt(tp)}`,
-            `Price per ${fromUnit}: ${currency}${fmt(tp)} \u00F7 ${fmt(tv)} = ${currency}${fmt(pricePerUnit)}`,
-            `Cost for ${fmt(rq)} ${fromUnit}: ${currency}${fmt(pricePerUnit)} \u00D7 ${fmt(rq)} = ${currency}${fmt(reqPrice)}`,
+            `Price per ${fromUnit}: ${currency}${fmt(tp)} ÷ ${fmt(tv)} = ${currency}${fmt(pricePerUnit)}`,
+            `Cost for ${fmt(rq)} ${fromUnit}: ${currency}${fmt(pricePerUnit)} × ${fmt(rq)} = ${currency}${fmt(reqPrice)}`,
           ],
         };
       }
@@ -1554,23 +1651,23 @@ function VolumeSolver() {
         const tp = parseFloat(totalPrice) || 0;
         const tv = parseFloat(totalVol) || 0;
         const bd = parseFloat(budget) || 0;
-        if (tv === 0 || tp === 0) return { value: "\u2014", steps: [] };
+        if (tv === 0 || tp === 0) return { value: "—", steps: [] };
         const pricePerUnit = tp / tv;
         const canBuy = bd / pricePerUnit;
         return {
           value: `${fmt(canBuy)} ${fromUnit}`,
           steps: [
             `Price for ${fmt(tv)} ${fromUnit} = ${currency}${fmt(tp)}`,
-            `Price per ${fromUnit}: ${currency}${fmt(tp)} \u00F7 ${fmt(tv)} = ${currency}${fmt(pricePerUnit)}`,
+            `Price per ${fromUnit}: ${currency}${fmt(tp)} ÷ ${fmt(tv)} = ${currency}${fmt(pricePerUnit)}`,
             `Budget: ${currency}${fmt(bd)}`,
-            `Volume you can get: ${currency}${fmt(bd)} \u00F7 ${currency}${fmt(pricePerUnit)} = ${fmt(canBuy)} ${fromUnit}`,
+            `Volume you can get: ${currency}${fmt(bd)} ÷ ${currency}${fmt(pricePerUnit)} = ${fmt(canBuy)} ${fromUnit}`,
           ],
         };
       }
       case "containers": {
         const cv = parseFloat(containerVol) || 0;
         const fv = parseFloat(fillVol) || 0;
-        if (cv === 0) return { value: "\u2014", steps: [] };
+        if (cv === 0) return { value: "—", steps: [] };
         const cvLiters = cv * getF(containerUnit);
         const fvLiters = fv * getF(fillUnit);
         const containers = fvLiters / cvLiters;
@@ -1581,7 +1678,7 @@ function VolumeSolver() {
           steps: [
             `Container size: ${fmt(cv)} ${getLabel(containerUnit)} = ${fmt(cvLiters)} L`,
             `Total to fill: ${fmt(fv)} ${getLabel(fillUnit)} = ${fmt(fvLiters)} L`,
-            `Containers needed: ${fmt(fvLiters)} \u00F7 ${fmt(cvLiters)} = ${fmt(containers)}`,
+            `Containers needed: ${fmt(fvLiters)} ÷ ${fmt(cvLiters)} = ${fmt(containers)}`,
             ...(remainder > 0.001 ? [`Remaining: ${fmt(remConverted)} ${containerUnit}`] : []),
           ],
         };
@@ -1606,96 +1703,86 @@ function VolumeSolver() {
           ],
         };
       }
-      default: return { value: "\u2014", steps: [] };
+      default: return { value: "—", steps: [] };
     }
   }, [mode, value, fromUnit, toUnit, totalVol, totalPrice, reqVol, budget, currency, containerVol, containerUnit, fillVol, fillUnit, mixQtyA, mixUnitA, mixQtyB, mixUnitB, resultUnit]);
 
   const unitOptions = VOLUME_UNITS.map(u => ({ value: u.value, label: u.label }));
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Volume Word Problem Solver" icon={Droplets} iconColor="bg-orange-500">
-        <ModeToggle
-          modes={[
-            { id: "convert", label: "Convert" },
-            { id: "price-per-vol", label: "Price/Vol" },
-            { id: "reverse-vol", label: "Reverse" },
-            { id: "containers", label: "Containers" },
-            { id: "mix", label: "Mix Liquids" },
-          ]}
-          mode={mode} setMode={setMode}
-        />
-        <div className="space-y-3">
-          {mode === "convert" && (
-            <>
-              <SolverInput label="Value" value={value} onChange={setValue} />
-              <SolverSelect label="From Unit" value={fromUnit} onChange={setFromUnit} options={unitOptions} />
-              <SolverSelect label="To Unit" value={toUnit} onChange={setToUnit} options={unitOptions} />
-            </>
-          )}
-          {mode === "price-per-vol" && (
-            <>
-              <div className="flex justify-end"><CurrencySelector currency={currency} setCurrency={setCurrency} /></div>
-              <SolverInput label="Total Volume" value={totalVol} onChange={setTotalVol} />
-              <SolverSelect label="Volume Unit" value={fromUnit} onChange={setFromUnit} options={unitOptions} />
-              <SolverInput label={`Total Price (${currency})`} value={totalPrice} onChange={setTotalPrice} />
-              <SolverInput label={`Required Volume (${fromUnit})`} value={reqVol} onChange={setReqVol} />
-            </>
-          )}
-          {mode === "reverse-vol" && (
-            <>
-              <div className="flex justify-end"><CurrencySelector currency={currency} setCurrency={setCurrency} /></div>
-              <SolverInput label="Total Volume" value={totalVol} onChange={setTotalVol} />
-              <SolverSelect label="Volume Unit" value={fromUnit} onChange={setFromUnit} options={unitOptions} />
-              <SolverInput label={`Total Price (${currency})`} value={totalPrice} onChange={setTotalPrice} />
-              <SolverInput label={`Your Budget (${currency})`} value={budget} onChange={setBudget} />
-            </>
-          )}
-          {mode === "containers" && (
-            <>
-              <SolverInput label="Container Size" value={containerVol} onChange={setContainerVol} />
-              <SolverSelect label="Container Unit" value={containerUnit} onChange={setContainerUnit} options={unitOptions} />
-              <SolverInput label="Total Volume to Fill" value={fillVol} onChange={setFillVol} />
-              <SolverSelect label="Fill Unit" value={fillUnit} onChange={setFillUnit} options={unitOptions} />
-            </>
-          )}
-          {mode === "mix" && (
-            <>
-              <SolverInput label="Liquid A Quantity" value={mixQtyA} onChange={setMixQtyA} />
-              <SolverSelect label="Liquid A Unit" value={mixUnitA} onChange={setMixUnitA} options={unitOptions} />
-              <SolverInput label="Liquid B Quantity" value={mixQtyB} onChange={setMixQtyB} />
-              <SolverSelect label="Liquid B Unit" value={mixUnitB} onChange={setMixUnitB} options={unitOptions} />
-              <SolverSelect label="Result Unit" value={resultUnit} onChange={setResultUnit} options={unitOptions} />
-            </>
-          )}
-        </div>
-        <div className="mt-4 space-y-3">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Volume Word Problem Solver" icon={Droplets} iconColor="bg-orange-500">
+          <ModeToggle
+            modes={[
+              { id: "convert", label: "Convert" },
+              { id: "price-per-vol", label: "Price/Vol" },
+              { id: "reverse-vol", label: "Reverse" },
+              { id: "containers", label: "Containers" },
+              { id: "mix", label: "Mix Liquids" },
+            ]}
+            mode={mode} setMode={setMode}
+          />
+          <div className="space-y-3">
+            {mode === "convert" && (
+              <>
+                <SolverInput label="Value" value={value} onChange={setValue} />
+                <SolverSelect label="From Unit" value={fromUnit} onChange={setFromUnit} options={unitOptions} />
+                <SolverSelect label="To Unit" value={toUnit} onChange={setToUnit} options={unitOptions} />
+              </>
+            )}
+            {mode === "price-per-vol" && (
+              <>
+                <div className="flex justify-end"><CurrencySelector currency={currency} setCurrency={setCurrency} /></div>
+                <SolverInput label="Total Volume" value={totalVol} onChange={setTotalVol} />
+                <SolverSelect label="Volume Unit" value={fromUnit} onChange={setFromUnit} options={unitOptions} />
+                <SolverInput label={`Total Price (${currency})`} value={totalPrice} onChange={setTotalPrice} />
+                <SolverInput label={`Required Volume (${fromUnit})`} value={reqVol} onChange={setReqVol} />
+              </>
+            )}
+            {mode === "reverse-vol" && (
+              <>
+                <div className="flex justify-end"><CurrencySelector currency={currency} setCurrency={setCurrency} /></div>
+                <SolverInput label="Total Volume" value={totalVol} onChange={setTotalVol} />
+                <SolverSelect label="Volume Unit" value={fromUnit} onChange={setFromUnit} options={unitOptions} />
+                <SolverInput label={`Total Price (${currency})`} value={totalPrice} onChange={setTotalPrice} />
+                <SolverInput label={`Your Budget (${currency})`} value={budget} onChange={setBudget} />
+              </>
+            )}
+            {mode === "containers" && (
+              <>
+                <SolverInput label="Container Size" value={containerVol} onChange={setContainerVol} />
+                <SolverSelect label="Container Unit" value={containerUnit} onChange={setContainerUnit} options={unitOptions} />
+                <SolverInput label="Total Volume to Fill" value={fillVol} onChange={setFillVol} />
+                <SolverSelect label="Fill Unit" value={fillUnit} onChange={setFillUnit} options={unitOptions} />
+              </>
+            )}
+            {mode === "mix" && (
+              <>
+                <SolverInput label="Liquid A Quantity" value={mixQtyA} onChange={setMixQtyA} />
+                <SolverSelect label="Liquid A Unit" value={mixUnitA} onChange={setMixUnitA} options={unitOptions} />
+                <SolverInput label="Liquid B Quantity" value={mixQtyB} onChange={setMixQtyB} />
+                <SolverSelect label="Liquid B Unit" value={mixUnitB} onChange={setMixUnitB} options={unitOptions} />
+                <SolverSelect label="Result Unit" value={resultUnit} onChange={setResultUnit} options={unitOptions} />
+              </>
+            )}
+          </div>
+        </InputPanel>
+      }
+      results={
+        <SolverCard>
           <StepsDisplay steps={result.steps} />
           <ResultBox label="Answer" value={result.value} />
-        </div>
-      </ToolCard>
-    </div>
+        </SolverCard>
+      }
+    />
   );
 }
 
-const LENGTH_UNITS = [
-  { value: "mm", label: "Millimeter (mm)", factor: 0.001 },
-  { value: "cm", label: "Centimeter (cm)", factor: 0.01 },
-  { value: "m", label: "Meter (m)", factor: 1 },
-  { value: "km", label: "Kilometer (km)", factor: 1000 },
-  { value: "in", label: "Inch (in)", factor: 0.0254 },
-  { value: "ft", label: "Foot (ft)", factor: 0.3048 },
-  { value: "yd", label: "Yard (yd)", factor: 0.9144 },
-  { value: "mi", label: "Mile (mi)", factor: 1609.34 },
-  { value: "nm", label: "Nautical Mile", factor: 1852 },
-  { value: "dm", label: "Decimeter (dm)", factor: 0.1 },
-  { value: "µm", label: "Micrometer (\u00B5m)", factor: 0.000001 },
-  { value: "ly", label: "Light Year", factor: 9.461e15 },
-];
-
+// ─── 13. Length Solver ────────────────────────────────────────────────────────
 function LengthSolver() {
   const [mode, setMode] = useState("convert");
-  const [currency, setCurrency] = useState("\u20B9");
+  const [currency, setCurrency] = useState("₹");
   const [fromUnit, setFromUnit] = useState("m");
   const [toUnit, setToUnit] = useState("ft");
   const [value, setValue] = useState("10");
@@ -1707,7 +1794,6 @@ function LengthSolver() {
   const [pieceUnit, setPieceUnit] = useState("m");
   const [totalRod, setTotalRod] = useState("20");
   const [rodUnit, setRodUnit] = useState("m");
-  const [perimeter, setPerimeter] = useState("");
   const [perimSides, setPerimSides] = useState("4");
   const [perimLen, setPerimLen] = useState("10");
   const [perimUnit, setPerimUnit] = useState("m");
@@ -1726,8 +1812,8 @@ function LengthSolver() {
           value: `${fmt(converted)} ${toUnit}`,
           steps: [
             `Input: ${fmt(v)} ${getLabel(fromUnit)}`,
-            `Convert to meters: ${fmt(v)} \u00D7 ${getF(fromUnit)} = ${fmt(meters)} m`,
-            `Convert to ${getLabel(toUnit)}: ${fmt(meters)} \u00F7 ${getF(toUnit)} = ${fmt(converted)}`,
+            `Convert to meters: ${fmt(v)} × ${getF(fromUnit)} = ${fmt(meters)} m`,
+            `Convert to ${getLabel(toUnit)}: ${fmt(meters)} ÷ ${getF(toUnit)} = ${fmt(converted)}`,
           ],
         };
       }
@@ -1735,7 +1821,7 @@ function LengthSolver() {
         const tl = parseFloat(totalLen) || 0;
         const tp = parseFloat(totalPrice) || 0;
         const rq = parseFloat(reqLen) || 0;
-        if (tl === 0) return { value: "\u2014", steps: [] };
+        if (tl === 0) return { value: "—", steps: [] };
         const pricePerUnit = tp / tl;
         const reqPrice = pricePerUnit * rq;
         return {
@@ -1743,8 +1829,8 @@ function LengthSolver() {
           steps: [
             `Total length: ${fmt(tl)} ${fromUnit}`,
             `Total price: ${currency}${fmt(tp)}`,
-            `Price per ${fromUnit}: ${currency}${fmt(tp)} \u00F7 ${fmt(tl)} = ${currency}${fmt(pricePerUnit)}`,
-            `Cost for ${fmt(rq)} ${fromUnit}: ${currency}${fmt(pricePerUnit)} \u00D7 ${fmt(rq)} = ${currency}${fmt(reqPrice)}`,
+            `Price per ${fromUnit}: ${currency}${fmt(tp)} ÷ ${fmt(tl)} = ${currency}${fmt(pricePerUnit)}`,
+            `Cost for ${fmt(rq)} ${fromUnit}: ${currency}${fmt(pricePerUnit)} × ${fmt(rq)} = ${currency}${fmt(reqPrice)}`,
           ],
         };
       }
@@ -1752,23 +1838,23 @@ function LengthSolver() {
         const tp = parseFloat(totalPrice) || 0;
         const tl = parseFloat(totalLen) || 0;
         const bd = parseFloat(budget) || 0;
-        if (tl === 0 || tp === 0) return { value: "\u2014", steps: [] };
+        if (tl === 0 || tp === 0) return { value: "—", steps: [] };
         const pricePerUnit = tp / tl;
         const canBuy = bd / pricePerUnit;
         return {
           value: `${fmt(canBuy)} ${fromUnit}`,
           steps: [
             `Price for ${fmt(tl)} ${fromUnit} = ${currency}${fmt(tp)}`,
-            `Price per ${fromUnit}: ${currency}${fmt(tp)} \u00F7 ${fmt(tl)} = ${currency}${fmt(pricePerUnit)}`,
+            `Price per ${fromUnit}: ${currency}${fmt(tp)} ÷ ${fmt(tl)} = ${currency}${fmt(pricePerUnit)}`,
             `Budget: ${currency}${fmt(bd)}`,
-            `Length you can buy: ${currency}${fmt(bd)} \u00F7 ${currency}${fmt(pricePerUnit)} = ${fmt(canBuy)} ${fromUnit}`,
+            `Length you can buy: ${currency}${fmt(bd)} ÷ ${currency}${fmt(pricePerUnit)} = ${fmt(canBuy)} ${fromUnit}`,
           ],
         };
       }
       case "cut-pieces": {
         const pl = parseFloat(pieceLen) || 0;
         const tr = parseFloat(totalRod) || 0;
-        if (pl === 0) return { value: "\u2014", steps: [] };
+        if (pl === 0) return { value: "—", steps: [] };
         const plMeters = pl * getF(pieceUnit);
         const trMeters = tr * getF(rodUnit);
         const pieces = trMeters / plMeters;
@@ -1779,7 +1865,7 @@ function LengthSolver() {
           steps: [
             `Total material: ${fmt(tr)} ${getLabel(rodUnit)} = ${fmt(trMeters)} m`,
             `Each piece: ${fmt(pl)} ${getLabel(pieceUnit)} = ${fmt(plMeters)} m`,
-            `Pieces = ${fmt(trMeters)} \u00F7 ${fmt(plMeters)} = ${fmt(pieces)}`,
+            `Pieces = ${fmt(trMeters)} ÷ ${fmt(plMeters)} = ${fmt(pieces)}`,
             ...(remainder > 0.0001 ? [`Leftover = ${fmt(remDisplay)} ${pieceUnit}`] : []),
           ],
         };
@@ -1795,100 +1881,90 @@ function LengthSolver() {
           steps: [
             `Number of sides: ${sides}`,
             `Each side: ${fmt(sideLen)} ${getLabel(perimUnit)} = ${fmt(sideLenM)} m`,
-            `Perimeter = ${sides} \u00D7 ${fmt(sideLenM)} = ${fmt(perimM)} m`,
+            `Perimeter = ${sides} × ${fmt(sideLenM)} = ${fmt(perimM)} m`,
             `In ${getLabel(resultPUnit)}: ${fmt(perimResult)}`,
           ],
         };
       }
-      default: return { value: "\u2014", steps: [] };
+      default: return { value: "—", steps: [] };
     }
   }, [mode, value, fromUnit, toUnit, totalLen, totalPrice, reqLen, budget, currency, pieceLen, pieceUnit, totalRod, rodUnit, perimSides, perimLen, perimUnit, resultPUnit]);
 
   const unitOptions = LENGTH_UNITS.map(u => ({ value: u.value, label: u.label }));
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Length Word Problem Solver" icon={Ruler} iconColor="bg-orange-500">
-        <ModeToggle
-          modes={[
-            { id: "convert", label: "Convert" },
-            { id: "price-per-len", label: "Price/Len" },
-            { id: "reverse-len", label: "Reverse" },
-            { id: "cut-pieces", label: "Cut Pieces" },
-            { id: "perimeter", label: "Perimeter" },
-          ]}
-          mode={mode} setMode={setMode}
-        />
-        <div className="space-y-3">
-          {mode === "convert" && (
-            <>
-              <SolverInput label="Value" value={value} onChange={setValue} />
-              <SolverSelect label="From Unit" value={fromUnit} onChange={setFromUnit} options={unitOptions} />
-              <SolverSelect label="To Unit" value={toUnit} onChange={setToUnit} options={unitOptions} />
-            </>
-          )}
-          {mode === "price-per-len" && (
-            <>
-              <div className="flex justify-end"><CurrencySelector currency={currency} setCurrency={setCurrency} /></div>
-              <SolverInput label="Total Length" value={totalLen} onChange={setTotalLen} />
-              <SolverSelect label="Length Unit" value={fromUnit} onChange={setFromUnit} options={unitOptions} />
-              <SolverInput label={`Total Price (${currency})`} value={totalPrice} onChange={setTotalPrice} />
-              <SolverInput label={`Required Length (${fromUnit})`} value={reqLen} onChange={setReqLen} />
-            </>
-          )}
-          {mode === "reverse-len" && (
-            <>
-              <div className="flex justify-end"><CurrencySelector currency={currency} setCurrency={setCurrency} /></div>
-              <SolverInput label="Total Length" value={totalLen} onChange={setTotalLen} />
-              <SolverSelect label="Length Unit" value={fromUnit} onChange={setFromUnit} options={unitOptions} />
-              <SolverInput label={`Total Price (${currency})`} value={totalPrice} onChange={setTotalPrice} />
-              <SolverInput label={`Your Budget (${currency})`} value={budget} onChange={setBudget} />
-            </>
-          )}
-          {mode === "cut-pieces" && (
-            <>
-              <SolverInput label="Total Material Length" value={totalRod} onChange={setTotalRod} />
-              <SolverSelect label="Material Unit" value={rodUnit} onChange={setRodUnit} options={unitOptions} />
-              <SolverInput label="Each Piece Length" value={pieceLen} onChange={setPieceLen} />
-              <SolverSelect label="Piece Unit" value={pieceUnit} onChange={setPieceUnit} options={unitOptions} />
-            </>
-          )}
-          {mode === "perimeter" && (
-            <>
-              <SolverInput label="Number of Sides" value={perimSides} onChange={setPerimSides} />
-              <SolverInput label="Side Length" value={perimLen} onChange={setPerimLen} />
-              <SolverSelect label="Side Unit" value={perimUnit} onChange={setPerimUnit} options={unitOptions} />
-              <SolverSelect label="Result Unit" value={resultPUnit} onChange={setResultPUnit} options={unitOptions} />
-            </>
-          )}
-        </div>
-        <div className="mt-4 space-y-3">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Length Word Problem Solver" icon={Ruler} iconColor="bg-orange-500">
+          <ModeToggle
+            modes={[
+              { id: "convert", label: "Convert" },
+              { id: "price-per-len", label: "Price/Len" },
+              { id: "reverse-len", label: "Reverse" },
+              { id: "cut-pieces", label: "Cut Pieces" },
+              { id: "perimeter", label: "Perimeter" },
+            ]}
+            mode={mode} setMode={setMode}
+          />
+          <div className="space-y-3">
+            {mode === "convert" && (
+              <>
+                <SolverInput label="Value" value={value} onChange={setValue} />
+                <SolverSelect label="From Unit" value={fromUnit} onChange={setFromUnit} options={unitOptions} />
+                <SolverSelect label="To Unit" value={toUnit} onChange={setToUnit} options={unitOptions} />
+              </>
+            )}
+            {mode === "price-per-len" && (
+              <>
+                <div className="flex justify-end"><CurrencySelector currency={currency} setCurrency={setCurrency} /></div>
+                <SolverInput label="Total Length" value={totalLen} onChange={setTotalLen} />
+                <SolverSelect label="Length Unit" value={fromUnit} onChange={setFromUnit} options={unitOptions} />
+                <SolverInput label={`Total Price (${currency})`} value={totalPrice} onChange={setTotalPrice} />
+                <SolverInput label={`Required Length (${fromUnit})`} value={reqLen} onChange={setReqLen} />
+              </>
+            )}
+            {mode === "reverse-len" && (
+              <>
+                <div className="flex justify-end"><CurrencySelector currency={currency} setCurrency={setCurrency} /></div>
+                <SolverInput label="Total Length" value={totalLen} onChange={setTotalLen} />
+                <SolverSelect label="Length Unit" value={fromUnit} onChange={setFromUnit} options={unitOptions} />
+                <SolverInput label={`Total Price (${currency})`} value={totalPrice} onChange={setTotalPrice} />
+                <SolverInput label={`Your Budget (${currency})`} value={budget} onChange={setBudget} />
+              </>
+            )}
+            {mode === "cut-pieces" && (
+              <>
+                <SolverInput label="Total Material Length" value={totalRod} onChange={setTotalRod} />
+                <SolverSelect label="Material Unit" value={rodUnit} onChange={setRodUnit} options={unitOptions} />
+                <SolverInput label="Each Piece Length" value={pieceLen} onChange={setPieceLen} />
+                <SolverSelect label="Piece Unit" value={pieceUnit} onChange={setPieceUnit} options={unitOptions} />
+              </>
+            )}
+            {mode === "perimeter" && (
+              <>
+                <SolverInput label="Number of Sides" value={perimSides} onChange={setPerimSides} />
+                <SolverInput label="Side Length" value={perimLen} onChange={setPerimLen} />
+                <SolverSelect label="Side Unit" value={perimUnit} onChange={setPerimUnit} options={unitOptions} />
+                <SolverSelect label="Result Unit" value={resultPUnit} onChange={setResultPUnit} options={unitOptions} />
+              </>
+            )}
+          </div>
+        </InputPanel>
+      }
+      results={
+        <SolverCard>
           <StepsDisplay steps={result.steps} />
           <ResultBox label="Answer" value={result.value} />
-        </div>
-      </ToolCard>
-    </div>
+        </SolverCard>
+      }
+    />
   );
 }
 
-const WEIGHT_UNITS = [
-  { value: "mg", label: "Milligram (mg)", factor: 0.000001 },
-  { value: "g", label: "Gram (g)", factor: 0.001 },
-  { value: "kg", label: "Kilogram (kg)", factor: 1 },
-  { value: "quintal", label: "Quintal", factor: 100 },
-  { value: "ton_m", label: "Metric Ton", factor: 1000 },
-  { value: "oz", label: "Ounce (oz)", factor: 0.0283495 },
-  { value: "lb", label: "Pound (lb)", factor: 0.453592 },
-  { value: "st", label: "Stone (st)", factor: 6.35029 },
-  { value: "ton_us", label: "US Ton (short)", factor: 907.185 },
-  { value: "ton_uk", label: "UK Ton (long)", factor: 1016.05 },
-  { value: "ct", label: "Carat (ct)", factor: 0.0002 },
-  { value: "tola", label: "Tola (India)", factor: 0.01166 },
-];
-
+// ─── 14. Weight Solver ────────────────────────────────────────────────────────
 function WeightSolver() {
   const [mode, setMode] = useState("convert");
-  const [currency, setCurrency] = useState("\u20B9");
+  const [currency, setCurrency] = useState("₹");
   const [fromUnit, setFromUnit] = useState("kg");
   const [toUnit, setToUnit] = useState("lb");
   const [value, setValue] = useState("5");
@@ -1918,8 +1994,8 @@ function WeightSolver() {
           value: `${fmt(converted)} ${toUnit}`,
           steps: [
             `Input: ${fmt(v)} ${getLabel(fromUnit)}`,
-            `Convert to kg: ${fmt(v)} \u00D7 ${getF(fromUnit)} = ${fmt(kg)} kg`,
-            `Convert to ${getLabel(toUnit)}: ${fmt(kg)} \u00F7 ${getF(toUnit)} = ${fmt(converted)}`,
+            `Convert to kg: ${fmt(v)} × ${getF(fromUnit)} = ${fmt(kg)} kg`,
+            `Convert to ${getLabel(toUnit)}: ${fmt(kg)} ÷ ${getF(toUnit)} = ${fmt(converted)}`,
           ],
         };
       }
@@ -1927,7 +2003,7 @@ function WeightSolver() {
         const tw = parseFloat(totalWt) || 0;
         const tp = parseFloat(totalPrice) || 0;
         const rq = parseFloat(reqWt) || 0;
-        if (tw === 0) return { value: "\u2014", steps: [] };
+        if (tw === 0) return { value: "—", steps: [] };
         const pricePerUnit = tp / tw;
         const reqPrice = pricePerUnit * rq;
         return {
@@ -1935,8 +2011,8 @@ function WeightSolver() {
           steps: [
             `Total weight: ${fmt(tw)} ${fromUnit}`,
             `Total price: ${currency}${fmt(tp)}`,
-            `Price per ${fromUnit}: ${currency}${fmt(tp)} \u00F7 ${fmt(tw)} = ${currency}${fmt(pricePerUnit)}`,
-            `Cost for ${fmt(rq)} ${fromUnit}: ${currency}${fmt(pricePerUnit)} \u00D7 ${fmt(rq)} = ${currency}${fmt(reqPrice)}`,
+            `Price per ${fromUnit}: ${currency}${fmt(tp)} ÷ ${fmt(tw)} = ${currency}${fmt(pricePerUnit)}`,
+            `Cost for ${fmt(rq)} ${fromUnit}: ${currency}${fmt(pricePerUnit)} × ${fmt(rq)} = ${currency}${fmt(reqPrice)}`,
           ],
         };
       }
@@ -1944,16 +2020,16 @@ function WeightSolver() {
         const tp = parseFloat(totalPrice) || 0;
         const tw = parseFloat(totalWt) || 0;
         const bd = parseFloat(budget) || 0;
-        if (tw === 0 || tp === 0) return { value: "\u2014", steps: [] };
+        if (tw === 0 || tp === 0) return { value: "—", steps: [] };
         const pricePerUnit = tp / tw;
         const canBuy = bd / pricePerUnit;
         return {
           value: `${fmt(canBuy)} ${fromUnit}`,
           steps: [
             `Price for ${fmt(tw)} ${fromUnit} = ${currency}${fmt(tp)}`,
-            `Price per ${fromUnit}: ${currency}${fmt(tp)} \u00F7 ${fmt(tw)} = ${currency}${fmt(pricePerUnit)}`,
+            `Price per ${fromUnit}: ${currency}${fmt(tp)} ÷ ${fmt(tw)} = ${currency}${fmt(pricePerUnit)}`,
             `Budget: ${currency}${fmt(bd)}`,
-            `Weight you can buy: ${currency}${fmt(bd)} \u00F7 ${currency}${fmt(pricePerUnit)} = ${fmt(canBuy)} ${fromUnit}`,
+            `Weight you can buy: ${currency}${fmt(bd)} ÷ ${currency}${fmt(pricePerUnit)} = ${fmt(canBuy)} ${fromUnit}`,
           ],
         };
       }
@@ -1967,15 +2043,15 @@ function WeightSolver() {
           steps: [
             `Number of items: ${fmt(ni)}`,
             `Weight per item: ${fmt(pw)} ${getLabel(perItemUnit)}`,
-            `Total weight = ${fmt(ni)} \u00D7 ${fmt(pw)} ${perItemUnit} = ${fmt(ni * pw)} ${perItemUnit}`,
-            `Convert to ${getLabel(resultWtUnit)}: ${fmt(totalKg)} kg \u00F7 ${getF(resultWtUnit)} = ${fmt(converted)} ${resultWtUnit}`,
+            `Total weight = ${fmt(ni)} × ${fmt(pw)} ${perItemUnit} = ${fmt(ni * pw)} ${perItemUnit}`,
+            `Convert to ${getLabel(resultWtUnit)}: ${fmt(totalKg)} kg ÷ ${getF(resultWtUnit)} = ${fmt(converted)} ${resultWtUnit}`,
           ],
         };
       }
       case "packing": {
         const pw = parseFloat(packWt) || 0;
         const tb = parseFloat(totalBulk) || 0;
-        if (pw === 0) return { value: "\u2014", steps: [] };
+        if (pw === 0) return { value: "—", steps: [] };
         const packKg = pw * getF(packUnit);
         const bulkKg = tb * getF(bulkUnit);
         const packs = bulkKg / packKg;
@@ -1986,78 +2062,82 @@ function WeightSolver() {
           steps: [
             `Each pack: ${fmt(pw)} ${getLabel(packUnit)} = ${fmt(packKg)} kg`,
             `Total bulk: ${fmt(tb)} ${getLabel(bulkUnit)} = ${fmt(bulkKg)} kg`,
-            `Packs = ${fmt(bulkKg)} \u00F7 ${fmt(packKg)} = ${fmt(packs)}`,
+            `Packs = ${fmt(bulkKg)} ÷ ${fmt(packKg)} = ${fmt(packs)}`,
             ...(remainder > 0.0001 ? [`Leftover = ${fmt(remDisplay)} ${packUnit}`] : []),
           ],
         };
       }
-      default: return { value: "\u2014", steps: [] };
+      default: return { value: "—", steps: [] };
     }
   }, [mode, value, fromUnit, toUnit, totalWt, totalPrice, reqWt, budget, currency, numItems, perItemWt, perItemUnit, resultWtUnit, packWt, packUnit, totalBulk, bulkUnit]);
 
   const unitOptions = WEIGHT_UNITS.map(u => ({ value: u.value, label: u.label }));
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Weight Word Problem Solver" icon={Weight} iconColor="bg-orange-500">
-        <ModeToggle
-          modes={[
-            { id: "convert", label: "Convert" },
-            { id: "price-per-wt", label: "Price/Wt" },
-            { id: "reverse-wt", label: "Reverse" },
-            { id: "total-weight", label: "Total Wt" },
-            { id: "packing", label: "Packing" },
-          ]}
-          mode={mode} setMode={setMode}
-        />
-        <div className="space-y-3">
-          {mode === "convert" && (
-            <>
-              <SolverInput label="Value" value={value} onChange={setValue} />
-              <SolverSelect label="From Unit" value={fromUnit} onChange={setFromUnit} options={unitOptions} />
-              <SolverSelect label="To Unit" value={toUnit} onChange={setToUnit} options={unitOptions} />
-            </>
-          )}
-          {mode === "price-per-wt" && (
-            <>
-              <div className="flex justify-end"><CurrencySelector currency={currency} setCurrency={setCurrency} /></div>
-              <SolverInput label="Total Weight" value={totalWt} onChange={setTotalWt} />
-              <SolverSelect label="Weight Unit" value={fromUnit} onChange={setFromUnit} options={unitOptions} />
-              <SolverInput label={`Total Price (${currency})`} value={totalPrice} onChange={setTotalPrice} />
-              <SolverInput label={`Required Weight (${fromUnit})`} value={reqWt} onChange={setReqWt} />
-            </>
-          )}
-          {mode === "reverse-wt" && (
-            <>
-              <div className="flex justify-end"><CurrencySelector currency={currency} setCurrency={setCurrency} /></div>
-              <SolverInput label="Total Weight" value={totalWt} onChange={setTotalWt} />
-              <SolverSelect label="Weight Unit" value={fromUnit} onChange={setFromUnit} options={unitOptions} />
-              <SolverInput label={`Total Price (${currency})`} value={totalPrice} onChange={setTotalPrice} />
-              <SolverInput label={`Your Budget (${currency})`} value={budget} onChange={setBudget} />
-            </>
-          )}
-          {mode === "total-weight" && (
-            <>
-              <SolverInput label="Number of Items" value={numItems} onChange={setNumItems} />
-              <SolverInput label="Weight per Item" value={perItemWt} onChange={setPerItemWt} />
-              <SolverSelect label="Per Item Unit" value={perItemUnit} onChange={setPerItemUnit} options={unitOptions} />
-              <SolverSelect label="Result Unit" value={resultWtUnit} onChange={setResultWtUnit} options={unitOptions} />
-            </>
-          )}
-          {mode === "packing" && (
-            <>
-              <SolverInput label="Pack Size" value={packWt} onChange={setPackWt} />
-              <SolverSelect label="Pack Unit" value={packUnit} onChange={setPackUnit} options={unitOptions} />
-              <SolverInput label="Total Bulk Weight" value={totalBulk} onChange={setTotalBulk} />
-              <SolverSelect label="Bulk Unit" value={bulkUnit} onChange={setBulkUnit} options={unitOptions} />
-            </>
-          )}
-        </div>
-        <div className="mt-4 space-y-3">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Weight Word Problem Solver" icon={Weight} iconColor="bg-orange-500">
+          <ModeToggle
+            modes={[
+              { id: "convert", label: "Convert" },
+              { id: "price-per-wt", label: "Price/Wt" },
+              { id: "reverse-wt", label: "Reverse" },
+              { id: "total-weight", label: "Total Wt" },
+              { id: "packing", label: "Packing" },
+            ]}
+            mode={mode} setMode={setMode}
+          />
+          <div className="space-y-3">
+            {mode === "convert" && (
+              <>
+                <SolverInput label="Value" value={value} onChange={setValue} />
+                <SolverSelect label="From Unit" value={fromUnit} onChange={setFromUnit} options={unitOptions} />
+                <SolverSelect label="To Unit" value={toUnit} onChange={setToUnit} options={unitOptions} />
+              </>
+            )}
+            {mode === "price-per-wt" && (
+              <>
+                <div className="flex justify-end"><CurrencySelector currency={currency} setCurrency={setCurrency} /></div>
+                <SolverInput label="Total Weight" value={totalWt} onChange={setTotalWt} />
+                <SolverSelect label="Weight Unit" value={fromUnit} onChange={setFromUnit} options={unitOptions} />
+                <SolverInput label={`Total Price (${currency})`} value={totalPrice} onChange={setTotalPrice} />
+                <SolverInput label={`Required Weight (${fromUnit})`} value={reqWt} onChange={setReqWt} />
+              </>
+            )}
+            {mode === "reverse-wt" && (
+              <>
+                <div className="flex justify-end"><CurrencySelector currency={currency} setCurrency={setCurrency} /></div>
+                <SolverInput label="Total Weight" value={totalWt} onChange={setTotalWt} />
+                <SolverSelect label="Weight Unit" value={fromUnit} onChange={setFromUnit} options={unitOptions} />
+                <SolverInput label={`Total Price (${currency})`} value={totalPrice} onChange={setTotalPrice} />
+                <SolverInput label={`Your Budget (${currency})`} value={budget} onChange={setBudget} />
+              </>
+            )}
+            {mode === "total-weight" && (
+              <>
+                <SolverInput label="Number of Items" value={numItems} onChange={setNumItems} />
+                <SolverInput label="Weight per Item" value={perItemWt} onChange={setPerItemWt} />
+                <SolverSelect label="Per Item Unit" value={perItemUnit} onChange={setPerItemUnit} options={unitOptions} />
+                <SolverSelect label="Result Unit" value={resultWtUnit} onChange={setResultWtUnit} options={unitOptions} />
+              </>
+            )}
+            {mode === "packing" && (
+              <>
+                <SolverInput label="Pack Size" value={packWt} onChange={setPackWt} />
+                <SolverSelect label="Pack Unit" value={packUnit} onChange={setPackUnit} options={unitOptions} />
+                <SolverInput label="Total Bulk Weight" value={totalBulk} onChange={setTotalBulk} />
+                <SolverSelect label="Bulk Unit" value={bulkUnit} onChange={setBulkUnit} options={unitOptions} />
+              </>
+            )}
+          </div>
+        </InputPanel>
+      }
+      results={
+        <SolverCard>
           <StepsDisplay steps={result.steps} />
           <ResultBox label="Answer" value={result.value} />
-        </div>
-      </ToolCard>
-    </div>
+        </SolverCard>
+      }
+    />
   );
 }

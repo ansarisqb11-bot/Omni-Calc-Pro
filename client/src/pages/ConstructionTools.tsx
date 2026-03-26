@@ -3,7 +3,7 @@ import {
   Hammer, PaintBucket, LayoutGrid, Construction, Box, Calculator,
   Home, Layers, ArrowRightLeft, Mountain, TrendingUp, Truck
 } from "lucide-react";
-import { ToolCard } from "@/components/ToolCard";
+import { DesktopToolGrid, InputPanel, ResultPanel, BreakdownRow, SummaryCard, ModeSelector } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
 
 type ToolType =
@@ -11,7 +11,6 @@ type ToolType =
   | "roofing" | "flooring" | "steel" | "plaster" | "excavation"
   | "staircase" | "gravel";
 
-// ─── Unit tables ────────────────────────────────────────────────────────────
 const LENGTH_UNITS = [
   { v: "m",  l: "m",   f: 1 },
   { v: "cm", l: "cm",  f: 0.01 },
@@ -31,9 +30,9 @@ const MASS_UNITS = [
   { v: "t",  l: "t",  f: 1000 },
 ];
 const AREA_UNITS = [
-  { v: "m2",   l: "m²",    f: 1 },
-  { v: "ft2",  l: "ft²",   f: 0.092903 },
-  { v: "cm2",  l: "cm²",   f: 0.0001 },
+  { v: "m2",  l: "m²",  f: 1 },
+  { v: "ft2", l: "ft²", f: 0.092903 },
+  { v: "cm2", l: "cm²", f: 0.0001 },
 ];
 type UnitType = "length" | "volume" | "mass" | "area";
 const UNIT_TABLES: Record<UnitType, { v: string; l: string; f: number }[]> = {
@@ -56,9 +55,7 @@ function convertUnit(val: number, from: string, to: string, type: UnitType): num
 
 const n2 = (v: number) => (isNaN(v) || !isFinite(v) ? "—" : v.toFixed(2));
 const n1 = (v: number) => (isNaN(v) || !isFinite(v) ? "—" : v.toFixed(1));
-const n0 = (v: number) => (isNaN(v) || !isFinite(v) ? "—" : Math.ceil(v).toString());
 
-// ─── UnitField ───────────────────────────────────────────────────────────────
 function UnitField({
   label, value, onChange, unit, onUnitChange, unitType, hint,
 }: {
@@ -77,26 +74,15 @@ function UnitField({
   };
   return (
     <div>
-      <label className="text-xs font-semibold text-muted-foreground mb-1 block uppercase tracking-wide">
-        {label}
-      </label>
+      <label className="text-xs font-semibold text-muted-foreground mb-1 block uppercase tracking-wide">{label}</label>
       <div className="flex rounded-xl border border-border overflow-hidden focus-within:ring-2 focus-within:ring-primary/40">
-        <input
-          type="number"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
+        <input type="number" value={value} onChange={(e) => onChange(e.target.value)}
           className="flex-1 min-w-0 bg-muted/50 px-3 py-2.5 text-foreground text-sm focus:outline-none"
-          data-testid={`input-${label.toLowerCase().replace(/\s+/g, "-")}`}
-        />
-        <select
-          value={unit}
-          onChange={(e) => handleUnitChange(e.target.value)}
+          data-testid={`input-${label.toLowerCase().replace(/\s+/g, "-")}`} />
+        <select value={unit} onChange={(e) => handleUnitChange(e.target.value)}
           className="bg-muted border-l border-border px-2 py-2.5 text-sm font-bold text-muted-foreground focus:outline-none cursor-pointer"
-          data-testid={`unit-${label.toLowerCase().replace(/\s+/g, "-")}`}
-        >
-          {opts.map((o) => (
-            <option key={o.v} value={o.v}>{o.l}</option>
-          ))}
+          data-testid={`unit-${label.toLowerCase().replace(/\s+/g, "-")}`}>
+          {opts.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
         </select>
       </div>
       {hint && <p className="text-xs text-muted-foreground/60 mt-1">{hint}</p>}
@@ -104,26 +90,19 @@ function UnitField({
   );
 }
 
-// ─── Plain text field (no unit) ──────────────────────────────────────────────
-function Field({ label, value, onChange, suffix, hint }: {
+function Field({ label, value, onChange, suffix, hint, type = "number" }: {
   label: string; value: string; onChange: (v: string) => void;
-  suffix?: string; hint?: string;
+  suffix?: string; hint?: string; type?: string;
 }) {
   return (
     <div>
       <label className="text-xs font-semibold text-muted-foreground mb-1 block uppercase tracking-wide">{label}</label>
       <div className="flex rounded-xl border border-border overflow-hidden focus-within:ring-2 focus-within:ring-primary/40">
-        <input
-          type="number"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
+        <input type={type} value={value} onChange={(e) => onChange(e.target.value)}
           className="flex-1 min-w-0 bg-muted/50 px-3 py-2.5 text-foreground text-sm focus:outline-none"
-          data-testid={`input-${label.toLowerCase().replace(/\s+/g, "-")}`}
-        />
+          data-testid={`input-${label.toLowerCase().replace(/\s+/g, "-")}`} />
         {suffix && (
-          <span className="bg-muted border-l border-border px-3 py-2.5 text-xs font-bold text-muted-foreground flex items-center shrink-0">
-            {suffix}
-          </span>
+          <span className="bg-muted border-l border-border px-3 py-2.5 text-xs font-bold text-muted-foreground flex items-center shrink-0">{suffix}</span>
         )}
       </div>
       {hint && <p className="text-xs text-muted-foreground/60 mt-1">{hint}</p>}
@@ -138,77 +117,31 @@ function SelectField({ label, value, onChange, options }: {
   return (
     <div>
       <label className="text-xs font-semibold text-muted-foreground mb-1 block uppercase tracking-wide">{label}</label>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+      <select value={value} onChange={(e) => onChange(e.target.value)}
         className="w-full bg-muted/50 border border-border rounded-xl px-3 py-2.5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 text-sm"
-        data-testid={`select-${label.toLowerCase().replace(/\s+/g, "-")}`}
-      >
+        data-testid={`select-${label.toLowerCase().replace(/\s+/g, "-")}`}>
         {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
     </div>
   );
 }
 
-function ModeToggle({ mode, onChange, labelA = "Normal Mode", labelB = "Reverse Mode", color = "bg-orange-500" }: {
-  mode: "a" | "b"; onChange: (m: "a" | "b") => void;
-  labelA?: string; labelB?: string; color?: string;
-}) {
-  return (
-    <div className="flex gap-1 p-1 bg-muted rounded-xl mb-4">
-      {(["a", "b"] as const).map((k) => (
-        <button
-          key={k}
-          onClick={() => onChange(k)}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium transition-all ${mode === k ? `${color} text-white` : "text-muted-foreground"}`}
-          data-testid={`mode-${k}`}
-        >
-          {k === "b" && <ArrowRightLeft className="w-3.5 h-3.5" />}
-          {k === "a" ? labelA : labelB}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function Step({ label, value, sub }: { label: string; value: string; sub?: string }) {
-  return (
-    <div className="flex justify-between items-center py-2 border-b border-border/40 last:border-0">
-      <div>
-        <span className="text-sm text-muted-foreground">{label}</span>
-        {sub && <p className="text-xs text-muted-foreground/60">{sub}</p>}
-      </div>
-      <span className="font-bold text-foreground text-sm ml-4 text-right">{value}</span>
-    </div>
-  );
-}
-
-function Highlight({ label, value, color = "text-orange-400" }: { label: string; value: string; color?: string }) {
-  return (
-    <div className="bg-muted/60 rounded-xl p-4 text-center mt-3">
-      <p className="text-xs text-muted-foreground mb-1">{label}</p>
-      <p className={`text-2xl font-black ${color}`}>{value}</p>
-    </div>
-  );
-}
-
-// ─── Page ────────────────────────────────────────────────────────────────────
 export default function ConstructionTools() {
   const [activeTool, setActiveTool] = useState<ToolType>("cement");
 
   const tools = [
-    { id: "cement",    label: "Cement",     icon: Box },
-    { id: "paint",     label: "Paint",      icon: PaintBucket },
-    { id: "tile",      label: "Tiles",      icon: LayoutGrid },
-    { id: "brick",     label: "Brick",      icon: Layers },
-    { id: "concrete",  label: "Concrete",   icon: Hammer },
-    { id: "plaster",   label: "Plaster",    icon: Layers },
-    { id: "roofing",   label: "Roofing",    icon: Home },
-    { id: "flooring",  label: "Flooring",   icon: LayoutGrid },
-    { id: "steel",     label: "Steel Bar",  icon: Construction },
-    { id: "excavation",label: "Excavation", icon: Mountain },
-    { id: "staircase", label: "Staircase",  icon: TrendingUp },
-    { id: "gravel",    label: "Gravel/Fill",icon: Truck },
+    { id: "cement",     label: "Cement",      icon: Box },
+    { id: "paint",      label: "Paint",       icon: PaintBucket },
+    { id: "tile",       label: "Tiles",       icon: LayoutGrid },
+    { id: "brick",      label: "Brick",       icon: Layers },
+    { id: "concrete",   label: "Concrete",    icon: Hammer },
+    { id: "plaster",    label: "Plaster",     icon: Layers },
+    { id: "roofing",    label: "Roofing",     icon: Home },
+    { id: "flooring",   label: "Flooring",    icon: LayoutGrid },
+    { id: "steel",      label: "Steel Bar",   icon: Construction },
+    { id: "excavation", label: "Excavation",  icon: Mountain },
+    { id: "staircase",  label: "Staircase",   icon: TrendingUp },
+    { id: "gravel",     label: "Gravel/Fill", icon: Truck },
   ];
 
   return (
@@ -236,7 +169,6 @@ export default function ConstructionTools() {
   );
 }
 
-// ─── 1. Cement ───────────────────────────────────────────────────────────────
 function CementCalc() {
   const [mode, setMode] = useState<"a" | "b">("a");
   const [len, setLen] = useState("10"); const [lenU, setLenU] = useState("m");
@@ -245,26 +177,22 @@ function CementCalc() {
   const [ratio, setRatio] = useState("1:2:4");
   const [bags, setBags] = useState("50");
 
-  const volM3 = toSI(parseFloat(len)||0,"m","length") <= 0
-    ? toSI(parseFloat(len)||0,lenU,"length") * toSI(parseFloat(wid)||0,widU,"length") * toSI(parseFloat(thi)||0,thiU,"length")
-    : toSI(parseFloat(len)||0,lenU,"length") * toSI(parseFloat(wid)||0,widU,"length") * toSI(parseFloat(thi)||0,thiU,"length");
-
+  const volM3 = toSI(parseFloat(len)||0,lenU,"length") * toSI(parseFloat(wid)||0,widU,"length") * toSI(parseFloat(thi)||0,thiU,"length");
   const parts = ratio.split(":").map(Number);
   const total = parts.reduce((a,b)=>a+b,0);
   const dry = volM3 * 1.54;
   const cBags = Math.ceil((dry * (parts[0]/total)) / 0.035);
   const sandM3 = dry * (parts[1]/total);
   const aggM3  = dry * (parts[2]/total);
-
   const revBags = parseInt(bags)||0;
   const revDry  = (revBags * 0.035) / (parts[0]/total);
   const revWet  = revDry / 1.54;
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ModeToggle mode={mode} onChange={setMode} labelA="Dimensions → Cement" labelB="Bags → Volume" />
-      <ToolCard title="Cement Calculator" icon={Box} iconColor="bg-amber-500">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Cement Calculator" icon={Box} iconColor="bg-amber-500">
+          <ModeSelector modes={[{id:"a",label:"Dimensions → Cement"},{id:"b",label:"Bags → Volume"}]} active={mode} onChange={v=>setMode(v as "a"|"b")} />
           {mode === "a" ? (
             <>
               <div className="grid grid-cols-2 gap-3">
@@ -283,32 +211,34 @@ function CementCalc() {
               {value:"1:3:6",   label:"M10 — 1:3:6 (Lean)"},
               {value:"1:4:8",   label:"M7.5 — 1:4:8 (Lean Fill)"},
             ]} />
-        </div>
-      </ToolCard>
-      <ToolCard title="Materials Required" icon={Calculator} iconColor="bg-emerald-500">
-        {mode === "a" ? (
-          <div className="space-y-1">
-            <Step label="Wet Volume"       value={`${n2(volM3)} m³`} />
-            <Step label="Dry Volume (×1.54)" value={`${n2(dry)} m³`} />
-            <Step label="Sand"             value={`${n2(sandM3)} m³`} />
-            <Step label="Aggregate"        value={`${n2(aggM3)} m³`} />
-            <Highlight label="Cement Bags (50 kg each)" value={`${cBags} bags`} color="text-amber-400" />
-          </div>
-        ) : (
-          <div className="space-y-1">
-            <Step label="Dry Volume"  value={`${n2(revDry)} m³`} />
-            <Step label="Wet Volume"  value={`${n2(revWet)} m³`} />
-            <Step label="Sand"        value={`${n2(revDry*(parts[1]/total))} m³`} />
-            <Step label="Aggregate"   value={`${n2(revDry*(parts[2]/total))} m³`} />
-            <Highlight label="Area @ 15 cm depth" value={`${n1(revWet/0.15)} m²`} color="text-emerald-400" />
-          </div>
-        )}
-      </ToolCard>
-    </div>
+        </InputPanel>
+      }
+      results={
+        <ResultPanel
+          label={mode === "a" ? "Cement Bags (50 kg each)" : "Volume from Bags"}
+          primary={mode === "a" ? `${cBags} bags` : `${n2(revWet)} m³`}
+        >
+          {mode === "a" ? (
+            <>
+              <BreakdownRow label="Wet Volume"       value={`${n2(volM3)} m³`} />
+              <BreakdownRow label="Dry Volume (×1.54)" value={`${n2(dry)} m³`} />
+              <BreakdownRow label="Sand"             value={`${n2(sandM3)} m³`} />
+              <BreakdownRow label="Aggregate"        value={`${n2(aggM3)} m³`} />
+            </>
+          ) : (
+            <>
+              <BreakdownRow label="Dry Volume"  value={`${n2(revDry)} m³`} />
+              <BreakdownRow label="Sand"        value={`${n2(revDry*(parts[1]/total))} m³`} />
+              <BreakdownRow label="Aggregate"   value={`${n2(revDry*(parts[2]/total))} m³`} />
+              <BreakdownRow label="Area @ 15 cm depth" value={`${n1(revWet/0.15)} m²`} accent="text-emerald-400" bold />
+            </>
+          )}
+        </ResultPanel>
+      }
+    />
   );
 }
 
-// ─── 2. Paint ────────────────────────────────────────────────────────────────
 function PaintCalc() {
   const [mode, setMode] = useState<"a"|"b">("a");
   const [len, setLen] = useState("12"); const [lenU, setLenU] = useState("m");
@@ -332,15 +262,14 @@ function PaintCalc() {
   const openings  = d*1.89 + wn*1.2;
   const paintable = Math.max(0, wallArea - openings);
   const liters    = (paintable * c) / covM2;
-
   const availL = parseFloat(avail)||0;
   const areaFromAvail = (availL * covM2) / c;
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ModeToggle mode={mode} onChange={setMode} labelA="Room → Paint" labelB="Paint → Area" color="bg-pink-500" />
-      <ToolCard title="Paint Calculator" icon={PaintBucket} iconColor="bg-pink-500">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Paint Calculator" icon={PaintBucket} iconColor="bg-pink-500">
+          <ModeSelector modes={[{id:"a",label:"Room → Paint"},{id:"b",label:"Paint → Area"}]} active={mode} onChange={v=>setMode(v as "a"|"b")} />
           {mode === "a" ? (
             <>
               <div className="grid grid-cols-2 gap-3">
@@ -360,28 +289,29 @@ function PaintCalc() {
             <Field label="Coats" value={coats} onChange={setCoats} suffix="coats" />
             <UnitField label="Coverage / Liter" value={cov} onChange={setCov} unit={covU} onUnitChange={setCovU} unitType="area" hint="~12 m²/L" />
           </div>
-        </div>
-      </ToolCard>
-      <ToolCard title="Results" icon={Calculator} iconColor="bg-emerald-500">
-        {mode === "a" ? (
-          <div className="space-y-1">
-            <Step label="Total Wall Area"      value={`${n2(wallArea)} m²`} />
-            <Step label="Doors + Windows"      value={`−${n2(openings)} m²`} />
-            <Step label="Paintable Area"       value={`${n2(paintable)} m²`} />
-            <Highlight label={`Paint (${coats} coat${c!==1?"s":""})`} value={`${n1(liters)} L  ·  ${n2(liters*0.264)} gal`} color="text-pink-400" />
-          </div>
-        ) : (
-          <div className="space-y-1">
-            <Step label="Available" value={`${avail} L`} />
-            <Highlight label={`Area (${coats} coat${c!==1?"s":""})`} value={`${n1(areaFromAvail)} m²`} color="text-pink-400" />
-          </div>
-        )}
-      </ToolCard>
-    </div>
+        </InputPanel>
+      }
+      results={
+        <ResultPanel
+          label={mode === "a" ? `Paint (${coats} coat${c!==1?"s":""})` : `Area (${coats} coat${c!==1?"s":""})`}
+          primary={mode === "a" ? `${n1(liters)} L` : `${n1(areaFromAvail)} m²`}
+          primarySub={mode === "a" ? `· ${n2(liters*0.264)} gal` : undefined}
+        >
+          {mode === "a" ? (
+            <>
+              <BreakdownRow label="Total Wall Area"  value={`${n2(wallArea)} m²`} />
+              <BreakdownRow label="Doors + Windows"  value={`−${n2(openings)} m²`} />
+              <BreakdownRow label="Paintable Area"   value={`${n2(paintable)} m²`} />
+            </>
+          ) : (
+            <BreakdownRow label="Available" value={`${avail} L`} />
+          )}
+        </ResultPanel>
+      }
+    />
   );
 }
 
-// ─── 3. Tile ─────────────────────────────────────────────────────────────────
 function TileCalc() {
   const [mode, setMode] = useState<"a"|"b">("a");
   const [rL, setRL] = useState("5"); const [rLU, setRLU] = useState("m");
@@ -393,13 +323,13 @@ function TileCalc() {
   const [onHand, setOnHand] = useState("100");
 
   const presets = [
-    {value:"0.3x0.3",  label:"30×30 cm"  },
-    {value:"0.45x0.45",label:"45×45 cm"  },
-    {value:"0.6x0.6",  label:"60×60 cm"  },
-    {value:"0.6x1.2",  label:"60×120 cm" },
-    {value:"0.8x0.8",  label:"80×80 cm"  },
+    {value:"0.3x0.3",  label:"30×30 cm"},
+    {value:"0.45x0.45",label:"45×45 cm"},
+    {value:"0.6x0.6",  label:"60×60 cm"},
+    {value:"0.6x1.2",  label:"60×120 cm"},
+    {value:"0.8x0.8",  label:"80×80 cm"},
     {value:"1.0x1.0",  label:"100×100 cm"},
-    {value:"custom",   label:"Custom"    },
+    {value:"custom",   label:"Custom"},
   ];
   const handlePreset = (v: string) => {
     setTilePreset(v);
@@ -416,10 +346,10 @@ function TileCalc() {
   const areaFromHand = tileM2 * (parseInt(onHand)||0);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ModeToggle mode={mode} onChange={setMode} labelA="Room → Tiles" labelB="Tiles on Hand → Area" color="bg-blue-500" />
-      <ToolCard title="Tile Calculator" icon={LayoutGrid} iconColor="bg-blue-500">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Tile Calculator" icon={LayoutGrid} iconColor="bg-blue-500">
+          <ModeSelector modes={[{id:"a",label:"Room → Tiles"},{id:"b",label:"On Hand → Area"}]} active={mode} onChange={v=>setMode(v as "a"|"b")} />
           {mode === "a" ? (
             <div className="grid grid-cols-2 gap-3">
               <UnitField label="Room Length" value={rL} onChange={setRL} unit={rLU} onUnitChange={setRLU} unitType="length" />
@@ -434,28 +364,28 @@ function TileCalc() {
             <UnitField label="Tile Width"  value={tW} onChange={setTW} unit={tWU} onUnitChange={setTWU} unitType="length" />
           </div>
           {mode === "a" && <Field label="Wastage" value={wastage} onChange={setWastage} suffix="%" hint="Recommended 10–15%" />}
-        </div>
-      </ToolCard>
-      <ToolCard title="Results" icon={Calculator} iconColor="bg-emerald-500">
-        {mode === "a" ? (
-          <div className="space-y-1">
-            <Step label="Room Area"       value={`${n2(roomM2)} m²`} />
-            <Step label="Per Tile Area"   value={`${n2(tileM2)} m²`} />
-            <Step label="Tiles (exact)"   value={n2(exact)} />
-            <Highlight label={`Tiles with ${wastage}% waste`} value={`${withWaste} tiles`} color="text-blue-400" />
-          </div>
-        ) : (
-          <div className="space-y-1">
-            <Step label="Per Tile Area" value={`${n2(tileM2)} m²`} />
-            <Highlight label="Area Coverable" value={`${n2(areaFromHand)} m²`} color="text-blue-400" />
-          </div>
-        )}
-      </ToolCard>
-    </div>
+        </InputPanel>
+      }
+      results={
+        <ResultPanel
+          label={mode === "a" ? `Tiles with ${wastage}% waste` : "Area Coverable"}
+          primary={mode === "a" ? `${withWaste} tiles` : `${n2(areaFromHand)} m²`}
+        >
+          {mode === "a" ? (
+            <>
+              <BreakdownRow label="Room Area"     value={`${n2(roomM2)} m²`} />
+              <BreakdownRow label="Per Tile Area" value={`${n2(tileM2)} m²`} />
+              <BreakdownRow label="Tiles (exact)" value={n2(exact)} />
+            </>
+          ) : (
+            <BreakdownRow label="Per Tile Area" value={`${n2(tileM2)} m²`} />
+          )}
+        </ResultPanel>
+      }
+    />
   );
 }
 
-// ─── 4. Brick ────────────────────────────────────────────────────────────────
 function BrickCalc() {
   const [mode, setMode] = useState<"a"|"b">("a");
   const [wL, setWL] = useState("10"); const [wLU, setWLU] = useState("m");
@@ -479,10 +409,10 @@ function BrickCalc() {
   const areaFrB = (parseInt(onHand)||0) / bricksPerM2;
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ModeToggle mode={mode} onChange={setMode} labelA="Wall → Bricks" labelB="Bricks on Hand → Area" color="bg-red-500" />
-      <ToolCard title="Brick Calculator" icon={Layers} iconColor="bg-red-500">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Brick Calculator" icon={Layers} iconColor="bg-red-500">
+          <ModeSelector modes={[{id:"a",label:"Wall → Bricks"},{id:"b",label:"On Hand → Area"}]} active={mode} onChange={v=>setMode(v as "a"|"b")} />
           {mode === "a" ? (
             <div className="grid grid-cols-2 gap-3">
               <UnitField label="Wall Length" value={wL} onChange={setWL} unit={wLU} onUnitChange={setWLU} unitType="length" />
@@ -494,28 +424,28 @@ function BrickCalc() {
           <SelectField label="Brick Type" value={brickType} onChange={setBrickType}
             options={Object.entries(types).map(([k,v])=>({value:k,label:v.name}))} />
           {mode === "a" && <Field label="Wastage" value={wastage} onChange={setWastage} suffix="%" />}
-        </div>
-      </ToolCard>
-      <ToolCard title="Results" icon={Calculator} iconColor="bg-emerald-500">
-        {mode === "a" ? (
-          <div className="space-y-1">
-            <Step label="Wall Area"       value={`${n2(wallM2)} m²`} />
-            <Step label="Bricks per m²"   value={`≈ ${Math.ceil(bricksPerM2)}`} />
-            <Step label="Exact"           value={n0(exact)} />
-            <Highlight label={`With ${wastage}% wastage`} value={`${withW} bricks`} color="text-red-400" />
-          </div>
-        ) : (
-          <div className="space-y-1">
-            <Step label="Bricks per m²" value={`≈ ${Math.ceil(bricksPerM2)}`} />
-            <Highlight label="Wall Area Possible" value={`${n2(areaFrB)} m²`} color="text-red-400" />
-          </div>
-        )}
-      </ToolCard>
-    </div>
+        </InputPanel>
+      }
+      results={
+        <ResultPanel
+          label={mode === "a" ? `With ${wastage}% wastage` : "Wall Area Possible"}
+          primary={mode === "a" ? `${withW} bricks` : `${n2(areaFrB)} m²`}
+        >
+          {mode === "a" ? (
+            <>
+              <BreakdownRow label="Wall Area"      value={`${n2(wallM2)} m²`} />
+              <BreakdownRow label="Bricks per m²"  value={`≈ ${Math.ceil(bricksPerM2)}`} />
+              <BreakdownRow label="Exact"          value={n2(exact)} />
+            </>
+          ) : (
+            <BreakdownRow label="Bricks per m²" value={`≈ ${Math.ceil(bricksPerM2)}`} />
+          )}
+        </ResultPanel>
+      }
+    />
   );
 }
 
-// ─── 5. Concrete ─────────────────────────────────────────────────────────────
 function ConcreteCalc() {
   const [mode, setMode] = useState<"a"|"b">("a");
   const [shape, setShape] = useState("slab");
@@ -545,10 +475,10 @@ function ConcreteCalc() {
   const areaFrBags = depM>0 ? bags2vol/depM : 0;
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ModeToggle mode={mode} onChange={setMode} labelA="Dimensions → Volume" labelB="Bags → Area" />
-      <ToolCard title="Concrete Calculator" icon={Hammer} iconColor="bg-gray-500">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Concrete Calculator" icon={Hammer} iconColor="bg-gray-500">
+          <ModeSelector modes={[{id:"a",label:"Dimensions → Volume"},{id:"b",label:"Bags → Area"}]} active={mode} onChange={v=>setMode(v as "a"|"b")} />
           <SelectField label="Shape" value={shape} onChange={setShape} options={[
             {value:"slab",   label:"Slab / Footing"},
             {value:"column", label:"Circular Column"},
@@ -582,30 +512,30 @@ function ConcreteCalc() {
               {value:"1:3:6",  label:"M10 — 1:3:6"},
             ]} />
           )}
-        </div>
-      </ToolCard>
-      <ToolCard title="Results" icon={Calculator} iconColor="bg-emerald-500">
-        {mode === "a" ? (
-          <div className="space-y-1">
-            <Step label="Volume"        value={`${n2(volM3)} m³  /  ${n2(volM3*1.308)} yd³`} />
-            <Step label="Premix Bags"   value={`${Math.ceil(volM3/0.03)} bags`} />
-            <Step label="Cement Bags"   value={`${cBags} bags (50 kg)`} />
-            <Step label="Sand"          value={`${n2(sandM3)} m³`} />
-            <Step label="Aggregate"     value={`${n2(aggM3)} m³`} />
-            <Highlight label="Total Volume" value={`${n2(volM3)} m³`} />
-          </div>
-        ) : (
-          <div className="space-y-1">
-            <Step label="Volume from Bags" value={`${n2(bags2vol)} m³`} />
-            <Highlight label="Area Coverable" value={`${n2(areaFrBags)} m²`} color="text-emerald-400" />
-          </div>
-        )}
-      </ToolCard>
-    </div>
+        </InputPanel>
+      }
+      results={
+        <ResultPanel
+          label={mode === "a" ? "Total Volume" : "Area Coverable"}
+          primary={mode === "a" ? `${n2(volM3)} m³` : `${n2(areaFrBags)} m²`}
+        >
+          {mode === "a" ? (
+            <>
+              <BreakdownRow label="Volume (yd³)" value={`${n2(volM3*1.308)} yd³`} />
+              <BreakdownRow label="Premix Bags"  value={`${Math.ceil(volM3/0.03)} bags`} />
+              <BreakdownRow label="Cement Bags"  value={`${cBags} bags (50 kg)`} />
+              <BreakdownRow label="Sand"         value={`${n2(sandM3)} m³`} />
+              <BreakdownRow label="Aggregate"    value={`${n2(aggM3)} m³`} />
+            </>
+          ) : (
+            <BreakdownRow label="Volume from Bags" value={`${n2(bags2vol)} m³`} />
+          )}
+        </ResultPanel>
+      }
+    />
   );
 }
 
-// ─── 6. Plaster ──────────────────────────────────────────────────────────────
 function PlasterCalc() {
   const [mode, setMode] = useState<"a"|"b">("a");
   const [wL, setWL] = useState("5"); const [wLU, setWLU] = useState("m");
@@ -622,24 +552,21 @@ function PlasterCalc() {
   const total   = parts.reduce((a,b)=>a+b,0);
   const cBags   = Math.ceil((dry*(parts[0]/total))/0.035);
   const sandM3  = dry*(parts[1]/total);
-
   const revBags  = parseInt(bags)||0;
   const revDry   = (revBags*0.035)/(parts[0]/total);
   const revWet   = revDry/1.3;
   const revArea  = thiM>0 ? revWet/thiM : 0;
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ModeToggle mode={mode} onChange={setMode} labelA="Wall → Materials" labelB="Bags → Wall Area" color="bg-yellow-500" />
-      <ToolCard title="Plaster Calculator" icon={Layers} iconColor="bg-yellow-500">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Plaster Calculator" icon={Layers} iconColor="bg-yellow-500">
+          <ModeSelector modes={[{id:"a",label:"Wall → Materials"},{id:"b",label:"Bags → Wall Area"}]} active={mode} onChange={v=>setMode(v as "a"|"b")} />
           {mode === "a" ? (
-            <>
-              <div className="grid grid-cols-2 gap-3">
-                <UnitField label="Wall Length" value={wL} onChange={setWL} unit={wLU} onUnitChange={setWLU} unitType="length" />
-                <UnitField label="Wall Height" value={wH} onChange={setWH} unit={wHU} onUnitChange={setWHU} unitType="length" />
-              </div>
-            </>
+            <div className="grid grid-cols-2 gap-3">
+              <UnitField label="Wall Length" value={wL} onChange={setWL} unit={wLU} onUnitChange={setWLU} unitType="length" />
+              <UnitField label="Wall Height" value={wH} onChange={setWH} unit={wHU} onUnitChange={setWHU} unitType="length" />
+            </div>
           ) : (
             <Field label="Cement Bags (50 kg)" value={bags} onChange={setBags} suffix="bags" />
           )}
@@ -650,29 +577,31 @@ function PlasterCalc() {
             {value:"1:5",label:"1:5 (Exterior)"},
             {value:"1:6",label:"1:6 (Rough)"},
           ]} />
-        </div>
-      </ToolCard>
-      <ToolCard title="Materials" icon={Calculator} iconColor="bg-emerald-500">
-        {mode === "a" ? (
-          <div className="space-y-1">
-            <Step label="Wall Area"      value={`${n2(wallM2)} m²`} />
-            <Step label="Plaster Volume" value={`${n2(volM3)} m³`} />
-            <Step label="Sand"           value={`${n2(sandM3)} m³`} />
-            <Highlight label="Cement Bags (50 kg)" value={`${cBags} bags`} color="text-yellow-400" />
-          </div>
-        ) : (
-          <div className="space-y-1">
-            <Step label="Dry Volume" value={`${n2(revDry)} m³`} />
-            <Step label="Sand"       value={`${n2(revDry*(parts[1]/total))} m³`} />
-            <Highlight label="Wall Area Coverable" value={`${n1(revArea)} m²`} color="text-yellow-400" />
-          </div>
-        )}
-      </ToolCard>
-    </div>
+        </InputPanel>
+      }
+      results={
+        <ResultPanel
+          label={mode === "a" ? "Cement Bags (50 kg)" : "Wall Area Coverable"}
+          primary={mode === "a" ? `${cBags} bags` : `${n1(revArea)} m²`}
+        >
+          {mode === "a" ? (
+            <>
+              <BreakdownRow label="Wall Area"      value={`${n2(wallM2)} m²`} />
+              <BreakdownRow label="Plaster Volume" value={`${n2(volM3)} m³`} />
+              <BreakdownRow label="Sand"           value={`${n2(sandM3)} m³`} />
+            </>
+          ) : (
+            <>
+              <BreakdownRow label="Dry Volume" value={`${n2(revDry)} m³`} />
+              <BreakdownRow label="Sand"       value={`${n2(revDry*(parts[1]/total))} m³`} />
+            </>
+          )}
+        </ResultPanel>
+      }
+    />
   );
 }
 
-// ─── 7. Roofing ──────────────────────────────────────────────────────────────
 function RoofingCalc() {
   const [mode, setMode] = useState<"a"|"b">("a");
   const [len, setLen] = useState("12"); const [lenU, setLenU] = useState("m");
@@ -687,20 +616,20 @@ function RoofingCalc() {
 
   type RoofMat = {name:string;unit:string;calc:(a:number)=>number;rev:(q:number)=>number};
   const materials: Record<string,RoofMat> = {
-    shingles:      {name:"Shingles",           unit:"bundles",calc:(a)=>Math.ceil((a/9.29)*3),  rev:(q)=>(q/3)*9.29},
-    metal:         {name:"Metal Panels",       unit:"panels", calc:(a)=>Math.ceil(a/2.79),      rev:(q)=>q*2.79},
-    tiles:         {name:"Roof Tiles",         unit:"tiles",  calc:(a)=>Math.ceil(a*10),        rev:(q)=>q/10},
-    polycarbonate: {name:"Polycarbonate Sheets",unit:"sheets",calc:(a)=>Math.ceil(a/1.8),       rev:(q)=>q*1.8},
+    shingles:      {name:"Shingles",            unit:"bundles",calc:(a)=>Math.ceil((a/9.29)*3),  rev:(q)=>(q/3)*9.29},
+    metal:         {name:"Metal Panels",        unit:"panels", calc:(a)=>Math.ceil(a/2.79),      rev:(q)=>q*2.79},
+    tiles:         {name:"Roof Tiles",          unit:"tiles",  calc:(a)=>Math.ceil(a*10),        rev:(q)=>q/10},
+    polycarbonate: {name:"Polycarbonate Sheets",unit:"sheets", calc:(a)=>Math.ceil(a/1.8),       rev:(q)=>q*1.8},
   };
   const sel = materials[roofType];
   const qty = sel.calc(roofM2);
   const areaFromMat = sel.rev(parseInt(onHand)||0);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ModeToggle mode={mode} onChange={setMode} labelA="Roof → Materials" labelB="Materials → Area" color="bg-slate-500" />
-      <ToolCard title="Roofing Calculator" icon={Home} iconColor="bg-slate-500">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Roofing Calculator" icon={Home} iconColor="bg-slate-500">
+          <ModeSelector modes={[{id:"a",label:"Roof → Materials"},{id:"b",label:"Materials → Area"}]} active={mode} onChange={v=>setMode(v as "a"|"b")} />
           {mode === "a" ? (
             <>
               <div className="grid grid-cols-2 gap-3">
@@ -714,28 +643,28 @@ function RoofingCalc() {
           )}
           <SelectField label="Material Type" value={roofType} onChange={setRoofType}
             options={Object.entries(materials).map(([k,v])=>({value:k,label:v.name}))} />
-        </div>
-      </ToolCard>
-      <ToolCard title="Results" icon={Calculator} iconColor="bg-emerald-500">
-        {mode === "a" ? (
-          <div className="space-y-1">
-            <Step label="Base Area"      value={`${n2(baseM2)} m²`} />
-            <Step label="Pitch Factor"   value={`× ${pitchF.toFixed(3)}`} />
-            <Step label="Actual Roof Area" value={`${n2(roofM2)} m²`} />
-            <Highlight label={sel.name} value={`${qty} ${sel.unit}`} color="text-slate-300" />
-          </div>
-        ) : (
-          <div className="space-y-1">
-            <Step label={sel.name} value={`${onHand} ${sel.unit}`} />
-            <Highlight label="Roof Area Coverable" value={`${n2(areaFromMat)} m²`} color="text-slate-300" />
-          </div>
-        )}
-      </ToolCard>
-    </div>
+        </InputPanel>
+      }
+      results={
+        <ResultPanel
+          label={mode === "a" ? sel.name : "Roof Area Coverable"}
+          primary={mode === "a" ? `${qty} ${sel.unit}` : `${n2(areaFromMat)} m²`}
+        >
+          {mode === "a" ? (
+            <>
+              <BreakdownRow label="Base Area"       value={`${n2(baseM2)} m²`} />
+              <BreakdownRow label="Pitch Factor"    value={`× ${pitchF.toFixed(3)}`} />
+              <BreakdownRow label="Actual Roof Area" value={`${n2(roofM2)} m²`} />
+            </>
+          ) : (
+            <BreakdownRow label={sel.name} value={`${onHand} ${sel.unit}`} />
+          )}
+        </ResultPanel>
+      }
+    />
   );
 }
 
-// ─── 8. Flooring ─────────────────────────────────────────────────────────────
 function FlooringCalc() {
   const [mode, setMode] = useState<"a"|"b">("a");
   const [len, setLen] = useState("5"); const [lenU, setLenU] = useState("m");
@@ -760,10 +689,10 @@ function FlooringCalc() {
   const areaFrB = (parseFloat(budget)||0)/sel.price;
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ModeToggle mode={mode} onChange={setMode} labelA="Room → Cost" labelB="Budget → Area" color="bg-amber-600" />
-      <ToolCard title="Flooring Calculator" icon={LayoutGrid} iconColor="bg-amber-600">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Flooring Calculator" icon={LayoutGrid} iconColor="bg-amber-600">
+          <ModeSelector modes={[{id:"a",label:"Room → Cost"},{id:"b",label:"Budget → Area"}]} active={mode} onChange={v=>setMode(v as "a"|"b")} />
           {mode === "a" ? (
             <>
               <div className="grid grid-cols-2 gap-3">
@@ -774,7 +703,7 @@ function FlooringCalc() {
             </>
           ) : (
             <div className="grid grid-cols-3 gap-3">
-              <Field label="Currency" value={currency} onChange={setCurrency} />
+              <Field label="Currency" value={currency} onChange={setCurrency} type="text" />
               <div className="col-span-2">
                 <Field label="Budget" value={budget} onChange={setBudget} />
               </div>
@@ -782,28 +711,28 @@ function FlooringCalc() {
           )}
           <SelectField label="Floor Material" value={floorType} onChange={setFloorType}
             options={Object.entries(costs).map(([k,v])=>({value:k,label:`${v.name}  (~${currency}${v.price}/m²)`}))} />
-        </div>
-      </ToolCard>
-      <ToolCard title="Estimate" icon={Calculator} iconColor="bg-emerald-500">
-        {mode === "a" ? (
-          <div className="space-y-1">
-            <Step label="Room Area"         value={`${n2(roomM2)} m²`} />
-            <Step label={`With ${wastage}% waste`} value={`${n2(totalM2)} m²`} />
-            <Step label={`Rate (${currency}/m²)`}  value={`${currency}${sel.price}`} />
-            <Highlight label="Estimated Cost" value={`${currency}${Math.ceil(cost)}`} color="text-amber-400" />
-          </div>
-        ) : (
-          <div className="space-y-1">
-            <Step label={`Rate (${currency}/m²)`} value={`${currency}${sel.price}`} />
-            <Highlight label="Area You Can Cover" value={`${n2(areaFrB)} m²`} color="text-amber-400" />
-          </div>
-        )}
-      </ToolCard>
-    </div>
+        </InputPanel>
+      }
+      results={
+        <ResultPanel
+          label={mode === "a" ? "Estimated Cost" : "Area You Can Cover"}
+          primary={mode === "a" ? `${currency}${Math.ceil(cost)}` : `${n2(areaFrB)} m²`}
+        >
+          {mode === "a" ? (
+            <>
+              <BreakdownRow label="Room Area"         value={`${n2(roomM2)} m²`} />
+              <BreakdownRow label={`With ${wastage}% waste`} value={`${n2(totalM2)} m²`} />
+              <BreakdownRow label={`Rate (${currency}/m²)`}  value={`${currency}${sel.price}`} />
+            </>
+          ) : (
+            <BreakdownRow label={`Rate (${currency}/m²)`} value={`${currency}${sel.price}`} />
+          )}
+        </ResultPanel>
+      }
+    />
   );
 }
 
-// ─── 9. Steel Bar ────────────────────────────────────────────────────────────
 function SteelCalc() {
   const [mode, setMode] = useState<"a"|"b">("a");
   const [dia, setDia] = useState("12");
@@ -816,16 +745,15 @@ function SteelCalc() {
   const wtPerM = (dMm*dMm)/162;
   const wtPerBar = wtPerM * lM;
   const totalKg  = wtPerBar * (parseInt(qty)||0);
-
   const twKg  = toSI(parseFloat(targetW)||0,targetWU,"mass");
   const totalLenM = twKg / wtPerM;
   const barsNeeded = Math.ceil(totalLenM / lM);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ModeToggle mode={mode} onChange={setMode} labelA="Bars → Weight" labelB="Weight → Bars Needed" color="bg-slate-500" />
-      <ToolCard title="Steel Bar Calculator" icon={Construction} iconColor="bg-slate-500">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Steel Bar Calculator" icon={Construction} iconColor="bg-slate-500">
+          <ModeSelector modes={[{id:"a",label:"Bars → Weight"},{id:"b",label:"Weight → Bars"}]} active={mode} onChange={v=>setMode(v as "a"|"b")} />
           <SelectField label="Bar Diameter" value={dia} onChange={setDia} options={[
             {value:"8", label:"8 mm"},
             {value:"10",label:"10 mm"},
@@ -841,29 +769,32 @@ function SteelCalc() {
           ) : (
             <UnitField label="Target Weight" value={targetW} onChange={setTargetW} unit={targetWU} onUnitChange={setTargetWU} unitType="mass" />
           )}
-        </div>
-      </ToolCard>
-      <ToolCard title="Results" icon={Calculator} iconColor="bg-emerald-500">
-        {mode === "a" ? (
-          <div className="space-y-1">
-            <Step label="Formula"      value="d² ÷ 162 kg/m" sub="d = diameter in mm" />
-            <Step label="Weight/metre" value={`${wtPerM.toFixed(4)} kg/m`} />
-            <Step label="Weight/bar"   value={`${n2(wtPerBar)} kg`} />
-            <Highlight label={`Total (${qty} bars)`} value={`${n2(totalKg)} kg  ·  ${n2(totalKg*2.205)} lb`} color="text-slate-300" />
-          </div>
-        ) : (
-          <div className="space-y-1">
-            <Step label="Weight per bar"    value={`${n2(wtPerBar)} kg`} />
-            <Step label="Total length needed" value={`${n2(totalLenM)} m`} />
-            <Highlight label="Bars Required" value={`${barsNeeded} bars`} color="text-slate-300" />
-          </div>
-        )}
-      </ToolCard>
-    </div>
+        </InputPanel>
+      }
+      results={
+        <ResultPanel
+          label={mode === "a" ? `Total (${qty} bars)` : "Bars Required"}
+          primary={mode === "a" ? `${n2(totalKg)} kg` : `${barsNeeded} bars`}
+          primarySub={mode === "a" ? `· ${n2(totalKg*2.205)} lb` : undefined}
+        >
+          {mode === "a" ? (
+            <>
+              <BreakdownRow label="Formula"      value="d² ÷ 162 kg/m" />
+              <BreakdownRow label="Weight/metre" value={`${wtPerM.toFixed(4)} kg/m`} />
+              <BreakdownRow label="Weight/bar"   value={`${n2(wtPerBar)} kg`} />
+            </>
+          ) : (
+            <>
+              <BreakdownRow label="Weight per bar"      value={`${n2(wtPerBar)} kg`} />
+              <BreakdownRow label="Total length needed"  value={`${n2(totalLenM)} m`} />
+            </>
+          )}
+        </ResultPanel>
+      }
+    />
   );
 }
 
-// ─── 10. Excavation ──────────────────────────────────────────────────────────
 function ExcavationCalc() {
   const [shape, setShape] = useState("rectangular");
   const [len, setLen] = useState("10"); const [lenU, setLenU] = useState("m");
@@ -874,7 +805,6 @@ function ExcavationCalc() {
 
   const swells: Record<string,number> = {normal:1.25,sandy:1.12,clay:1.40,rock:1.60};
   const sw = swells[soilType];
-
   const lM = toSI(parseFloat(len)||0,lenU,"length");
   const wM = toSI(parseFloat(wid)||0,widU,"length");
   const dM = toSI(parseFloat(dep)||0,depU,"length");
@@ -884,9 +814,9 @@ function ExcavationCalc() {
   const trucks = capM3>0 ? Math.ceil(swollenM3/capM3) : 0;
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Excavation Calculator" icon={Mountain} iconColor="bg-amber-800">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Excavation Calculator" icon={Mountain} iconColor="bg-amber-800">
           <SelectField label="Shape" value={shape} onChange={setShape} options={[
             {value:"rectangular",label:"Rectangular / Trench"},
             {value:"circular",   label:"Circular Pit"},
@@ -907,21 +837,19 @@ function ExcavationCalc() {
             {value:"rock",  label:"Rock (×1.60)"},
           ]} />
           <UnitField label="Truck Capacity" value={truckCap} onChange={setTruckCap} unit={truckU} onUnitChange={setTruckU} unitType="volume" />
-        </div>
-      </ToolCard>
-      <ToolCard title="Results" icon={Calculator} iconColor="bg-emerald-500">
-        <div className="space-y-1">
-          <Step label="In-situ Volume"  value={`${n2(volM3)} m³`} />
-          <Step label="Swell Factor"    value={`× ${sw}  (${soilType})`} />
-          <Step label="Swollen Volume"  value={`${n2(swollenM3)} m³`} />
-          <Highlight label="Truck Loads" value={`${trucks} trucks`} color="text-amber-700" />
-        </div>
-      </ToolCard>
-    </div>
+        </InputPanel>
+      }
+      results={
+        <ResultPanel label="Truck Loads" primary={`${trucks} trucks`}>
+          <BreakdownRow label="In-situ Volume" value={`${n2(volM3)} m³`} />
+          <BreakdownRow label="Swell Factor"   value={`× ${sw}  (${soilType})`} />
+          <BreakdownRow label="Swollen Volume" value={`${n2(swollenM3)} m³`} />
+        </ResultPanel>
+      }
+    />
   );
 }
 
-// ─── 11. Staircase ───────────────────────────────────────────────────────────
 function StaircaseCalc() {
   const [flh, setFlh] = useState("3");   const [flhU, setFlhU] = useState("m");
   const [ris, setRis] = useState("175"); const [risU, setRisU] = useState("mm");
@@ -941,34 +869,33 @@ function StaircaseCalc() {
   const ok = actualRiser>=0.15&&actualRiser<=0.19&&tdM>=0.23&&tdM<=0.30;
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Staircase Designer" icon={TrendingUp} iconColor="bg-indigo-500">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Staircase Designer" icon={TrendingUp} iconColor="bg-indigo-500">
           <UnitField label="Floor-to-Floor Height" value={flh} onChange={setFlh} unit={flhU} onUnitChange={setFlhU} unitType="length" hint="Typical: 2.8–3.2 m" />
           <div className="grid grid-cols-2 gap-3">
             <UnitField label="Riser Height" value={ris} onChange={setRis} unit={risU} onUnitChange={setRisU} unitType="length" hint="Ideal: 150–190 mm" />
             <UnitField label="Tread Depth"  value={tre} onChange={setTre} unit={treU} onUnitChange={setTreU} unitType="length" hint="Ideal: 230–300 mm" />
           </div>
           <UnitField label="Stair Width" value={sw} onChange={setSw} unit={swU} onUnitChange={setSwU} unitType="length" hint="Min: 900 mm" />
-        </div>
-      </ToolCard>
-      <ToolCard title="Design Output" icon={Calculator} iconColor="bg-emerald-500">
-        <div className="space-y-1">
-          <Step label="Number of Steps"     value={`${steps}`} />
-          <Step label="Actual Riser"        value={`${(actualRiser*1000).toFixed(1)} mm`} />
-          <Step label="Total Going (run)"   value={`${n2(going)} m`} />
-          <Step label="Slope Angle"         value={`${angle.toFixed(1)}°`} />
-          <Step label="Concrete Approx."    value={`${n2(concreteM3)} m³`} />
-          <div className={`mt-3 px-4 py-2 rounded-xl text-sm font-semibold text-center ${ok?"bg-emerald-500/20 text-emerald-400":"bg-red-500/20 text-red-400"}`}>
-            {ok ? "✓ Comfortable & code-compliant" : "⚠ Adjust riser or tread for comfort"}
-          </div>
-        </div>
-      </ToolCard>
-    </div>
+        </InputPanel>
+      }
+      results={
+        <ResultPanel
+          label="Number of Steps"
+          primary={`${steps}`}
+          tip={ok ? "✓ Comfortable & code-compliant" : "⚠ Adjust riser or tread for comfort"}
+        >
+          <BreakdownRow label="Actual Riser"      value={`${(actualRiser*1000).toFixed(1)} mm`} />
+          <BreakdownRow label="Total Going (run)"  value={`${n2(going)} m`} />
+          <BreakdownRow label="Slope Angle"        value={`${angle.toFixed(1)}°`} />
+          <BreakdownRow label="Concrete Approx."   value={`${n2(concreteM3)} m³`} />
+        </ResultPanel>
+      }
+    />
   );
 }
 
-// ─── 12. Gravel / Fill ───────────────────────────────────────────────────────
 function GravelCalc() {
   const [mode, setMode] = useState<"a"|"b">("a");
   const [len, setLen] = useState("10"); const [lenU, setLenU] = useState("m");
@@ -991,15 +918,14 @@ function GravelCalc() {
   const volM3   = lM*wM*dM;
   const weightKg= volM3*sel.d;
   const tonnes  = weightKg/1000;
-
   const wKg  = toSI(parseFloat(woh)||0,wohU,"mass");
   const areaFr = dM>0 ? wKg/(sel.d*dM) : 0;
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ModeToggle mode={mode} onChange={setMode} labelA="Area → Quantity" labelB="Quantity → Area" color="bg-stone-500" />
-      <ToolCard title="Gravel / Fill Calculator" icon={Truck} iconColor="bg-stone-500">
-        <div className="space-y-4">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Gravel / Fill Calculator" icon={Truck} iconColor="bg-stone-500">
+          <ModeSelector modes={[{id:"a",label:"Area → Quantity"},{id:"b",label:"Quantity → Area"}]} active={mode} onChange={v=>setMode(v as "a"|"b")} />
           {mode === "a" ? (
             <div className="grid grid-cols-2 gap-3">
               <UnitField label="Length" value={len} onChange={setLen} unit={lenU} onUnitChange={setLenU} unitType="length" />
@@ -1011,22 +937,24 @@ function GravelCalc() {
           <UnitField label="Depth" value={dep} onChange={setDep} unit={depU} onUnitChange={setDepU} unitType="length" hint="Driveway: 100 mm · Path: 50 mm" />
           <SelectField label="Material" value={mat} onChange={setMat}
             options={Object.entries(densities).map(([k,v])=>({value:k,label:v.name}))} />
-        </div>
-      </ToolCard>
-      <ToolCard title="Material Quantity" icon={Calculator} iconColor="bg-emerald-500">
-        {mode === "a" ? (
-          <div className="space-y-1">
-            <Step label="Volume" value={`${n2(volM3)} m³`} />
-            <Step label="Weight" value={`${n2(weightKg)} kg  ·  ${n2(weightKg*2.205)} lb`} />
-            <Highlight label="Metric Tonnes" value={`${tonnes.toFixed(2)} t`} color="text-stone-400" />
-          </div>
-        ) : (
-          <div className="space-y-1">
-            <Step label="Material" value={`${woh} ${wohU}`} />
-            <Highlight label="Area Coverable" value={`${n2(areaFr)} m²`} color="text-stone-400" />
-          </div>
-        )}
-      </ToolCard>
-    </div>
+        </InputPanel>
+      }
+      results={
+        <ResultPanel
+          label={mode === "a" ? "Metric Tonnes" : "Area Coverable"}
+          primary={mode === "a" ? `${tonnes.toFixed(2)} t` : `${n2(areaFr)} m²`}
+          summaries={mode === "a" ? (
+            <>
+              <SummaryCard label="Volume" value={`${n2(volM3)} m³`} />
+              <SummaryCard label="Weight" value={`${n2(weightKg)} kg`} />
+            </>
+          ) : undefined}
+        >
+          {mode === "b" && (
+            <BreakdownRow label="Material" value={`${woh} ${wohU}`} />
+          )}
+        </ResultPanel>
+      }
+    />
   );
 }
