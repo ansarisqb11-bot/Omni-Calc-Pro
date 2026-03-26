@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Proportions, Monitor, ImageIcon, RulerIcon, FileText } from "lucide-react";
-import { ToolCard } from "@/components/ToolCard";
+import { DesktopToolGrid, InputPanel } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
 
 type ToolType = "aspect-ratio" | "dpi-ppi" | "image-resize" | "cm-px-inch" | "paper-size";
@@ -221,8 +221,9 @@ function AspectRatioCalc() {
   }, [mode, width, height, targetWidth, targetHeight, preset]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Aspect Ratio Calculator" icon={Proportions} iconColor="bg-pink-500">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Aspect Ratio Calculator" icon={Proportions} iconColor="bg-pink-500">
         <ModeToggle modes={[
           { id: "calculate", label: "Calculate" },
           { id: "resize", label: "Resize" },
@@ -247,12 +248,15 @@ function AspectRatioCalc() {
             <SolverSelect label="Aspect Ratio Preset" value={preset} onChange={setPreset} options={presets} />
           )}
         </div>
-        <div className="mt-4 space-y-3">
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
           <StepsDisplay steps={result.steps} />
           <MultiResult results={result.results} />
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -417,8 +421,9 @@ function DpiPpiCalc() {
   }, [mode, widthPx, heightPx, diagonal, unit, dpi, widthIn, heightIn, ppiInput]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Mobile DPI / PPI Calculator" icon={Monitor} iconColor="bg-pink-500">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Mobile DPI / PPI Calculator" icon={Monitor} iconColor="bg-pink-500">
         <ModeToggle modes={[
           { id: "mobile-ppi", label: "Resolution → PPI" },
           { id: "mobile-size", label: "PPI → Screen Size" },
@@ -468,12 +473,15 @@ function DpiPpiCalc() {
           </div>
         )}
 
-        <div className="mt-4 space-y-3">
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
           <StepsDisplay steps={result.steps} />
           <MultiResult results={result.results} />
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -580,8 +588,9 @@ function ImageResizeCalc() {
   }, [mode, origW, origH, percent, maxW, maxH, targetDpi, printW, printH]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Image Resize Calculator" icon={ImageIcon} iconColor="bg-pink-500">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Image Resize Calculator" icon={ImageIcon} iconColor="bg-pink-500">
         <ModeToggle modes={[
           { id: "percentage", label: "By %" },
           { id: "fit", label: "Fit to Box" },
@@ -607,12 +616,15 @@ function ImageResizeCalc() {
             </>
           )}
         </div>
-        <div className="mt-4 space-y-3">
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
           <StepsDisplay steps={result.steps} />
           <MultiResult results={result.results} />
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -672,19 +684,23 @@ function CmPxInchConverter() {
   }, [value, fromUnit, dpi]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="CM / Pixel / Inch Converter" icon={RulerIcon} iconColor="bg-pink-500">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="CM / Pixel / Inch Converter" icon={RulerIcon} iconColor="bg-pink-500">
         <div className="space-y-3">
           <SolverInput label="Value" value={value} onChange={setValue} placeholder="1" />
           <SolverSelect label="From Unit" value={fromUnit} onChange={setFromUnit} options={units} />
           <SolverInput label="DPI / PPI (for pixel calculations)" value={dpi} onChange={setDpi} placeholder="96" />
         </div>
-        <div className="mt-4 space-y-3">
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
           <StepsDisplay steps={result.steps} />
           <MultiResult results={result.results} />
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -792,8 +808,9 @@ function PaperSizeCalc() {
   const allSizeOptions = Object.values(paperSizes).flat().map(s => ({ value: s.label, label: s.label }));
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Paper Size Calculator" icon={FileText} iconColor="bg-pink-500">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Paper Size Calculator" icon={FileText} iconColor="bg-pink-500">
         <ModeToggle modes={[
           { id: "lookup", label: "All Sizes" },
           { id: "detail", label: "Detail / Pixels" },
@@ -818,11 +835,14 @@ function PaperSizeCalc() {
             </>
           )}
         </div>
-        <div className="mt-4 space-y-3">
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
           <StepsDisplay steps={result.steps} />
           <MultiResult results={result.results} />
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }

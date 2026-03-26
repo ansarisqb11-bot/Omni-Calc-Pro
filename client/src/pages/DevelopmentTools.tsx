@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { BarChart3, TrendingDown, BookOpen, HeartPulse, Building2, Wifi, Zap } from "lucide-react";
-import { ToolCard } from "@/components/ToolCard";
+import { DesktopToolGrid, InputPanel } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
 
 type ToolType = "hdi" | "poverty" | "literacy" | "health" | "infrastructure" | "digital" | "energy";
@@ -205,8 +205,9 @@ function HDICalculator() {
   }, [mode, lifeExp, expSchool, meanSchool, gniPerCapita, currency, convRate]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="HDI Calculator" icon={BarChart3} iconColor="bg-amber-500">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="HDI Calculator" icon={BarChart3} iconColor="bg-amber-500">
         <ModeToggle modes={[
           { id: "full", label: "Calculate HDI" },
           { id: "compare", label: "Compare" },
@@ -220,12 +221,15 @@ function HDICalculator() {
           <SolverInput label="Mean Years of Schooling" value={meanSchool} onChange={setMeanSchool} placeholder="e.g. 6.7" />
           <SolverInput label={`GNI per Capita (${currency === "inr" ? "\u20B9" : "$"})`} value={gniPerCapita} onChange={setGniPerCapita} placeholder="e.g. 6590" />
         </div>
-        <div className="mt-4 space-y-3">
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
           <StepsDisplay steps={result.steps} />
           <MultiResult results={result.results} />
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -341,8 +345,9 @@ function PovertyRate() {
   }, [mode, totalPop, belowLine, povertyLine, currency, avgIncomePoor, incomes, prevRate, currentRate, years, sym, convRate]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Poverty Rate Tool" icon={TrendingDown} iconColor="bg-amber-500">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Poverty Rate Tool" icon={TrendingDown} iconColor="bg-amber-500">
         <ModeToggle modes={[
           { id: "headcount", label: "Headcount" },
           { id: "gap", label: "Poverty Gap" },
@@ -387,12 +392,15 @@ function PovertyRate() {
             </>
           )}
         </div>
-        <div className="mt-4 space-y-3">
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
           <StepsDisplay steps={result.steps} />
           <MultiResult results={result.results} />
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -513,8 +521,9 @@ function LiteracyRate() {
   }, [mode, literate, pop7plus, maleLit, maleTotal, femaleLit, femaleTotal, urbanLit, urbanTotal, ruralLit, ruralTotal, prevRate, currentRate, years]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Literacy Rate Tool" icon={BookOpen} iconColor="bg-amber-500">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Literacy Rate Tool" icon={BookOpen} iconColor="bg-amber-500">
         <ModeToggle modes={[
           { id: "basic", label: "Basic" },
           { id: "gender", label: "Gender" },
@@ -552,12 +561,15 @@ function LiteracyRate() {
             </>
           )}
         </div>
-        <div className="mt-4 space-y-3">
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
           <StepsDisplay steps={result.steps} />
           <MultiResult results={result.results} />
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -663,8 +675,9 @@ function HealthIndex() {
   }, [mode, lifeExp, imr, mmr, u5mr, bedsPer1000, doctorsPer1000, healthSpend, gdpPerCapita, vaccRate, waterAccess, sanitationAccess]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Health Index Tool" icon={HeartPulse} iconColor="bg-amber-500">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Health Index Tool" icon={HeartPulse} iconColor="bg-amber-500">
         <ModeToggle modes={[
           { id: "composite", label: "Composite" },
           { id: "infrastructure", label: "Infrastructure" },
@@ -695,12 +708,15 @@ function HealthIndex() {
             </>
           )}
         </div>
-        <div className="mt-4 space-y-3">
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
           <StepsDisplay steps={result.steps} />
           <MultiResult results={result.results} />
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -809,8 +825,9 @@ function InfrastructureIndex() {
   }, [mode, roadDensity, railDensity, electrification, urbanization, internetPenetration, mobileSubscribers, airportsPer1M, portCapacity, pipelineKm, totalArea]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Infrastructure Index" icon={Building2} iconColor="bg-amber-500">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Infrastructure Index" icon={Building2} iconColor="bg-amber-500">
         <ModeToggle modes={[
           { id: "composite", label: "Composite" },
           { id: "transport", label: "Transport" },
@@ -844,12 +861,15 @@ function InfrastructureIndex() {
             </>
           )}
         </div>
-        <div className="mt-4 space-y-3">
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
           <StepsDisplay steps={result.steps} />
           <MultiResult results={result.results} />
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -953,8 +973,9 @@ function DigitalEconomy() {
   }, [mode, internetUsers, totalPop, ecommerceRev, gdp, mobilePayUsers, digitalLitRate, broadbandSubs, itExports, totalExports, startups, unicorns, techWorkers, currency, sym]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Digital Economy Tool" icon={Wifi} iconColor="bg-amber-500">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Digital Economy Tool" icon={Wifi} iconColor="bg-amber-500">
         <ModeToggle modes={[
           { id: "readiness", label: "Readiness" },
           { id: "ecommerce", label: "E-commerce" },
@@ -991,12 +1012,15 @@ function DigitalEconomy() {
             </>
           )}
         </div>
-        <div className="mt-4 space-y-3">
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
           <StepsDisplay steps={result.steps} />
           <MultiResult results={result.results} />
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -1136,8 +1160,9 @@ function EnergyConsumption() {
   }, [mode, totalEnergy, population, energyUnit, gdpBillion, renewableShare, coalShare, oilShare, gasShare, nuclearShare, hydroShare, co2Emissions, prevEnergy, years, currency, sym]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Energy Consumption per Capita" icon={Zap} iconColor="bg-amber-500">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Energy Consumption per Capita" icon={Zap} iconColor="bg-amber-500">
         <ModeToggle modes={[
           { id: "per-capita", label: "Per Capita" },
           { id: "intensity", label: "Intensity" },
@@ -1188,11 +1213,14 @@ function EnergyConsumption() {
             </>
           )}
         </div>
-        <div className="mt-4 space-y-3">
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
           <StepsDisplay steps={result.steps} />
           <MultiResult results={result.results} />
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }

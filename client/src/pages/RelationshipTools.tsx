@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { 
   Users, 
   ArrowRightLeft, 
@@ -10,11 +10,12 @@ import {
   Info,
   Search
 } from "lucide-react";
-import { ToolCard } from "@/components/ToolCard";
+import { DesktopToolGrid, InputPanel } from "@/components/ToolCard";
+import { PageWrapper } from "@/components/PageWrapper";
 
 type Gender = "M" | "F" | "N";
 type CountryMode = "INDIA" | "USA" | "NEUTRAL";
-type Mode = "step-by-step" | "sentence" | "two-way";
+type ToolType = "step-by-step" | "sentence" | "two-way";
 
 interface RelationDef {
   gen: number;
@@ -82,52 +83,36 @@ const USA_NAMES: Record<string, string> = {
   "wife-sister": "Sister-in-law",
 };
 
+const tools = [
+  { id: "step-by-step", label: "Step by Step", icon: Users },
+  { id: "sentence", label: "Text Input", icon: MessageSquare },
+  { id: "two-way", label: "Two-Way", icon: ArrowRightLeft },
+];
+
 export default function RelationshipTools() {
-  const [activeMode, setActiveMode] = useState<Mode>("step-by-step");
+  const [activeTool, setActiveTool] = useState<ToolType>("step-by-step");
   const [country, setCountry] = useState<CountryMode>("INDIA");
 
+  const renderTool = () => {
+    switch (activeTool) {
+      case "step-by-step": return <StepByStepFinder country={country} setCountry={setCountry} />;
+      case "sentence": return <SentenceFinder country={country} setCountry={setCountry} />;
+      case "two-way": return <TwoWayFinder country={country} setCountry={setCountry} />;
+      default: return null;
+    }
+  };
+
   return (
-    <div className="space-y-4 max-w-lg mx-auto pb-10">
-      <div className="flex flex-col gap-4">
-        <div className="flex gap-2 p-1 bg-muted rounded-xl">
-          {(["step-by-step", "sentence", "two-way"] as Mode[]).map((m) => (
-            <button
-              key={m}
-              onClick={() => setActiveMode(m)}
-              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${
-                activeMode === m ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {m === "step-by-step" && <Users className="w-3.5 h-3.5" />}
-              {m === "sentence" && <MessageSquare className="w-3.5 h-3.5" />}
-              {m === "two-way" && <ArrowRightLeft className="w-3.5 h-3.5" />}
-              <span className="capitalize">{m.replace("-", " ")}</span>
-            </button>
-          ))}
-        </div>
-
-        <div className="flex gap-2 p-1 bg-muted rounded-xl w-fit self-center">
-          {(["INDIA", "USA", "NEUTRAL"] as CountryMode[]).map((c) => (
-            <button
-              key={c}
-              onClick={() => setCountry(c)}
-              className={`px-4 py-1.5 text-[10px] font-bold rounded-lg transition-all flex items-center gap-1.5 ${
-                country === c ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {c === "INDIA" && "🇮🇳"}
-              {c === "USA" && "🇺🇸"}
-              {c === "NEUTRAL" && <Globe className="w-3 h-3" />}
-              {c}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {activeMode === "step-by-step" && <StepByStepFinder country={country} />}
-      {activeMode === "sentence" && <SentenceFinder country={country} />}
-      {activeMode === "two-way" && <TwoWayFinder country={country} />}
-    </div>
+    <PageWrapper
+      title="Relationship Finder"
+      subtitle="Find any family relation"
+      accentColor="bg-violet-500"
+      tools={tools}
+      activeTool={activeTool}
+      onToolChange={(id) => setActiveTool(id as ToolType)}
+    >
+      {renderTool()}
+    </PageWrapper>
   );
 }
 
@@ -159,6 +144,27 @@ function calculateRelation(path: string[]) {
   };
 }
 
+function CountryToggle({ country, setCountry }: { country: CountryMode; setCountry: (c: CountryMode) => void }) {
+  return (
+    <div className="flex gap-2 p-1 bg-muted rounded-xl w-fit">
+      {(["INDIA", "USA", "NEUTRAL"] as CountryMode[]).map((c) => (
+        <button
+          key={c}
+          onClick={() => setCountry(c)}
+          className={`px-4 py-1.5 text-[10px] font-bold rounded-lg transition-all flex items-center gap-1.5 ${
+            country === c ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          {c === "INDIA" && "🇮🇳"}
+          {c === "USA" && "🇺🇸"}
+          {c === "NEUTRAL" && <Globe className="w-3 h-3" />}
+          {c}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function ResultDisplay({ path, country }: { path: string[], country: CountryMode }) {
   const res = calculateRelation(path);
   
@@ -175,7 +181,7 @@ function ResultDisplay({ path, country }: { path: string[], country: CountryMode
     <motion.div 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mt-6 space-y-4"
+      className="space-y-4"
     >
       <div className="bg-card border border-border rounded-2xl p-5 shadow-sm space-y-4">
         <div className="flex justify-between items-start">
@@ -212,62 +218,67 @@ function ResultDisplay({ path, country }: { path: string[], country: CountryMode
   );
 }
 
-function StepByStepFinder({ country }: { country: CountryMode }) {
+function StepByStepFinder({ country, setCountry }: { country: CountryMode; setCountry: (c: CountryMode) => void }) {
   const [path, setPath] = useState<string[]>(["mother", "sister"]);
 
   return (
-    <ToolCard title="Step-by-Step Chain" icon={Users} iconColor="bg-violet-500">
-      <div className="space-y-4">
-        <div className="space-y-3">
-          {path.map((step, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-[10px] font-bold shrink-0">
-                {i === 0 ? "Me" : i}
-              </div>
-              <select
-                value={step}
-                onChange={(e) => {
-                  const next = [...path];
-                  next[i] = e.target.value;
-                  setPath(next);
-                }}
-                className="flex-1 bg-muted/50 border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/20"
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Step-by-Step Chain" icon={Users} iconColor="bg-violet-500">
+          <div className="space-y-4">
+            <CountryToggle country={country} setCountry={setCountry} />
+            <div className="space-y-3">
+              {path.map((step, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-[10px] font-bold shrink-0">
+                    {i === 0 ? "Me" : i}
+                  </div>
+                  <select
+                    value={step}
+                    onChange={(e) => {
+                      const next = [...path];
+                      next[i] = e.target.value;
+                      setPath(next);
+                    }}
+                    className="flex-1 bg-muted/50 border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/20"
+                  >
+                    {Object.keys(REL).map(r => <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1).replace("step", "Step-")}</option>)}
+                  </select>
+                  {path.length > 1 && (
+                    <button 
+                      onClick={() => setPath(path.filter((_, idx) => idx !== i))} 
+                      className="p-2 text-muted-foreground hover:text-destructive transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                onClick={() => setPath([...path, "brother"])}
+                className="w-full py-3 border border-dashed border-border rounded-xl text-xs font-bold text-muted-foreground hover:bg-muted/50 transition-all flex items-center justify-center gap-2"
               >
-                {Object.keys(REL).map(r => <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1).replace("step", "Step-")}</option>)}
-              </select>
-              {path.length > 1 && (
-                <button 
-                  onClick={() => setPath(path.filter((_, idx) => idx !== i))} 
-                  className="p-2 text-muted-foreground hover:text-destructive transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              )}
+                <Plus className="w-3.5 h-3.5" />
+                Add Next Relation in Chain
+              </button>
             </div>
-          ))}
-          <button
-            onClick={() => setPath([...path, "brother"])}
-            className="w-full py-3 border border-dashed border-border rounded-xl text-xs font-bold text-muted-foreground hover:bg-muted/50 transition-all flex items-center justify-center gap-2"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            Add Next Relation in Chain
-          </button>
-        </div>
-        
+            <div className="bg-primary/5 p-4 rounded-xl flex gap-3 items-start">
+              <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+              <p className="text-[10px] text-muted-foreground leading-relaxed">
+                This tool calculates complex chains without limits. Select "Me" as the starting point and build your tree step-by-step.
+              </p>
+            </div>
+          </div>
+        </InputPanel>
+      }
+      results={
         <ResultDisplay path={path} country={country} />
-        
-        <div className="bg-primary/5 p-4 rounded-xl flex gap-3 items-start">
-          <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-          <p className="text-[10px] text-muted-foreground leading-relaxed">
-            This tool calculates complex chains without limits. Select "Me" as the starting point and build your tree step-by-step.
-          </p>
-        </div>
-      </div>
-    </ToolCard>
+      }
+    />
   );
 }
 
-function SentenceFinder({ country }: { country: CountryMode }) {
+function SentenceFinder({ country, setCountry }: { country: CountryMode; setCountry: (c: CountryMode) => void }) {
   const [text, setText] = useState("mother's sister's husband");
   
   const path = useMemo(() => {
@@ -280,63 +291,75 @@ function SentenceFinder({ country }: { country: CountryMode }) {
   }, [text]);
 
   return (
-    <ToolCard title="Smart Text Input" icon={MessageSquare} iconColor="bg-blue-500">
-      <div className="space-y-4">
-        <div>
-          <label className="text-xs font-bold text-muted-foreground mb-2 block uppercase tracking-tight">Describe the relation</label>
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              type="text"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              className="w-full bg-muted/50 border border-border rounded-xl pl-11 pr-4 py-3.5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
-              placeholder="e.g. my mother's brother's wife"
-            />
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Smart Text Input" icon={MessageSquare} iconColor="bg-blue-500">
+          <div className="space-y-4">
+            <CountryToggle country={country} setCountry={setCountry} />
+            <div>
+              <label className="text-xs font-bold text-muted-foreground mb-2 block uppercase tracking-tight">Describe the relation</label>
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  className="w-full bg-muted/50 border border-border rounded-xl pl-11 pr-4 py-3.5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
+                  placeholder="e.g. my mother's brother's wife"
+                />
+              </div>
+            </div>
           </div>
-        </div>
-        
-        {path.length > 0 ? (
+        </InputPanel>
+      }
+      results={
+        path.length > 0 ? (
           <ResultDisplay path={path} country={country} />
         ) : (
-          <div className="p-10 text-center border border-dashed border-border rounded-2xl bg-muted/10">
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-10 text-center flex flex-col items-center justify-center min-h-[200px]">
             <MessageSquare className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
             <p className="text-muted-foreground text-xs font-medium italic">
               "Who is my father's sister's son?"
             </p>
           </div>
-        )}
-      </div>
-    </ToolCard>
+        )
+      }
+    />
   );
 }
 
-function TwoWayFinder({ country }: { country: CountryMode }) {
+function TwoWayFinder({ country, setCountry }: { country: CountryMode; setCountry: (c: CountryMode) => void }) {
   const [path, setPath] = useState<string[]>(["sister", "daughter"]);
   const res = calculateRelation(path);
 
   return (
-    <ToolCard title="Two-Way Finder" icon={ArrowRightLeft} iconColor="bg-emerald-500">
-      <div className="space-y-4">
-        <div className="space-y-3">
-          <div className="text-[10px] font-bold text-muted-foreground uppercase">Path from Me</div>
-          {path.map((step, i) => (
-            <select
-              key={i}
-              value={step}
-              onChange={(e) => {
-                const next = [...path];
-                next[i] = e.target.value;
-                setPath(next);
-              }}
-              className="w-full bg-muted/50 border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none"
-            >
-              {Object.keys(REL).map(r => <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>)}
-            </select>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 gap-3 pt-4 border-t border-border">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Two-Way Finder" icon={ArrowRightLeft} iconColor="bg-emerald-500">
+          <div className="space-y-4">
+            <CountryToggle country={country} setCountry={setCountry} />
+            <div className="space-y-3">
+              <div className="text-[10px] font-bold text-muted-foreground uppercase">Path from Me</div>
+              {path.map((step, i) => (
+                <select
+                  key={i}
+                  value={step}
+                  onChange={(e) => {
+                    const next = [...path];
+                    next[i] = e.target.value;
+                    setPath(next);
+                  }}
+                  className="w-full bg-muted/50 border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none"
+                >
+                  {Object.keys(REL).map(r => <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>)}
+                </select>
+              ))}
+            </div>
+          </div>
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
           <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
             <div className="text-[10px] font-bold text-muted-foreground uppercase mb-1 flex items-center gap-1">
                They are my <ArrowRight className="w-2.5 h-2.5" />
@@ -354,8 +377,8 @@ function TwoWayFinder({ country }: { country: CountryMode }) {
             </div>
           </div>
         </div>
-      </div>
-    </ToolCard>
+      }
+    />
   );
 }
 

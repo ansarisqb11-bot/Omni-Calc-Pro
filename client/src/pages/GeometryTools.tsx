@@ -13,7 +13,7 @@ import {
   Diamond,
   Cone,
 } from "lucide-react";
-import { ToolCard } from "@/components/ToolCard";
+import { DesktopToolGrid, InputPanel } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
 
 type ToolType = "2d-shapes" | "3d-shapes" | "distance" | "slope";
@@ -429,8 +429,9 @@ function Shapes2D() {
   }, [shape, inputUnit, areaUnit, perimUnit, radius, length, width, sideA, sideB, sideC, triBase, triHeight, side, sides, d1, d2, pBase, pTop, pHeight, pSide1, pSide2, semiMajor, semiMinor, arcRadius, arcAngle]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="2D Shapes \u2014 Area & Perimeter" icon={Pentagon} iconColor="bg-cyan-500">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="2D Shapes \u2014 Area & Perimeter" icon={Pentagon} iconColor="bg-cyan-500">
         <ModeToggle
           modes={[
             { id: "circle", label: "Circle" },
@@ -510,12 +511,15 @@ function Shapes2D() {
             </>
           )}
         </div>
-        <div className="mt-4 space-y-3">
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
           <StepsDisplay steps={result.steps} />
           <MultiResult results={result.results} />
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -765,8 +769,9 @@ function Shapes3D() {
   }, [shape, inputUnit, saUnit, volUnit, side, length, width, height, radius, radius2, slant, semiA, semiB, semiC, baseEdge, pyrHeight]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="3D Shapes \u2014 Volume & Surface Area" icon={Box} iconColor="bg-cyan-500">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="3D Shapes \u2014 Volume & Surface Area" icon={Box} iconColor="bg-cyan-500">
         <ModeToggle
           modes={[
             { id: "cube", label: "Cube" },
@@ -844,12 +849,15 @@ function Shapes3D() {
             </>
           )}
         </div>
-        <div className="mt-4 space-y-3">
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
           <StepsDisplay steps={result.steps} />
           <MultiResult results={result.results} />
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -973,8 +981,9 @@ function DistanceCalculator() {
   }, [mode, unit, resultUnit, x1, y1, x2, y2, z1, z2, lat1, lon1, lat2, lon2]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Coordinate Distance Calculator" icon={Move} iconColor="bg-cyan-500">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Coordinate Distance Calculator" icon={Move} iconColor="bg-cyan-500">
         <ModeToggle
           modes={[
             { id: "2d", label: "2D Distance" },
@@ -1036,12 +1045,15 @@ function DistanceCalculator() {
             </>
           )}
         </div>
-        <div className="mt-4 space-y-3">
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
           <StepsDisplay steps={result.steps} />
           <MultiResult results={result.results} />
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -1185,8 +1197,9 @@ function SlopeCalculator() {
   }, [mode, unit, x1, y1, x2, y2, slopeVal, xPt, yPt, rise, run, angleVal]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Slope Calculator" icon={TrendingUp} iconColor="bg-cyan-500">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Slope Calculator" icon={TrendingUp} iconColor="bg-cyan-500">
         <ModeToggle
           modes={[
             { id: "two-points", label: "Two Points" },
@@ -1233,11 +1246,14 @@ function SlopeCalculator() {
           {mode === "angle" && <SolverInput label="Angle (degrees)" value={angleVal} onChange={setAngleVal} />}
           {mode === "parallel-perp" && <SolverInput label="Given Slope (m)" value={slopeVal} onChange={setSlopeVal} />}
         </div>
-        <div className="mt-4 space-y-3">
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
           <StepsDisplay steps={result.steps} />
           <MultiResult results={result.results} />
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }

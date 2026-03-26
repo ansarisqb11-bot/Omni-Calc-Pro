@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Users, Baby, Skull, Plane, Briefcase, PieChart, User, TrendingUp } from "lucide-react";
-import { ToolCard } from "@/components/ToolCard";
+import { DesktopToolGrid, InputPanel } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
 
 type ToolType = "growth" | "density" | "birth" | "death" | "migration" | "working" | "dependency" | "youth";
@@ -252,8 +252,9 @@ function PopulationGrowth() {
   }, [mode, initPop, growthRate, years, finalPop, births, deaths, immigrants, emigrants]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Population Growth Calculator" icon={TrendingUp} iconColor="bg-rose-500">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Population Growth Calculator" icon={TrendingUp} iconColor="bg-rose-500">
         <ModeToggle modes={[
           { id: "exponential", label: "Exponential" },
           { id: "arithmetic", label: "Arithmetic" },
@@ -283,12 +284,15 @@ function PopulationGrowth() {
             </>
           )}
         </div>
-        <div className="mt-4 space-y-3">
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
           <StepsDisplay steps={result.steps} />
           <MultiResult results={result.results} />
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -382,8 +386,9 @@ function PopulationDensity() {
   }, [mode, population, area, areaUnit, urbanPop, urbanArea, ruralPop, ruralArea, arableLand]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Population Density Tool" icon={Users} iconColor="bg-rose-500">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Population Density Tool" icon={Users} iconColor="bg-rose-500">
         <ModeToggle modes={[
           { id: "basic", label: "Basic Density" },
           { id: "urban-rural", label: "Urban vs Rural" },
@@ -413,12 +418,15 @@ function PopulationDensity() {
             </>
           )}
         </div>
-        <div className="mt-4 space-y-3">
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
           <StepsDisplay steps={result.steps} />
           <MultiResult results={result.results} />
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -526,8 +534,9 @@ function BirthRate() {
   }, [mode, births, population, women1549, livebirths, infantDeaths, neonatalDeaths, years, prevRate]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Birth Rate Calculator" icon={Baby} iconColor="bg-rose-500">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Birth Rate Calculator" icon={Baby} iconColor="bg-rose-500">
         <ModeToggle modes={[
           { id: "crude", label: "Crude Birth Rate" },
           { id: "fertility", label: "Fertility Rate" },
@@ -563,12 +572,15 @@ function BirthRate() {
             </>
           )}
         </div>
-        <div className="mt-4 space-y-3">
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
           <StepsDisplay steps={result.steps} />
           <MultiResult results={result.results} />
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -662,8 +674,9 @@ function DeathRate() {
   }, [mode, deaths, population, ageDeaths, agePop, ageGroup, maternalDeaths, liveBirths, under5Deaths]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Death Rate Calculator" icon={Skull} iconColor="bg-rose-500">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Death Rate Calculator" icon={Skull} iconColor="bg-rose-500">
         <ModeToggle modes={[
           { id: "crude", label: "Crude Death Rate" },
           { id: "age-specific", label: "Age-Specific" },
@@ -701,12 +714,15 @@ function DeathRate() {
             </>
           )}
         </div>
-        <div className="mt-4 space-y-3">
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
           <StepsDisplay steps={result.steps} />
           <MultiResult results={result.results} />
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -796,8 +812,9 @@ function MigrationRate() {
   }, [mode, immigrants, emigrants, population, popStart, popEnd, births, deaths]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Migration Rate Tool" icon={Plane} iconColor="bg-rose-500">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Migration Rate Tool" icon={Plane} iconColor="bg-rose-500">
         <ModeToggle modes={[
           { id: "net", label: "Net Migration" },
           { id: "residual", label: "Residual Method" },
@@ -826,12 +843,15 @@ function MigrationRate() {
             </>
           )}
         </div>
-        <div className="mt-4 space-y-3">
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
           <StepsDisplay steps={result.steps} />
           <MultiResult results={result.results} />
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -924,8 +944,9 @@ function WorkingPopulation() {
   }, [mode, totalPop, workingAge, employed, unemployed, laborForce, sectorPrimary, sectorSecondary, sectorTertiary]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Working Population Estimator" icon={Briefcase} iconColor="bg-rose-500">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Working Population Estimator" icon={Briefcase} iconColor="bg-rose-500">
         <ModeToggle modes={[
           { id: "labor", label: "Labor Force" },
           { id: "sector", label: "By Sector" },
@@ -954,12 +975,15 @@ function WorkingPopulation() {
             </>
           )}
         </div>
-        <div className="mt-4 space-y-3">
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
           <StepsDisplay steps={result.steps} />
           <MultiResult results={result.results} />
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -1028,8 +1052,9 @@ function DependencyRatio() {
   }, [mode, pop0_14, pop15_64, pop65plus, totalPop]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Dependency Ratio Calculator" icon={PieChart} iconColor="bg-rose-500">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Dependency Ratio Calculator" icon={PieChart} iconColor="bg-rose-500">
         <ModeToggle modes={[
           { id: "total", label: "Dependency Ratios" },
           { id: "aging-index", label: "Aging Index" },
@@ -1040,12 +1065,15 @@ function DependencyRatio() {
           <SolverInput label="Population 65+ (Elderly)" value={pop65plus} onChange={setPop65plus} />
           {mode === "aging-index" && <SolverInput label="Total Population" value={totalPop} onChange={setTotalPop} />}
         </div>
-        <div className="mt-4 space-y-3">
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
           <StepsDisplay steps={result.steps} />
           <MultiResult results={result.results} />
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }
 
@@ -1141,8 +1169,9 @@ function YouthPopulation() {
   }, [mode, totalPop, youth15_24, youth15_29, youthEmployed, youthLabor, youthLiterate, enrolled, neetCount]);
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Youth Population Tool" icon={User} iconColor="bg-rose-500">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Youth Population Tool" icon={User} iconColor="bg-rose-500">
         <ModeToggle modes={[
           { id: "analysis", label: "Youth Analysis" },
           { id: "employment", label: "Employment" },
@@ -1172,11 +1201,14 @@ function YouthPopulation() {
             </>
           )}
         </div>
-        <div className="mt-4 space-y-3">
+        </InputPanel>
+      }
+      results={
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
           <StepsDisplay steps={result.steps} />
           <MultiResult results={result.results} />
         </div>
-      </ToolCard>
-    </div>
+      }
+    />
   );
 }

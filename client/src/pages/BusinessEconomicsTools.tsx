@@ -3,7 +3,7 @@ import {
   TrendingUp, BarChart2, DollarSign, Users, Briefcase,
   Zap, Package, UserCheck, Globe, Activity
 } from "lucide-react";
-import { ToolCard } from "@/components/ToolCard";
+import { DesktopToolGrid, InputPanel } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
 
 type ToolType =
@@ -279,8 +279,9 @@ function GDPCalculator() {
   };
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="GDP Calculator" icon={Globe} iconColor="bg-cyan-600">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="GDP Calculator" icon={Globe} iconColor="bg-cyan-600">
         <ModeToggle modes={[
           { id: "expenditure", label: "GDP (Expenditure)" },
           { id: "growth", label: "Growth Rate" },
@@ -329,9 +330,21 @@ function GDPCalculator() {
           )}
           <CalcButton onClick={calculate} />
         </div>
-        {result && <div className="mt-4 space-y-3"><Steps steps={result.steps} /><Results results={result.results} /></div>}
-      </ToolCard>
-    </div>
+        </InputPanel>
+      }
+      results={
+        result ? (
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
+            <Steps steps={result.steps} />
+            <Results results={result.results} />
+          </div>
+        ) : (
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-5 flex items-center justify-center min-h-[200px]">
+            <p className="text-muted-foreground text-sm text-center">Fill in the values and click Calculate</p>
+          </div>
+        )
+      }
+    />
   );
 }
 
@@ -419,8 +432,9 @@ function MarketSizeCalculator() {
   };
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Market Size Calculator" icon={BarChart2} iconColor="bg-cyan-600">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Market Size Calculator" icon={BarChart2} iconColor="bg-cyan-600">
         <ModeToggle modes={[
           { id: "tam", label: "TAM / SAM / SOM" },
           { id: "growth", label: "Market Growth" },
@@ -455,9 +469,21 @@ function MarketSizeCalculator() {
           )}
           <CalcButton onClick={calculate} />
         </div>
-        {result && <div className="mt-4 space-y-3"><Steps steps={result.steps} /><Results results={result.results} /></div>}
-      </ToolCard>
-    </div>
+        </InputPanel>
+      }
+      results={
+        result ? (
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
+            <Steps steps={result.steps} />
+            <Results results={result.results} />
+          </div>
+        ) : (
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-5 flex items-center justify-center min-h-[200px]">
+            <p className="text-muted-foreground text-sm text-center">Fill in the values and click Calculate</p>
+          </div>
+        )
+      }
+    />
   );
 }
 
@@ -543,8 +569,9 @@ function NetWorthCalculator() {
   };
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Net Worth Calculator" icon={DollarSign} iconColor="bg-cyan-600">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Net Worth Calculator" icon={DollarSign} iconColor="bg-cyan-600">
         <ModeToggle modes={[
           { id: "calculate", label: "Calculate Net Worth" },
           { id: "target", label: "Target Net Worth" },
@@ -584,9 +611,21 @@ function NetWorthCalculator() {
           )}
           <CalcButton onClick={calculate} />
         </div>
-        {result && <div className="mt-4 space-y-3"><Steps steps={result.steps} /><Results results={result.results} /></div>}
-      </ToolCard>
-    </div>
+        </InputPanel>
+      }
+      results={
+        result ? (
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
+            <Steps steps={result.steps} />
+            <Results results={result.results} />
+          </div>
+        ) : (
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-5 flex items-center justify-center min-h-[200px]">
+            <p className="text-muted-foreground text-sm text-center">Fill in the values and click Calculate</p>
+          </div>
+        )
+      }
+    />
   );
 }
 
@@ -670,8 +709,9 @@ function UnemploymentCalculator() {
   };
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Unemployment Rate Calculator" icon={Users} iconColor="bg-cyan-600">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Unemployment Rate Calculator" icon={Users} iconColor="bg-cyan-600">
         <ModeToggle modes={[
           { id: "rate", label: "Calculate Rate" },
           { id: "reverse", label: "Find Unemployed" },
@@ -694,9 +734,21 @@ function UnemploymentCalculator() {
           )}
           <CalcButton onClick={calculate} />
         </div>
-        {result && <div className="mt-4 space-y-3"><Steps steps={result.steps} /><Results results={result.results} /></div>}
-      </ToolCard>
-    </div>
+        </InputPanel>
+      }
+      results={
+        result ? (
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
+            <Steps steps={result.steps} />
+            <Results results={result.results} />
+          </div>
+        ) : (
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-5 flex items-center justify-center min-h-[200px]">
+            <p className="text-muted-foreground text-sm text-center">Fill in the values and click Calculate</p>
+          </div>
+        )
+      }
+    />
   );
 }
 
@@ -754,8 +806,9 @@ function EmploymentGrowthTool() {
   };
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Employment Growth Tool" icon={UserCheck} iconColor="bg-cyan-600">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Employment Growth Tool" icon={UserCheck} iconColor="bg-cyan-600">
         <ModeToggle modes={[
           { id: "growth", label: "Growth Rate" },
           { id: "reverse", label: "Jobs Needed (Reverse)" },
@@ -777,9 +830,21 @@ function EmploymentGrowthTool() {
           )}
           <CalcButton onClick={calculate} />
         </div>
-        {result && <div className="mt-4 space-y-3"><Steps steps={result.steps} /><Results results={result.results} /></div>}
-      </ToolCard>
-    </div>
+        </InputPanel>
+      }
+      results={
+        result ? (
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
+            <Steps steps={result.steps} />
+            <Results results={result.results} />
+          </div>
+        ) : (
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-5 flex items-center justify-center min-h-[200px]">
+            <p className="text-muted-foreground text-sm text-center">Fill in the values and click Calculate</p>
+          </div>
+        )
+      }
+    />
   );
 }
 
@@ -857,8 +922,9 @@ function ProductivityCalculator() {
   };
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Productivity Calculator" icon={Zap} iconColor="bg-cyan-600">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Productivity Calculator" icon={Zap} iconColor="bg-cyan-600">
         <ModeToggle modes={[
           { id: "labor", label: "Labor Productivity" },
           { id: "capital", label: "Capital Productivity" },
@@ -885,9 +951,21 @@ function ProductivityCalculator() {
           )}
           <CalcButton onClick={calculate} />
         </div>
-        {result && <div className="mt-4 space-y-3"><Steps steps={result.steps} /><Results results={result.results} /></div>}
-      </ToolCard>
-    </div>
+        </InputPanel>
+      }
+      results={
+        result ? (
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
+            <Steps steps={result.steps} />
+            <Results results={result.results} />
+          </div>
+        ) : (
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-5 flex items-center justify-center min-h-[200px]">
+            <p className="text-muted-foreground text-sm text-center">Fill in the values and click Calculate</p>
+          </div>
+        )
+      }
+    />
   );
 }
 
@@ -969,8 +1047,9 @@ function TariffCalculator() {
   };
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Tariff Impact Calculator" icon={Package} iconColor="bg-cyan-600">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Tariff Impact Calculator" icon={Package} iconColor="bg-cyan-600">
         <ModeToggle modes={[
           { id: "cost", label: "Price after Tariff" },
           { id: "revenue", label: "Govt Revenue" },
@@ -995,9 +1074,21 @@ function TariffCalculator() {
           )}
           <CalcButton onClick={calculate} />
         </div>
-        {result && <div className="mt-4 space-y-3"><Steps steps={result.steps} /><Results results={result.results} /></div>}
-      </ToolCard>
-    </div>
+        </InputPanel>
+      }
+      results={
+        result ? (
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
+            <Steps steps={result.steps} />
+            <Results results={result.results} />
+          </div>
+        ) : (
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-5 flex items-center justify-center min-h-[200px]">
+            <p className="text-muted-foreground text-sm text-center">Fill in the values and click Calculate</p>
+          </div>
+        )
+      }
+    />
   );
 }
 
@@ -1057,8 +1148,9 @@ function PerPersonIncomeCalculator() {
   };
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Per Person Income Calculator" icon={Briefcase} iconColor="bg-cyan-600">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Per Person Income Calculator" icon={Briefcase} iconColor="bg-cyan-600">
         <ModeToggle modes={[
           { id: "calculate", label: "Calculate Per Person" },
           { id: "reverse", label: "Find Total Income (Reverse)" },
@@ -1081,9 +1173,21 @@ function PerPersonIncomeCalculator() {
           )}
           <CalcButton onClick={calculate} />
         </div>
-        {result && <div className="mt-4 space-y-3"><Steps steps={result.steps} /><Results results={result.results} /></div>}
-      </ToolCard>
-    </div>
+        </InputPanel>
+      }
+      results={
+        result ? (
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
+            <Steps steps={result.steps} />
+            <Results results={result.results} />
+          </div>
+        ) : (
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-5 flex items-center justify-center min-h-[200px]">
+            <p className="text-muted-foreground text-sm text-center">Fill in the values and click Calculate</p>
+          </div>
+        )
+      }
+    />
   );
 }
 
@@ -1159,8 +1263,9 @@ function PerCapitaIncomeTool() {
   };
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Per Capita Income Tool" icon={Activity} iconColor="bg-cyan-600">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Per Capita Income Tool" icon={Activity} iconColor="bg-cyan-600">
         <ModeToggle modes={[
           { id: "calculate", label: "Calculate PCI" },
           { id: "reverse", label: "Find GDP (Reverse)" },
@@ -1187,9 +1292,21 @@ function PerCapitaIncomeTool() {
           )}
           <CalcButton onClick={calculate} />
         </div>
-        {result && <div className="mt-4 space-y-3"><Steps steps={result.steps} /><Results results={result.results} /></div>}
-      </ToolCard>
-    </div>
+        </InputPanel>
+      }
+      results={
+        result ? (
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
+            <Steps steps={result.steps} />
+            <Results results={result.results} />
+          </div>
+        ) : (
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-5 flex items-center justify-center min-h-[200px]">
+            <p className="text-muted-foreground text-sm text-center">Fill in the values and click Calculate</p>
+          </div>
+        )
+      }
+    />
   );
 }
 
@@ -1298,8 +1415,9 @@ function InflationImpactCalculator() {
   };
 
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <ToolCard title="Inflation Impact Calculator" icon={TrendingUp} iconColor="bg-cyan-600">
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Inflation Impact Calculator" icon={TrendingUp} iconColor="bg-cyan-600">
         <ModeToggle modes={[
           { id: "future", label: "Future Cost" },
           { id: "real", label: "Real Value (Reverse)" },
@@ -1342,8 +1460,20 @@ function InflationImpactCalculator() {
           )}
           <CalcButton onClick={calculate} />
         </div>
-        {result && <div className="mt-4 space-y-3"><Steps steps={result.steps} /><Results results={result.results} /></div>}
-      </ToolCard>
-    </div>
+        </InputPanel>
+      }
+      results={
+        result ? (
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
+            <Steps steps={result.steps} />
+            <Results results={result.results} />
+          </div>
+        ) : (
+          <div className="bg-card rounded-2xl border border-border shadow-sm p-5 flex items-center justify-center min-h-[200px]">
+            <p className="text-muted-foreground text-sm text-center">Fill in the values and click Calculate</p>
+          </div>
+        )
+      }
+    />
   );
 }
