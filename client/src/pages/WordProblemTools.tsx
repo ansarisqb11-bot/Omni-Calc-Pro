@@ -14,11 +14,12 @@ import {
   Ruler,
   Droplets,
   Weight,
+  GlassWater,
 } from "lucide-react";
 import { DesktopToolGrid, InputPanel } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
 
-type ToolType = "unit-price" | "ratio" | "speed" | "age" | "percentage" | "profit-loss" | "time-work" | "average" | "mixture" | "rate" | "basic" | "volume" | "length" | "weight";
+type ToolType = "unit-price" | "ratio" | "speed" | "age" | "percentage" | "profit-loss" | "time-work" | "average" | "mixture" | "rate" | "basic" | "volume" | "length" | "weight" | "milk-water";
 
 const tools = [
   { id: "unit-price", label: "Unit Price", icon: ShoppingCart },
@@ -30,6 +31,7 @@ const tools = [
   { id: "time-work", label: "Time & Work", icon: Clock },
   { id: "average", label: "Average", icon: BarChart3 },
   { id: "mixture", label: "Mixture", icon: FlaskConical },
+  { id: "milk-water", label: "Milk & Water", icon: GlassWater },
   { id: "rate", label: "Rate", icon: Zap },
   { id: "basic", label: "Basic", icon: Calculator },
   { id: "volume", label: "Volume", icon: Droplets },
@@ -51,6 +53,7 @@ export default function WordProblemTools() {
       case "time-work": return <TimeWorkSolver />;
       case "average": return <AverageSolver />;
       case "mixture": return <MixtureSolver />;
+      case "milk-water": return <MilkWaterSolver />;
       case "rate": return <RateSolver />;
       case "basic": return <BasicSolver />;
       case "volume": return <VolumeSolver />;
@@ -2136,6 +2139,381 @@ function WeightSolver() {
         <SolverCard>
           <StepsDisplay steps={result.steps} />
           <ResultBox label="Answer" value={result.value} />
+        </SolverCard>
+      }
+    />
+  );
+}
+
+// ─── 15. Milk & Water Solver ──────────────────────────────────────────────────
+function MilkWaterSolver() {
+  const [mode, setMode] = useState("ratio-to-qty");
+  const [unit, setUnit] = useState("l");
+
+  // ratio-to-qty
+  const [totalVol, setTotalVol] = useState("10");
+  const [milkRatio, setMilkRatio] = useState("3");
+  const [waterRatio, setWaterRatio] = useState("2");
+
+  // add-liquid
+  const [addType, setAddType] = useState("water");
+  const [initialMilk, setInitialMilk] = useState("6");
+  const [initialWater, setInitialWater] = useState("4");
+  const [addAmount, setAddAmount] = useState("2");
+
+  // alligation
+  const [concA, setConcA] = useState("80");
+  const [concB, setConcB] = useState("20");
+  const [targetConc, setTargetConc] = useState("50");
+  const [totalMixVol, setTotalMixVol] = useState("10");
+
+  // replacement
+  const [replTotalVol, setReplTotalVol] = useState("10");
+  const [replMilkConc, setReplMilkConc] = useState("100");
+  const [replRemoveVol, setReplRemoveVol] = useState("2");
+  const [replRounds, setReplRounds] = useState("3");
+
+  // find-concentration
+  const [fcMilk, setFcMilk] = useState("6");
+  const [fcWater, setFcWater] = useState("4");
+
+  // cost-profit
+  const [currency, setCurrency] = useState("₹");
+  const [milkCost, setMilkCost] = useState("50");
+  const [waterCost, setWaterCost] = useState("0");
+  const [cpMilkRatio, setCpMilkRatio] = useState("3");
+  const [cpWaterRatio, setCpWaterRatio] = useState("1");
+  const [sellingPrice, setSellingPrice] = useState("55");
+
+  // cross-check
+  const [ccMilkConc, setCcMilkConc] = useState("75");
+  const [ccTotalVol, setCcTotalVol] = useState("20");
+
+  const unitShort = unit;
+
+  const result = useMemo(() => {
+    switch (mode) {
+
+      case "ratio-to-qty": {
+        const tv = parseFloat(totalVol) || 0;
+        const mr = parseFloat(milkRatio) || 0;
+        const wr = parseFloat(waterRatio) || 0;
+        const sum = mr + wr;
+        if (sum === 0 || tv === 0) return { lines: [], steps: [] };
+        const milk = (tv * mr) / sum;
+        const water = (tv * wr) / sum;
+        const milkPct = (milk / tv) * 100;
+        return {
+          lines: [
+            { label: "Milk", value: `${fmt(milk)} ${unitShort}`, sub: `(${fmt(milkPct)}%)` },
+            { label: "Water", value: `${fmt(water)} ${unitShort}`, sub: `(${fmt(100 - milkPct)}%)` },
+            { label: "Total Mixture", value: `${fmt(tv)} ${unitShort}`, sub: "" },
+          ],
+          steps: [
+            `Ratio = Milk : Water = ${mr} : ${wr}`,
+            `Total parts = ${mr} + ${wr} = ${sum}`,
+            `Milk = ${fmt(tv)} × ${mr}/${sum} = ${fmt(milk)} ${unitShort}`,
+            `Water = ${fmt(tv)} × ${wr}/${sum} = ${fmt(water)} ${unitShort}`,
+            `Milk concentration = ${fmt(milk)}/${fmt(tv)} × 100 = ${fmt(milkPct)}%`,
+          ],
+        };
+      }
+
+      case "add-liquid": {
+        const im = parseFloat(initialMilk) || 0;
+        const iw = parseFloat(initialWater) || 0;
+        const add = parseFloat(addAmount) || 0;
+        const initTotal = im + iw;
+        if (initTotal === 0) return { lines: [], steps: [] };
+        const initMilkPct = (im / initTotal) * 100;
+        const newMilk = addType === "milk" ? im + add : im;
+        const newWater = addType === "water" ? iw + add : iw;
+        const newTotal = newMilk + newWater;
+        const newMilkPct = (newMilk / newTotal) * 100;
+        const newWaterPct = 100 - newMilkPct;
+        const gcd = (a: number, b: number): number => b < 0.001 ? a : gcd(b, a % b);
+        const g = gcd(newMilk, newWater);
+        const ratioM = newMilk / g;
+        const ratioW = newWater / g;
+        return {
+          lines: [
+            { label: "New Milk", value: `${fmt(newMilk)} ${unitShort}`, sub: `(${fmt(newMilkPct)}%)` },
+            { label: "New Water", value: `${fmt(newWater)} ${unitShort}`, sub: `(${fmt(newWaterPct)}%)` },
+            { label: "New Total", value: `${fmt(newTotal)} ${unitShort}`, sub: "" },
+            { label: "New Ratio (M:W)", value: `${fmt(ratioM, 2)} : ${fmt(ratioW, 2)}`, sub: "" },
+          ],
+          steps: [
+            `Initial: Milk = ${fmt(im)} ${unitShort}, Water = ${fmt(iw)} ${unitShort} → Total = ${fmt(initTotal)} ${unitShort}`,
+            `Initial milk % = ${fmt(im)}/${fmt(initTotal)} × 100 = ${fmt(initMilkPct)}%`,
+            `Adding ${fmt(add)} ${unitShort} of ${addType}...`,
+            `New Milk = ${fmt(newMilk)} ${unitShort}, New Water = ${fmt(newWater)} ${unitShort}`,
+            `New Total = ${fmt(newTotal)} ${unitShort}`,
+            `New milk % = ${fmt(newMilk)}/${fmt(newTotal)} × 100 = ${fmt(newMilkPct)}%`,
+            `New Milk : Water ≈ ${fmt(ratioM, 2)} : ${fmt(ratioW, 2)}`,
+          ],
+        };
+      }
+
+      case "alligation": {
+        const a = parseFloat(concA) || 0;
+        const b = parseFloat(concB) || 0;
+        const t = parseFloat(targetConc) || 0;
+        const tv = parseFloat(totalMixVol) || 0;
+        if (a === b) return { lines: [{ label: "Error", value: "Concentrations A and B must differ", sub: "" }], steps: [] };
+        if (t < Math.min(a, b) || t > Math.max(a, b)) return { lines: [{ label: "Error", value: "Target must be between A and B", sub: "" }], steps: [] };
+        const partA = Math.abs(t - b);
+        const partB = Math.abs(a - t);
+        const totalParts = partA + partB;
+        const volA = (tv * partA) / totalParts;
+        const volB = (tv * partB) / totalParts;
+        return {
+          lines: [
+            { label: "Solution A needed", value: `${fmt(volA)} ${unitShort}`, sub: `(${fmt(partA)} parts)` },
+            { label: "Solution B needed", value: `${fmt(volB)} ${unitShort}`, sub: `(${fmt(partB)} parts)` },
+            { label: "Final mixture", value: `${fmt(tv)} ${unitShort}`, sub: `at ${fmt(t)}% milk` },
+          ],
+          steps: [
+            `Solution A = ${fmt(a)}% milk, Solution B = ${fmt(b)}% milk`,
+            `Target = ${fmt(t)}% milk`,
+            `By alligation: Parts of A = |${fmt(t)} - ${fmt(b)}| = ${fmt(partA)}`,
+            `Parts of B = |${fmt(a)} - ${fmt(t)}| = ${fmt(partB)}`,
+            `Ratio A:B = ${fmt(partA)}:${fmt(partB)}`,
+            `Vol A = ${fmt(tv)} × ${fmt(partA)}/${fmt(totalParts)} = ${fmt(volA)} ${unitShort}`,
+            `Vol B = ${fmt(tv)} × ${fmt(partB)}/${fmt(totalParts)} = ${fmt(volB)} ${unitShort}`,
+          ],
+        };
+      }
+
+      case "replacement": {
+        const tv = parseFloat(replTotalVol) || 0;
+        const initConc = parseFloat(replMilkConc) || 0;
+        const rem = parseFloat(replRemoveVol) || 0;
+        const rounds = parseInt(replRounds) || 1;
+        if (tv === 0 || rem >= tv) return { lines: [{ label: "Error", value: "Remove volume must be less than total", sub: "" }], steps: [] };
+        const finalConc = initConc * Math.pow(1 - rem / tv, rounds);
+        const finalMilk = (finalConc / 100) * tv;
+        const finalWater = tv - finalMilk;
+        const lines = [
+          { label: "Final Milk %", value: `${fmt(finalConc)}%`, sub: "" },
+          { label: "Milk in mixture", value: `${fmt(finalMilk)} ${unitShort}`, sub: "" },
+          { label: "Water in mixture", value: `${fmt(finalWater)} ${unitShort}`, sub: "" },
+        ];
+        const steps: string[] = [
+          `Formula: Final % = Initial% × (1 − removed/total)^n`,
+          `= ${fmt(initConc)}% × (1 − ${fmt(rem)}/${fmt(tv)})^${rounds}`,
+          `= ${fmt(initConc)}% × (${fmt(1 - rem / tv, 4)})^${rounds}`,
+          `= ${fmt(finalConc)}%`,
+        ];
+        let conc = initConc;
+        for (let i = 1; i <= Math.min(rounds, 5); i++) {
+          conc = conc * (1 - rem / tv);
+          steps.push(`Round ${i}: ${fmt(initConc * Math.pow(1 - rem / tv, i))}% milk remains`);
+        }
+        if (rounds > 5) steps.push(`... (${rounds - 5} more rounds)`);
+        return { lines, steps };
+      }
+
+      case "find-concentration": {
+        const milk = parseFloat(fcMilk) || 0;
+        const water = parseFloat(fcWater) || 0;
+        const total = milk + water;
+        if (total === 0) return { lines: [], steps: [] };
+        const milkPct = (milk / total) * 100;
+        const waterPct = 100 - milkPct;
+        const gcd = (a: number, b: number): number => b < 0.001 ? a : gcd(b, a % b);
+        const g = gcd(milk, water);
+        const rm = milk / g;
+        const rw = water / g;
+        return {
+          lines: [
+            { label: "Milk %", value: `${fmt(milkPct)}%`, sub: `(${fmt(milk)} ${unitShort})` },
+            { label: "Water %", value: `${fmt(waterPct)}%`, sub: `(${fmt(water)} ${unitShort})` },
+            { label: "Total Volume", value: `${fmt(total)} ${unitShort}`, sub: "" },
+            { label: "Milk : Water ratio", value: `${fmt(rm, 2)} : ${fmt(rw, 2)}`, sub: "" },
+          ],
+          steps: [
+            `Milk = ${fmt(milk)} ${unitShort}, Water = ${fmt(water)} ${unitShort}`,
+            `Total = ${fmt(milk)} + ${fmt(water)} = ${fmt(total)} ${unitShort}`,
+            `Milk % = ${fmt(milk)}/${fmt(total)} × 100 = ${fmt(milkPct)}%`,
+            `Water % = ${fmt(water)}/${fmt(total)} × 100 = ${fmt(waterPct)}%`,
+            `Simplified ratio ≈ ${fmt(rm, 2)} : ${fmt(rw, 2)}`,
+          ],
+        };
+      }
+
+      case "cost-profit": {
+        const mc = parseFloat(milkCost) || 0;
+        const wc = parseFloat(waterCost) || 0;
+        const mr = parseFloat(cpMilkRatio) || 0;
+        const wr = parseFloat(cpWaterRatio) || 0;
+        const sp = parseFloat(sellingPrice) || 0;
+        const totalParts = mr + wr;
+        if (totalParts === 0) return { lines: [], steps: [] };
+        const milkFrac = mr / totalParts;
+        const waterFrac = wr / totalParts;
+        const costPerUnit = milkFrac * mc + waterFrac * wc;
+        const profit = sp - costPerUnit;
+        const profitPct = costPerUnit > 0 ? (profit / costPerUnit) * 100 : 0;
+        const milkPct = milkFrac * 100;
+        return {
+          lines: [
+            { label: "Cost per unit", value: `${currency}${fmt(costPerUnit)}`, sub: "" },
+            { label: "Selling price", value: `${currency}${fmt(sp)}`, sub: "" },
+            { label: "Profit per unit", value: `${currency}${fmt(profit)}`, sub: `(${fmt(profitPct)}%)` },
+            { label: "Milk in mixture", value: `${fmt(milkPct)}%`, sub: "" },
+          ],
+          steps: [
+            `Milk:Water = ${mr}:${wr}, Total parts = ${totalParts}`,
+            `Milk fraction = ${mr}/${totalParts} = ${fmt(milkFrac, 4)}`,
+            `Water fraction = ${wr}/${totalParts} = ${fmt(waterFrac, 4)}`,
+            `Cost = ${fmt(milkFrac, 4)} × ${currency}${fmt(mc)} + ${fmt(waterFrac, 4)} × ${currency}${fmt(wc)} = ${currency}${fmt(costPerUnit)}`,
+            `Profit = ${currency}${fmt(sp)} − ${currency}${fmt(costPerUnit)} = ${currency}${fmt(profit)}`,
+            `Profit % = ${fmt(profit)}/${fmt(costPerUnit)} × 100 = ${fmt(profitPct)}%`,
+          ],
+        };
+      }
+
+      case "cross-check": {
+        const milkConc = parseFloat(ccMilkConc) || 0;
+        const tv = parseFloat(ccTotalVol) || 0;
+        if (tv === 0) return { lines: [], steps: [] };
+        const milkAmt = (milkConc / 100) * tv;
+        const waterAmt = tv - milkAmt;
+        const addWaterForHalf = milkAmt - waterAmt;
+        const addWaterFor3_1 = milkAmt / 3 - waterAmt;
+        return {
+          lines: [
+            { label: "Milk in mixture", value: `${fmt(milkAmt)} ${unitShort}`, sub: `(${fmt(milkConc)}%)` },
+            { label: "Water in mixture", value: `${fmt(waterAmt)} ${unitShort}`, sub: `(${fmt(100 - milkConc)}%)` },
+            { label: "Water to add for 50:50", value: addWaterForHalf > 0 ? `${fmt(addWaterForHalf)} ${unitShort}` : "Already ≤50% milk", sub: "" },
+            { label: "Water to add for 3:1", value: addWaterFor3_1 > 0 ? `${fmt(addWaterFor3_1)} ${unitShort}` : "Already ≤75% milk", sub: "" },
+          ],
+          steps: [
+            `Milk concentration = ${fmt(milkConc)}%`,
+            `Total volume = ${fmt(tv)} ${unitShort}`,
+            `Milk = ${fmt(milkConc)}/100 × ${fmt(tv)} = ${fmt(milkAmt)} ${unitShort}`,
+            `Water = ${fmt(tv)} − ${fmt(milkAmt)} = ${fmt(waterAmt)} ${unitShort}`,
+            `To reach 50% milk: need equal milk & water → add ${addWaterForHalf > 0 ? fmt(addWaterForHalf) + " " + unitShort + " water" : "no water (already ≤50%)"}`,
+            `To reach Milk:Water = 3:1: need water = milk/3 → add ${addWaterFor3_1 > 0 ? fmt(addWaterFor3_1) + " " + unitShort + " water" : "no water (already ≤75%)"}`,
+          ],
+        };
+      }
+
+      default: return { lines: [], steps: [] };
+    }
+  }, [mode, unit, totalVol, milkRatio, waterRatio, addType, initialMilk, initialWater, addAmount, concA, concB, targetConc, totalMixVol, replTotalVol, replMilkConc, replRemoveVol, replRounds, fcMilk, fcWater, currency, milkCost, waterCost, cpMilkRatio, cpWaterRatio, sellingPrice, ccMilkConc, ccTotalVol]);
+
+  const modes = [
+    { id: "ratio-to-qty", label: "Ratio → Qty" },
+    { id: "add-liquid", label: "Add Liquid" },
+    { id: "alligation", label: "Alligation" },
+    { id: "replacement", label: "Replacement" },
+    { id: "find-concentration", label: "Find Conc." },
+    { id: "cost-profit", label: "Cost & Profit" },
+    { id: "cross-check", label: "Cross Check" },
+  ];
+
+  const volumeOpts = VOLUME_UNITS.map(u => ({ value: u.value, label: u.label }));
+
+  return (
+    <DesktopToolGrid
+      inputs={
+        <InputPanel title="Milk & Water Problem Solver" icon={GlassWater} iconColor="bg-sky-500">
+          <ModeToggle modes={modes} mode={mode} setMode={setMode} />
+
+          <SolverSelect label="Volume Unit" value={unit} onChange={setUnit} options={volumeOpts} />
+
+          <div className="space-y-3">
+            {mode === "ratio-to-qty" && (
+              <>
+                <SolverInput label={`Total Mixture (${unitShort})`} value={totalVol} onChange={setTotalVol} placeholder="e.g. 10" />
+                <div className="grid grid-cols-2 gap-3">
+                  <SolverInput label="Milk Ratio (parts)" value={milkRatio} onChange={setMilkRatio} placeholder="e.g. 3" />
+                  <SolverInput label="Water Ratio (parts)" value={waterRatio} onChange={setWaterRatio} placeholder="e.g. 2" />
+                </div>
+              </>
+            )}
+
+            {mode === "add-liquid" && (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <SolverInput label={`Initial Milk (${unitShort})`} value={initialMilk} onChange={setInitialMilk} placeholder="e.g. 6" />
+                  <SolverInput label={`Initial Water (${unitShort})`} value={initialWater} onChange={setInitialWater} placeholder="e.g. 4" />
+                </div>
+                <SolverSelect label="Add Which Liquid?" value={addType} onChange={setAddType} options={[
+                  { value: "water", label: "Add Water (dilution)" },
+                  { value: "milk", label: "Add Milk (enrichment)" },
+                ]} />
+                <SolverInput label={`Amount to Add (${unitShort})`} value={addAmount} onChange={setAddAmount} placeholder="e.g. 2" />
+              </>
+            )}
+
+            {mode === "alligation" && (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <SolverInput label="Solution A — Milk %" value={concA} onChange={setConcA} placeholder="e.g. 80" />
+                  <SolverInput label="Solution B — Milk %" value={concB} onChange={setConcB} placeholder="e.g. 20" />
+                </div>
+                <SolverInput label="Target Milk %" value={targetConc} onChange={setTargetConc} placeholder="e.g. 50" />
+                <SolverInput label={`Final Mixture Volume (${unitShort})`} value={totalMixVol} onChange={setTotalMixVol} placeholder="e.g. 10" />
+              </>
+            )}
+
+            {mode === "replacement" && (
+              <>
+                <SolverInput label={`Total Vessel Volume (${unitShort})`} value={replTotalVol} onChange={setReplTotalVol} placeholder="e.g. 10" />
+                <SolverInput label="Initial Milk %" value={replMilkConc} onChange={setReplMilkConc} placeholder="e.g. 100 for pure milk" />
+                <SolverInput label={`Volume Removed Each Round (${unitShort})`} value={replRemoveVol} onChange={setReplRemoveVol} placeholder="e.g. 2" />
+                <SolverInput label="Number of Rounds" value={replRounds} onChange={setReplRounds} placeholder="e.g. 3" />
+              </>
+            )}
+
+            {mode === "find-concentration" && (
+              <>
+                <SolverInput label={`Milk Quantity (${unitShort})`} value={fcMilk} onChange={setFcMilk} placeholder="e.g. 6" />
+                <SolverInput label={`Water Quantity (${unitShort})`} value={fcWater} onChange={setFcWater} placeholder="e.g. 4" />
+              </>
+            )}
+
+            {mode === "cost-profit" && (
+              <>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-muted-foreground">Currency</span>
+                  <CurrencySelector currency={currency} setCurrency={setCurrency} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <SolverInput label={`Milk Cost (per ${unitShort})`} value={milkCost} onChange={setMilkCost} placeholder="e.g. 50" />
+                  <SolverInput label={`Water Cost (per ${unitShort})`} value={waterCost} onChange={setWaterCost} placeholder="e.g. 0" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <SolverInput label="Milk parts" value={cpMilkRatio} onChange={setCpMilkRatio} placeholder="e.g. 3" />
+                  <SolverInput label="Water parts" value={cpWaterRatio} onChange={setCpWaterRatio} placeholder="e.g. 1" />
+                </div>
+                <SolverInput label={`Selling Price (per ${unitShort})`} value={sellingPrice} onChange={setSellingPrice} placeholder="e.g. 55" />
+              </>
+            )}
+
+            {mode === "cross-check" && (
+              <>
+                <SolverInput label="Milk Concentration (%)" value={ccMilkConc} onChange={setCcMilkConc} placeholder="e.g. 75" />
+                <SolverInput label={`Total Volume (${unitShort})`} value={ccTotalVol} onChange={setCcTotalVol} placeholder="e.g. 20" />
+              </>
+            )}
+          </div>
+        </InputPanel>
+      }
+      results={
+        <SolverCard>
+          <StepsDisplay steps={result.steps} />
+          {result.lines.map((line, i) => (
+            <div key={i} className="flex justify-between items-center p-3 bg-muted/30 rounded-xl">
+              <span className="text-sm font-semibold text-muted-foreground">{line.label}</span>
+              <div className="text-right">
+                <span className={`text-lg font-bold ${i === 0 ? "text-sky-400" : "text-foreground"}`} data-testid={`result-${i}`}>{line.value}</span>
+                {line.sub && <div className="text-xs text-muted-foreground">{line.sub}</div>}
+              </div>
+            </div>
+          ))}
         </SolverCard>
       }
     />
