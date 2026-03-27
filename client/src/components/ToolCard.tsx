@@ -129,7 +129,7 @@ export function SummaryCard({ label, value, accent, sub }: { label: string; valu
 export function BreakdownRow({
   label, value, dot, accent, bold,
 }: {
-  label: string; value: string; dot?: string; accent?: string; bold?: boolean;
+  label: string; value: React.ReactNode; dot?: string; accent?: string; bold?: boolean;
 }) {
   return (
     <div className="flex items-center justify-between py-2.5">

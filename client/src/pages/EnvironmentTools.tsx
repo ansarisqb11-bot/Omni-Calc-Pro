@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Globe, MapPin, Wind, Thermometer, Leaf, Cloud, Mountain } from "lucide-react";
-import { DesktopToolGrid, InputPanel, InputField, ResultDisplay } from "@/components/ToolCard";
+import { DesktopToolGrid, InputPanel, InputField, ResultPanel, SummaryCard, BreakdownRow } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
 
 type ToolType = "distance" | "scale" | "windchill" | "heatindex" | "carbon" | "aqi" | "altitude";
+
+const fmt = (n: number, d = 2) => (isFinite(n) && !isNaN(n) ? parseFloat(n.toFixed(d)).toLocaleString() : "—");
 
 export default function EnvironmentTools() {
   const [activeTool, setActiveTool] = useState<ToolType>("distance");
@@ -38,6 +40,7 @@ export default function EnvironmentTools() {
   );
 }
 
+// ─── 1. Earth Distance Calculator ─────────────────────────────────────────────
 function EarthDistanceCalculator() {
   const [lat1, setLat1] = useState("40.7128");
   const [lon1, setLon1] = useState("-74.0060");
@@ -58,6 +61,7 @@ function EarthDistanceCalculator() {
   const distance = calculateDistance();
   const miles = distance * 0.621371;
   const flightHours = distance / 850;
+  const nauticalMiles = distance * 0.539957;
 
   return (
     <DesktopToolGrid
@@ -76,17 +80,26 @@ function EarthDistanceCalculator() {
         </InputPanel>
       }
       results={
-        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-4">Distance</p>
-          <ResultDisplay label="Kilometers" value={`${distance.toFixed(1)} km`} highlight color="text-blue-400" />
-          <ResultDisplay label="Miles" value={`${miles.toFixed(1)} mi`} />
-          <ResultDisplay label="Est. Flight Time" value={`~${flightHours.toFixed(1)} hours`} />
-        </div>
+        <ResultPanel
+          label="Great-Circle Distance"
+          primary={`${fmt(distance, 1)} km`}
+          summaries={<>
+            <SummaryCard label="In Miles" value={`${fmt(miles, 1)} mi`} accent="text-emerald-500" />
+            <SummaryCard label="Est. Flight Time" value={`~${fmt(flightHours, 1)} hrs`} />
+          </>}
+          tip={`Uses the Haversine formula on Earth's radius (6,371 km). Actual routes may differ due to airspace restrictions.`}
+        >
+          <BreakdownRow label="Nautical Miles" value={`${fmt(nauticalMiles, 1)} nmi`} />
+          <BreakdownRow label="Flight Distance (@ 850 km/h)" value={`${fmt(flightHours, 2)} hours`} />
+          <BreakdownRow label="Point 1" value={`${lat1}°N, ${lon1}°E`} />
+          <BreakdownRow label="Point 2" value={`${lat2}°N, ${lon2}°E`} />
+        </ResultPanel>
       }
     />
   );
 }
 
+// ─── 2. Map Scale Converter ────────────────────────────────────────────────────
 function MapScaleConverter() {
   const [mapDistance, setMapDistance] = useState("5");
   const [scale, setScale] = useState("50000");
@@ -97,6 +110,7 @@ function MapScaleConverter() {
   const multipliers = { cm: 100000, mm: 1000000, inch: 63360 };
   const mult = multipliers[unit as keyof typeof multipliers];
   const realDistance = (map * s) / mult;
+  const realMeters = realDistance * 1000;
 
   return (
     <DesktopToolGrid
@@ -119,18 +133,25 @@ function MapScaleConverter() {
         </InputPanel>
       }
       results={
-        <div className="bg-card rounded-2xl border border-border shadow-sm p-5">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-4">Real Distance</p>
-          <div className="text-center py-6">
-            <div className="text-4xl font-bold text-amber-400 mb-2">{realDistance.toFixed(2)} km</div>
-            <p className="text-muted-foreground">{(realDistance * 1000).toFixed(0)} meters</p>
-          </div>
-        </div>
+        <ResultPanel
+          label="Real-World Distance"
+          primary={`${fmt(realDistance, 3)} km`}
+          summaries={<>
+            <SummaryCard label="Map Measurement" value={`${mapDistance} ${unit}`} accent="text-emerald-500" />
+            <SummaryCard label="Scale Ratio" value={`1 : ${parseInt(scale).toLocaleString()}`} />
+          </>}
+          tip={`Real distance = map distance × scale ratio. At 1:50,000, 1 cm on map = 500 meters in reality.`}
+        >
+          <BreakdownRow label="In Meters" value={`${fmt(realMeters, 0)} m`} />
+          <BreakdownRow label="In Miles" value={`${fmt(realDistance * 0.621371, 3)} mi`} />
+          <BreakdownRow label="In Feet" value={`${fmt(realDistance * 3280.84, 0)} ft`} />
+        </ResultPanel>
       }
     />
   );
 }
 
+// ─── 3. Wind Chill Calculator ──────────────────────────────────────────────────
 function WindChillCalculator() {
   const [temp, setTemp] = useState("0");
   const [windSpeed, setWindSpeed] = useState("20");
@@ -141,6 +162,10 @@ function WindChillCalculator() {
   const tempC = tempUnit === "F" ? (t - 32) * 5 / 9 : t;
   const windChill = 13.12 + 0.6215 * tempC - 11.37 * Math.pow(v, 0.16) + 0.3965 * tempC * Math.pow(v, 0.16);
   const feelsLike = tempUnit === "F" ? windChill * 9 / 5 + 32 : windChill;
+  const danger = feelsLike < -27 ? "Frostbite Danger" : feelsLike < -10 ? "Very Cold" : feelsLike < 0 ? "Cold" : "Manageable";
+  const dangerColor = feelsLike < -27 ? "text-red-400" : feelsLike < -10 ? "text-orange-400" : feelsLike < 0 ? "text-yellow-400" : "text-emerald-400";
+  const tempOpposite = tempUnit === "C" ? feelsLike * 9 / 5 + 32 : (feelsLike - 32) * 5 / 9;
+  const oppositeUnit = tempUnit === "C" ? "F" : "C";
 
   return (
     <DesktopToolGrid
@@ -155,24 +180,30 @@ function WindChillCalculator() {
               </button>
             ))}
           </div>
-          <InputField label={`Temperature (${tempUnit})`} value={temp} onChange={setTemp} type="number" />
+          <InputField label={`Air Temperature (°${tempUnit})`} value={temp} onChange={setTemp} type="number" />
           <InputField label="Wind Speed (km/h)" value={windSpeed} onChange={setWindSpeed} type="number" />
         </InputPanel>
       }
       results={
-        <div className="bg-card rounded-2xl border border-border shadow-sm p-5">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-4">Wind Chill</p>
-          <div className="text-center py-6">
-            <div className="text-4xl font-bold text-cyan-400 mb-2">{feelsLike.toFixed(1)}{tempUnit}</div>
-            <p className="text-muted-foreground">Feels Like</p>
-            {feelsLike < -27 && <p className="text-red-400 text-sm mt-2">Warning: Frostbite danger!</p>}
-          </div>
-        </div>
+        <ResultPanel
+          label="Feels Like Temperature"
+          primary={`${fmt(feelsLike, 1)}°${tempUnit}`}
+          summaries={<>
+            <SummaryCard label="Actual Temp" value={`${temp}°${tempUnit}`} accent="text-emerald-500" />
+            <SummaryCard label="Wind Speed" value={`${windSpeed} km/h`} />
+          </>}
+          tip={`Wind chill only applies below 10°C with wind > 4.8 km/h. Higher winds strip body heat faster.`}
+        >
+          <BreakdownRow label={`Feels Like (°${oppositeUnit})`} value={`${fmt(tempOpposite, 1)}°${oppositeUnit}`} />
+          <BreakdownRow label="Risk Level" value={<span className={dangerColor}>{danger}</span>} />
+          <BreakdownRow label="Formula" value="Environment Canada / NWS standard" />
+        </ResultPanel>
       }
     />
   );
 }
 
+// ─── 4. Heat Index Calculator ──────────────────────────────────────────────────
 function HeatIndexCalculator() {
   const [temp, setTemp] = useState("35");
   const [humidity, setHumidity] = useState("60");
@@ -186,16 +217,18 @@ function HeatIndexCalculator() {
     - 0.05481717 * h * h + 0.00122874 * tempF * tempF * h
     + 0.00085282 * tempF * h * h - 0.00000199 * tempF * tempF * h * h;
   const heatIndex = tempUnit === "C" ? (hi - 32) * 5 / 9 : hi;
+  const heatIndexF = tempUnit === "C" ? hi : heatIndex;
+  const oppositeUnit = tempUnit === "C" ? "F" : "C";
+  const heatIndexOpposite = tempUnit === "C" ? hi : (hi - 32) * 5 / 9;
 
-  const getWarning = (hi: number) => {
-    const hiF = tempUnit === "C" ? hi * 9 / 5 + 32 : hi;
-    if (hiF >= 130) return { level: "Extreme Danger", color: "text-red-600" };
-    if (hiF >= 105) return { level: "Danger", color: "text-red-500" };
-    if (hiF >= 90) return { level: "Extreme Caution", color: "text-orange-400" };
-    if (hiF >= 80) return { level: "Caution", color: "text-yellow-400" };
-    return { level: "Safe", color: "text-green-400" };
+  const getWarning = (hiF: number) => {
+    if (hiF >= 130) return { level: "Extreme Danger", color: "text-red-600", tip: "Heat stroke is imminent. Stay indoors with AC." };
+    if (hiF >= 105) return { level: "Danger", color: "text-red-500", tip: "Heat cramps and exhaustion likely. Limit outdoor activity." };
+    if (hiF >= 90) return { level: "Extreme Caution", color: "text-orange-400", tip: "Heat exhaustion possible. Drink water frequently." };
+    if (hiF >= 80) return { level: "Caution", color: "text-yellow-400", tip: "Fatigue possible with prolonged exposure. Stay hydrated." };
+    return { level: "Safe", color: "text-emerald-400", tip: "Conditions are comfortable for most people." };
   };
-  const warning = getWarning(heatIndex);
+  const warning = getWarning(heatIndexF);
 
   return (
     <DesktopToolGrid
@@ -210,23 +243,30 @@ function HeatIndexCalculator() {
               </button>
             ))}
           </div>
-          <InputField label={`Temperature (${tempUnit})`} value={temp} onChange={setTemp} type="number" />
-          <InputField label="Humidity (%)" value={humidity} onChange={setHumidity} type="number" />
+          <InputField label={`Temperature (°${tempUnit})`} value={temp} onChange={setTemp} type="number" />
+          <InputField label="Relative Humidity (%)" value={humidity} onChange={setHumidity} type="number" />
         </InputPanel>
       }
       results={
-        <div className="bg-card rounded-2xl border border-border shadow-sm p-5">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-4">Heat Index</p>
-          <div className="text-center py-6">
-            <div className="text-4xl font-bold text-orange-400 mb-2">{heatIndex.toFixed(1)}{tempUnit}</div>
-            <p className={`font-medium ${warning.color}`}>{warning.level}</p>
-          </div>
-        </div>
+        <ResultPanel
+          label="Heat Index (Feels Like)"
+          primary={`${fmt(heatIndex, 1)}°${tempUnit}`}
+          summaries={<>
+            <SummaryCard label="Risk Level" value={warning.level} accent="text-emerald-500" />
+            <SummaryCard label="Humidity" value={`${humidity}%`} />
+          </>}
+          tip={warning.tip}
+        >
+          <BreakdownRow label={`Heat Index (°${oppositeUnit})`} value={`${fmt(heatIndexOpposite, 1)}°${oppositeUnit}`} />
+          <BreakdownRow label="Actual Temperature" value={`${temp}°${tempUnit}`} />
+          <BreakdownRow label="Danger Zone" value={<span className={warning.color}>{warning.level}</span>} />
+        </ResultPanel>
       }
     />
   );
 }
 
+// ─── 5. Carbon Footprint ───────────────────────────────────────────────────────
 function CarbonFootprint() {
   const [carKm, setCarKm] = useState("50");
   const [electricity, setElectricity] = useState("300");
@@ -240,6 +280,8 @@ function CarbonFootprint() {
   const flightCO2 = fly * 1000;
   const totalCO2 = carCO2 + elecCO2 + flightCO2;
   const trees = totalCO2 / 21;
+  const worldAvg = 4700;
+  const vsAvg = ((totalCO2 - worldAvg) / worldAvg * 100);
 
   return (
     <DesktopToolGrid
@@ -251,75 +293,99 @@ function CarbonFootprint() {
         </InputPanel>
       }
       results={
-        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Annual CO2 Emissions</p>
-          <div className="text-center py-4 mb-2">
-            <div className="text-4xl font-bold text-green-400 mb-1">{(totalCO2 / 1000).toFixed(2)}</div>
-            <p className="text-muted-foreground text-sm">Tonnes CO2 per year</p>
-          </div>
-          <ResultDisplay label="Driving" value={`${(carCO2 / 1000).toFixed(2)} t`} />
-          <ResultDisplay label="Electricity" value={`${(elecCO2 / 1000).toFixed(2)} t`} />
-          <ResultDisplay label="Flights" value={`${(flightCO2 / 1000).toFixed(2)} t`} />
-          <ResultDisplay label="Trees to Offset" value={`${Math.ceil(trees)} trees`} color="text-green-400" />
-        </div>
+        <ResultPanel
+          label="Annual CO₂ Emissions"
+          primary={`${fmt(totalCO2 / 1000, 2)} t CO₂`}
+          summaries={<>
+            <SummaryCard label="Trees to Offset" value={`${Math.ceil(trees)} trees`} accent="text-emerald-500" />
+            <SummaryCard label="vs World Avg" value={vsAvg >= 0 ? `+${fmt(vsAvg, 1)}%` : `${fmt(vsAvg, 1)}%`} />
+          </>}
+          tip={`World avg is ~4.7 t CO₂/person/year. Planting trees, switching to renewables, and flying less are the biggest levers.`}
+        >
+          <BreakdownRow label="Driving" value={`${fmt(carCO2 / 1000, 2)} t CO₂`} />
+          <BreakdownRow label="Electricity" value={`${fmt(elecCO2 / 1000, 2)} t CO₂`} />
+          <BreakdownRow label="Flights" value={`${fmt(flightCO2 / 1000, 2)} t CO₂`} />
+          <BreakdownRow label="In Kg" value={`${fmt(totalCO2, 0)} kg`} />
+        </ResultPanel>
       }
     />
   );
 }
 
+// ─── 6. AQI Explainer ─────────────────────────────────────────────────────────
 function AQIExplainer() {
   const [aqi, setAqi] = useState("75");
 
   const aqiVal = parseInt(aqi) || 0;
   const getAQIInfo = (val: number) => {
-    if (val <= 50) return { level: "Good", color: "text-green-400", desc: "Air quality is satisfactory." };
-    if (val <= 100) return { level: "Moderate", color: "text-yellow-400", desc: "Acceptable; may be a concern for sensitive groups." };
-    if (val <= 150) return { level: "Unhealthy for Sensitive", color: "text-orange-400", desc: "Sensitive groups may experience effects." };
-    if (val <= 200) return { level: "Unhealthy", color: "text-red-400", desc: "Everyone may experience health effects." };
-    if (val <= 300) return { level: "Very Unhealthy", color: "text-purple-400", desc: "Health alert: serious effects possible." };
-    return { level: "Hazardous", color: "text-red-600", desc: "Emergency conditions." };
+    if (val <= 50) return { level: "Good", color: "text-green-400", desc: "Air quality is satisfactory.", tip: "Great conditions for outdoor activities." };
+    if (val <= 100) return { level: "Moderate", color: "text-yellow-400", desc: "Acceptable; may concern sensitive groups.", tip: "Sensitive individuals should consider limiting prolonged outdoor exertion." };
+    if (val <= 150) return { level: "Unhealthy (Sensitive)", color: "text-orange-400", desc: "Sensitive groups may experience effects.", tip: "People with asthma or heart disease should reduce outdoor activity." };
+    if (val <= 200) return { level: "Unhealthy", color: "text-red-400", desc: "Everyone may experience health effects.", tip: "Avoid prolonged outdoor exertion. Wear an N95 mask if going out." };
+    if (val <= 300) return { level: "Very Unhealthy", color: "text-purple-400", desc: "Serious health effects possible.", tip: "Health alert. Avoid outdoor activities entirely if possible." };
+    return { level: "Hazardous", color: "text-red-600", desc: "Emergency conditions. Everyone at risk.", tip: "Stay indoors. Seal windows and use air purifiers." };
   };
   const info = getAQIInfo(aqiVal);
+  const pct = Math.min(100, (aqiVal / 500) * 100);
 
   return (
     <DesktopToolGrid
       inputs={
         <InputPanel title="AQI Explainer" icon={Cloud} iconColor="bg-sky-500">
-          <InputField label="AQI Value" value={aqi} onChange={setAqi} type="number" min={0} max={500} />
+          <InputField label="AQI Value (0–500)" value={aqi} onChange={setAqi} type="number" min={0} max={500} />
+          <div className="mt-2 space-y-1">
+            {[
+              { range: "0–50", label: "Good", color: "bg-green-400" },
+              { range: "51–100", label: "Moderate", color: "bg-yellow-400" },
+              { range: "101–150", label: "Unhealthy (Sensitive)", color: "bg-orange-400" },
+              { range: "151–200", label: "Unhealthy", color: "bg-red-400" },
+              { range: "201–300", label: "Very Unhealthy", color: "bg-purple-400" },
+              { range: "301+", label: "Hazardous", color: "bg-red-600" },
+            ].map((r) => (
+              <div key={r.range} className="flex items-center gap-2 text-xs">
+                <div className={`w-2 h-2 rounded-full ${r.color}`} />
+                <span className="text-muted-foreground w-16">{r.range}</span>
+                <span>{r.label}</span>
+              </div>
+            ))}
+          </div>
         </InputPanel>
       }
       results={
-        <div className="bg-card rounded-2xl border border-border shadow-sm p-5">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-4">Air Quality</p>
-          <div className="text-center py-4 mb-4">
-            <div className={`text-4xl font-bold mb-2 ${info.color}`}>{aqiVal}</div>
-            <p className={`font-medium ${info.color}`}>{info.level}</p>
-            <p className="text-muted-foreground text-sm mt-2">{info.desc}</p>
-          </div>
-          <div className="space-y-1">
-            <div className="flex justify-between text-xs p-1"><span className="text-green-400">0–50</span><span>Good</span></div>
-            <div className="flex justify-between text-xs p-1"><span className="text-yellow-400">51–100</span><span>Moderate</span></div>
-            <div className="flex justify-between text-xs p-1"><span className="text-orange-400">101–150</span><span>Unhealthy (Sensitive)</span></div>
-            <div className="flex justify-between text-xs p-1"><span className="text-red-400">151–200</span><span>Unhealthy</span></div>
-            <div className="flex justify-between text-xs p-1"><span className="text-purple-400">201–300</span><span>Very Unhealthy</span></div>
-            <div className="flex justify-between text-xs p-1"><span className="text-red-600">301+</span><span>Hazardous</span></div>
-          </div>
-        </div>
+        <ResultPanel
+          label="Air Quality Index"
+          primary={`${aqiVal} — ${info.level}`}
+          summaries={<>
+            <SummaryCard label="Category" value={info.level} accent="text-emerald-500" />
+            <SummaryCard label="Hazard %" value={`${fmt(pct, 1)}% of max`} />
+          </>}
+          tip={info.tip}
+        >
+          <BreakdownRow label="Status" value={<span className={info.color}>{info.desc}</span>} />
+          <BreakdownRow label="Good Range" value="0 – 50" />
+          <BreakdownRow label="Hazardous At" value="> 300" />
+          <BreakdownRow label="Recommended Mask" value={aqiVal > 150 ? "N95 / KN95" : "Not required"} />
+        </ResultPanel>
       }
     />
   );
 }
 
+// ─── 7. Altitude vs Oxygen ────────────────────────────────────────────────────
 function AltitudeOxygen() {
   const [altitude, setAltitude] = useState("3000");
   const [unit, setUnit] = useState<"m" | "ft">("m");
 
   const alt = parseFloat(altitude) || 0;
   const altMeters = unit === "ft" ? alt * 0.3048 : alt;
+  const altFeet = unit === "m" ? alt / 0.3048 : alt;
   const seaLevelO2 = 20.9;
   const pressure = 101325 * Math.pow(1 - 2.25577e-5 * altMeters, 5.25588);
   const effectiveO2 = seaLevelO2 * (pressure / 101325);
   const spo2Estimate = Math.max(70, 98 - (altMeters / 500));
+  const pressureKpa = pressure / 1000;
+  const risk = altMeters > 5500 ? "Extreme — supplemental O₂ needed" : altMeters > 3500 ? "High — acclimatisation required" : altMeters > 2500 ? "Moderate — AMS risk" : "Low — generally safe";
+  const riskColor = altMeters > 5500 ? "text-red-500" : altMeters > 3500 ? "text-orange-400" : altMeters > 2500 ? "text-yellow-400" : "text-emerald-400";
 
   return (
     <DesktopToolGrid
@@ -338,16 +404,20 @@ function AltitudeOxygen() {
         </InputPanel>
       }
       results={
-        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Oxygen Levels</p>
-          <ResultDisplay label="Altitude" value={`${altMeters.toFixed(0)} m / ${(altMeters / 0.3048).toFixed(0)} ft`} />
-          <ResultDisplay label="Air Pressure" value={`${(pressure / 1000).toFixed(1)} kPa`} />
-          <ResultDisplay label="Effective O2" value={`${effectiveO2.toFixed(1)}%`} highlight color="text-indigo-400" />
-          <ResultDisplay label="Est. SpO2" value={`~${spo2Estimate.toFixed(0)}%`} color={spo2Estimate < 90 ? "text-red-400" : "text-green-400"} />
-          {altMeters > 2500 && (
-            <p className="text-yellow-400 text-xs mt-3">Warning: Risk of altitude sickness above 2500m</p>
-          )}
-        </div>
+        <ResultPanel
+          label="Effective Oxygen Level"
+          primary={`${fmt(effectiveO2, 1)}% O₂`}
+          summaries={<>
+            <SummaryCard label="Est. SpO₂" value={`~${fmt(spo2Estimate, 0)}%`} accent="text-emerald-500" />
+            <SummaryCard label="Air Pressure" value={`${fmt(pressureKpa, 1)} kPa`} />
+          </>}
+          tip={altMeters > 2500 ? `Above 2,500 m altitude sickness (AMS) risk rises. Acclimatise gradually — ascend no more than 300–500 m/day.` : `Below 2,500 m, oxygen levels are sufficient for most healthy adults without supplemental aid.`}
+        >
+          <BreakdownRow label="Altitude" value={`${fmt(altMeters, 0)} m / ${fmt(altFeet, 0)} ft`} />
+          <BreakdownRow label="Sea-Level O₂" value="20.9%" />
+          <BreakdownRow label="O₂ Reduction" value={`−${fmt(seaLevelO2 - effectiveO2, 1)}%`} />
+          <BreakdownRow label="Risk Level" value={<span className={riskColor}>{risk}</span>} />
+        </ResultPanel>
       }
     />
   );
