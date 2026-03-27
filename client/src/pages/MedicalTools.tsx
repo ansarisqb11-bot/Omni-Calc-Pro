@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Stethoscope, Pill, Heart, Droplets, Activity, Calculator, Flame, Eye } from "lucide-react";
-import { DesktopToolGrid, InputPanel, InputField, ResultDisplay, ToolButton } from "@/components/ToolCard";
+import { DesktopToolGrid, InputPanel, InputField, ResultPanel, SummaryCard, BreakdownRow, ModeSelector } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
 
 type ToolType = "dosage" | "ivdrip" | "heartrate" | "oxygen" | "calories" | "bsa" | "water" | "period" | "vision";
+
+const fmt = (n: number, d = 1) => (isFinite(n) && !isNaN(n) ? parseFloat(n.toFixed(d)).toLocaleString() : "—");
 
 export default function MedicalTools() {
   const [activeTool, setActiveTool] = useState<ToolType>("dosage");
@@ -53,23 +55,34 @@ function DosageCalculator() {
   const f = parseInt(frequency) || 1;
   const singleDose = w * d;
   const dailyDose = singleDose * f;
+  const weeklyDose = dailyDose * 7;
 
   return (
     <DesktopToolGrid
       inputs={
         <InputPanel title="Dosage Calculator" icon={Pill} iconColor="bg-blue-500">
-          <InputField label="Patient Weight (kg)" value={weight} onChange={setWeight} type="number" />
-          <InputField label="Dose per kg (mg/kg)" value={dosePerKg} onChange={setDosePerKg} type="number" />
-          <InputField label="Times per Day" value={frequency} onChange={setFrequency} type="number" />
+          <InputField label="Patient Weight (kg)" value={weight} onChange={setWeight} type="number" suffix="kg" />
+          <InputField label="Dose per kg (mg/kg)" value={dosePerKg} onChange={setDosePerKg} type="number" suffix="mg/kg" />
+          <InputField label="Times per Day" value={frequency} onChange={setFrequency} type="number" suffix="×/day" />
         </InputPanel>
       }
       results={
-        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Dosage</p>
-          <ResultDisplay label="Single Dose" value={`${singleDose.toFixed(1)} mg`} highlight color="text-blue-400" />
-          <ResultDisplay label="Daily Total" value={`${dailyDose.toFixed(1)} mg`} color="text-emerald-400" />
-          <p className="text-xs text-muted-foreground mt-4">Consult a healthcare provider before administering medication.</p>
-        </div>
+        <ResultPanel
+          label="Single Dose"
+          primary={`${fmt(singleDose, 1)} mg`}
+          summaries={<>
+            <SummaryCard label="Daily Total" value={`${fmt(dailyDose, 1)} mg`} accent="text-blue-500" />
+            <SummaryCard label="Weekly Total" value={`${fmt(weeklyDose, 0)} mg`} />
+          </>}
+          tip="Always verify dosages with a licensed pharmacist or healthcare provider before administration."
+        >
+          <BreakdownRow label="Patient Weight" value={`${w} kg`} dot="bg-blue-400" />
+          <BreakdownRow label="Dose per kg" value={`${d} mg/kg`} dot="bg-amber-400" />
+          <BreakdownRow label="Frequency" value={`${f}× per day`} dot="bg-purple-400" />
+          <BreakdownRow label="Single Dose" value={`${fmt(singleDose, 1)} mg`} dot="bg-green-500" bold />
+          <BreakdownRow label="Daily Total" value={`${fmt(dailyDose, 1)} mg`} dot="bg-orange-400" bold />
+          <BreakdownRow label="Weekly Total" value={`${fmt(weeklyDose, 0)} mg`} dot="bg-red-400" />
+        </ResultPanel>
       }
     />
   );
@@ -85,33 +98,46 @@ function IVDripCalculator() {
   const df = parseFloat(dropFactor) || 20;
   const dropsPerMin = (v * df) / (t * 60);
   const mlPerHour = v / t;
+  const mlPerMin = mlPerHour / 60;
 
   return (
     <DesktopToolGrid
       inputs={
         <InputPanel title="IV Drip Rate" icon={Droplets} iconColor="bg-cyan-500">
-          <InputField label="Volume (mL)" value={volume} onChange={setVolume} type="number" />
-          <InputField label="Time (hours)" value={time} onChange={setTime} type="number" />
+          <InputField label="Volume (mL)" value={volume} onChange={setVolume} type="number" suffix="mL" />
+          <InputField label="Time (hours)" value={time} onChange={setTime} type="number" suffix="hr" />
           <div>
             <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Drop Factor</label>
             <div className="flex gap-2">
               {["10", "15", "20", "60"].map((df) => (
                 <button key={df} onClick={() => setDropFactor(df)}
-                  className={`flex-1 py-2 rounded-lg text-sm ${dropFactor === df ? "bg-cyan-500 text-white" : "bg-muted text-muted-foreground"}`}
+                  className={`flex-1 py-2 rounded-lg text-sm font-semibold ${dropFactor === df ? "bg-cyan-500 text-white" : "bg-muted text-muted-foreground"}`}
                   data-testid={`button-df-${df}`}>
-                  {df} gtt/mL
+                  {df}
                 </button>
               ))}
             </div>
+            <p className="text-[10px] text-muted-foreground mt-1">gtt/mL</p>
           </div>
         </InputPanel>
       }
       results={
-        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Flow Rate</p>
-          <ResultDisplay label="Drops per Minute" value={`${dropsPerMin.toFixed(1)} gtt/min`} highlight color="text-cyan-400" />
-          <ResultDisplay label="mL per Hour" value={`${mlPerHour.toFixed(1)} mL/hr`} color="text-blue-400" />
-        </div>
+        <ResultPanel
+          label="Drip Rate"
+          primary={`${fmt(dropsPerMin, 0)} gtt/min`}
+          summaries={<>
+            <SummaryCard label="Flow Rate" value={`${fmt(mlPerHour, 0)} mL/hr`} accent="text-cyan-500" />
+            <SummaryCard label="Drop Factor" value={`${dropFactor} gtt/mL`} />
+          </>}
+          tip={`At ${fmt(dropsPerMin, 0)} drops/min, the ${v} mL bag will infuse in exactly ${t} hour${t !== 1 ? "s" : ""}.`}
+        >
+          <BreakdownRow label="Total Volume" value={`${v} mL`} dot="bg-cyan-400" />
+          <BreakdownRow label="Infusion Time" value={`${t} hour${t !== 1 ? "s" : ""}`} dot="bg-blue-400" />
+          <BreakdownRow label="Drop Factor" value={`${dropFactor} gtt/mL`} dot="bg-purple-400" />
+          <BreakdownRow label="mL per Minute" value={`${fmt(mlPerMin, 2)} mL/min`} dot="bg-amber-400" />
+          <BreakdownRow label="mL per Hour" value={`${fmt(mlPerHour, 1)} mL/hr`} dot="bg-green-500" bold />
+          <BreakdownRow label="Drops per Minute" value={`${fmt(dropsPerMin, 0)} gtt/min`} dot="bg-orange-400" bold />
+        </ResultPanel>
       }
     />
   );
@@ -127,39 +153,44 @@ function HeartRateZones() {
   const hrr = maxHR - rhr;
 
   const zones = [
-    { name: "Zone 1 (Recovery)", min: 0.5, max: 0.6, color: "text-gray-400" },
-    { name: "Zone 2 (Fat Burn)", min: 0.6, max: 0.7, color: "text-blue-400" },
-    { name: "Zone 3 (Cardio)", min: 0.7, max: 0.8, color: "text-green-400" },
-    { name: "Zone 4 (Anaerobic)", min: 0.8, max: 0.9, color: "text-orange-400" },
-    { name: "Zone 5 (Max)", min: 0.9, max: 1.0, color: "text-red-400" },
+    { name: "Zone 1 — Recovery", min: 0.5, max: 0.6, dot: "bg-gray-400", color: "text-gray-400" },
+    { name: "Zone 2 — Fat Burn", min: 0.6, max: 0.7, dot: "bg-blue-400", color: "text-blue-400" },
+    { name: "Zone 3 — Cardio", min: 0.7, max: 0.8, dot: "bg-green-400", color: "text-green-400" },
+    { name: "Zone 4 — Anaerobic", min: 0.8, max: 0.9, dot: "bg-orange-400", color: "text-orange-400" },
+    { name: "Zone 5 — Max", min: 0.9, max: 1.0, dot: "bg-red-500", color: "text-red-400" },
   ];
+
+  const cardioMin = Math.round(rhr + hrr * 0.7);
+  const cardioMax = Math.round(rhr + hrr * 0.8);
 
   return (
     <DesktopToolGrid
       inputs={
         <InputPanel title="Heart Rate Zones" icon={Heart} iconColor="bg-red-500">
-          <InputField label="Age" value={age} onChange={setAge} type="number" />
-          <InputField label="Resting Heart Rate (bpm)" value={restingHR} onChange={setRestingHR} type="number" />
+          <InputField label="Age" value={age} onChange={setAge} type="number" suffix="yrs" />
+          <InputField label="Resting Heart Rate" value={restingHR} onChange={setRestingHR} type="number" suffix="bpm" />
         </InputPanel>
       }
       results={
-        <div className="bg-card rounded-2xl border border-border shadow-sm p-5">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Training Zones</p>
-          <div className="flex justify-between p-2 bg-muted/30 rounded-lg mb-3">
-            <span className="text-muted-foreground">Max Heart Rate</span>
-            <span className="font-bold text-red-400">{maxHR} bpm</span>
-          </div>
-          <div className="space-y-2">
-            {zones.map((zone) => (
-              <div key={zone.name} className="flex justify-between items-center p-2 bg-muted/30 rounded-lg">
-                <span className={`text-sm ${zone.color}`}>{zone.name}</span>
-                <span className="font-mono text-sm">
-                  {Math.round(rhr + hrr * zone.min)} – {Math.round(rhr + hrr * zone.max)} bpm
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+        <ResultPanel
+          label="Max Heart Rate"
+          primary={`${maxHR} bpm`}
+          summaries={<>
+            <SummaryCard label="Heart Rate Reserve" value={`${hrr} bpm`} accent="text-red-500" />
+            <SummaryCard label="Resting HR" value={`${rhr} bpm`} />
+          </>}
+          tip={`Your cardio zone is ${cardioMin}–${cardioMax} bpm. Training here improves cardiovascular endurance most efficiently.`}
+        >
+          {zones.map((zone) => (
+            <BreakdownRow
+              key={zone.name}
+              label={zone.name}
+              value={`${Math.round(rhr + hrr * zone.min)}–${Math.round(rhr + hrr * zone.max)} bpm`}
+              dot={zone.dot}
+              accent={zone.color}
+            />
+          ))}
+        </ResultPanel>
       }
     />
   );
@@ -178,21 +209,24 @@ function OxygenFlowRate() {
 
   const device = devices[deviceType as keyof typeof devices];
   const targetFiO2 = parseFloat(fio2) || 21;
-  const flowRate = deviceType === "nasal"
+  const rawFlow = deviceType === "nasal"
     ? Math.max(1, Math.ceil((targetFiO2 - 21) / 4))
     : Math.ceil((targetFiO2 - 21) / 3);
+  const flowRate = Math.min(rawFlow, device.maxFlow);
+  const roomAir = 21;
+  const oxygenIncrease = targetFiO2 - roomAir;
 
   return (
     <DesktopToolGrid
       inputs={
         <InputPanel title="Oxygen Flow Rate" icon={Activity} iconColor="bg-sky-500">
-          <InputField label="Target FiO2 (%)" value={fio2} onChange={setFio2} type="number" min={21} max={100} />
+          <InputField label="Target FiO2 (%)" value={fio2} onChange={setFio2} type="number" suffix="%" min={21} max={100} />
           <div>
             <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Device Type</label>
             <div className="space-y-2">
               {Object.entries(devices).map(([key, val]) => (
                 <button key={key} onClick={() => setDeviceType(key)}
-                  className={`w-full text-left p-3 rounded-xl text-sm transition-all ${deviceType === key ? "bg-sky-500 text-white" : "bg-muted text-muted-foreground"}`}
+                  className={`w-full text-left p-3 rounded-xl text-sm font-medium transition-all ${deviceType === key ? "bg-sky-500 text-white" : "bg-muted text-muted-foreground"}`}
                   data-testid={`button-device-${key}`}>
                   {val.name}
                 </button>
@@ -202,14 +236,22 @@ function OxygenFlowRate() {
         </InputPanel>
       }
       results={
-        <div className="bg-card rounded-2xl border border-border shadow-sm p-5">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-4">Flow Rate</p>
-          <div className="text-center py-6">
-            <div className="text-5xl font-bold text-sky-400 mb-2">{Math.min(flowRate, device.maxFlow)} L/min</div>
-            <p className="text-muted-foreground">Recommended for {device.name}</p>
-            <p className="text-xs text-muted-foreground mt-2">Max: {device.maxFlow} L/min</p>
-          </div>
-        </div>
+        <ResultPanel
+          label="Recommended Flow"
+          primary={`${flowRate} L/min`}
+          summaries={<>
+            <SummaryCard label="Target FiO₂" value={`${targetFiO2}%`} accent="text-sky-500" />
+            <SummaryCard label="Max for Device" value={`${device.maxFlow} L/min`} />
+          </>}
+          tip={`${device.name} at ${flowRate} L/min delivers approximately ${targetFiO2}% oxygen, increasing FiO₂ by ${oxygenIncrease}% above room air.`}
+        >
+          <BreakdownRow label="Device" value={device.name} dot="bg-sky-400" />
+          <BreakdownRow label="Room Air FiO₂" value={`${roomAir}%`} dot="bg-gray-400" />
+          <BreakdownRow label="Target FiO₂" value={`${targetFiO2}%`} dot="bg-blue-400" />
+          <BreakdownRow label="FiO₂ Increase" value={`+${oxygenIncrease}%`} dot="bg-amber-400" />
+          <BreakdownRow label="Max Device Flow" value={`${device.maxFlow} L/min`} dot="bg-purple-400" />
+          <BreakdownRow label="Recommended Flow" value={`${flowRate} L/min`} dot="bg-green-500" bold />
+        </ResultPanel>
       }
     />
   );
@@ -233,19 +275,21 @@ function CaloriesBurned() {
   const d = parseFloat(duration) || 30;
   const met = activities[activity as keyof typeof activities].met;
   const calories = (met * w * d) / 60;
+  const calPerMin = calories / d;
+  const calPerHour = calPerMin * 60;
 
   return (
     <DesktopToolGrid
       inputs={
         <InputPanel title="Calories Burned" icon={Flame} iconColor="bg-orange-500">
-          <InputField label="Weight (kg)" value={weight} onChange={setWeight} type="number" />
-          <InputField label="Duration (minutes)" value={duration} onChange={setDuration} type="number" />
+          <InputField label="Weight (kg)" value={weight} onChange={setWeight} type="number" suffix="kg" />
+          <InputField label="Duration (minutes)" value={duration} onChange={setDuration} type="number" suffix="min" />
           <div>
             <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Activity</label>
             <div className="grid grid-cols-2 gap-2">
               {Object.entries(activities).map(([key, val]) => (
                 <button key={key} onClick={() => setActivity(key)}
-                  className={`p-2 rounded-lg text-sm transition-all ${activity === key ? "bg-orange-500 text-white" : "bg-muted text-muted-foreground"}`}
+                  className={`p-2.5 rounded-xl text-sm font-medium transition-all ${activity === key ? "bg-orange-500 text-white" : "bg-muted text-muted-foreground"}`}
                   data-testid={`button-activity-${key}`}>
                   {val.name}
                 </button>
@@ -255,13 +299,22 @@ function CaloriesBurned() {
         </InputPanel>
       }
       results={
-        <div className="bg-card rounded-2xl border border-border shadow-sm p-5">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-4">Result</p>
-          <div className="text-center py-6">
-            <div className="text-5xl font-bold text-orange-400 mb-2">{Math.round(calories)}</div>
-            <p className="text-muted-foreground">Calories Burned</p>
-          </div>
-        </div>
+        <ResultPanel
+          label="Calories Burned"
+          primary={`${Math.round(calories)} kcal`}
+          summaries={<>
+            <SummaryCard label="Per Hour" value={`${Math.round(calPerHour)} kcal`} accent="text-orange-500" />
+            <SummaryCard label="MET Value" value={`${met}`} sub="Metabolic Equivalent" />
+          </>}
+          tip={`${activities[activity as keyof typeof activities].name} burns ~${Math.round(calPerMin)} kcal/min for a ${w} kg person. Equivalent to ${fmt(calories / 9, 1)} g of fat.`}
+        >
+          <BreakdownRow label="Body Weight" value={`${w} kg`} dot="bg-orange-400" />
+          <BreakdownRow label="Activity" value={activities[activity as keyof typeof activities].name} dot="bg-amber-400" />
+          <BreakdownRow label="MET Value" value={`${met}`} dot="bg-purple-400" />
+          <BreakdownRow label="Duration" value={`${d} minutes`} dot="bg-blue-400" />
+          <BreakdownRow label="Per Minute" value={`${fmt(calPerMin, 1)} kcal`} dot="bg-green-400" />
+          <BreakdownRow label="Total Burned" value={`${Math.round(calories)} kcal`} dot="bg-red-400" bold />
+        </ResultPanel>
       }
     />
   );
@@ -282,19 +335,23 @@ function BSACalculator() {
   };
 
   const bsa = formulas[formula].calc();
+  const bmiApprox = w / Math.pow(h / 100, 2);
+  const normalMin = 1.5;
+  const normalMax = 2.2;
+  const status = bsa < normalMin ? "Below avg" : bsa > normalMax ? "Above avg" : "Normal range";
 
   return (
     <DesktopToolGrid
       inputs={
         <InputPanel title="Body Surface Area" icon={Calculator} iconColor="bg-purple-500">
-          <InputField label="Height (cm)" value={height} onChange={setHeight} type="number" />
-          <InputField label="Weight (kg)" value={weight} onChange={setWeight} type="number" />
+          <InputField label="Height (cm)" value={height} onChange={setHeight} type="number" suffix="cm" />
+          <InputField label="Weight (kg)" value={weight} onChange={setWeight} type="number" suffix="kg" />
           <div>
             <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Formula</label>
             <div className="flex gap-2">
               {Object.entries(formulas).map(([key, val]) => (
                 <button key={key} onClick={() => setFormula(key)}
-                  className={`flex-1 py-2 rounded-lg text-sm ${formula === key ? "bg-purple-500 text-white" : "bg-muted text-muted-foreground"}`}
+                  className={`flex-1 py-2 rounded-xl text-xs font-bold ${formula === key ? "bg-purple-500 text-white" : "bg-muted text-muted-foreground"}`}
                   data-testid={`button-formula-${key}`}>
                   {val.name}
                 </button>
@@ -304,13 +361,22 @@ function BSACalculator() {
         </InputPanel>
       }
       results={
-        <div className="bg-card rounded-2xl border border-border shadow-sm p-5">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-4">BSA</p>
-          <div className="text-center py-6">
-            <div className="text-5xl font-bold text-purple-400 mb-2">{bsa.toFixed(2)} m²</div>
-            <p className="text-muted-foreground">Body Surface Area</p>
-          </div>
-        </div>
+        <ResultPanel
+          label="Body Surface Area"
+          primary={`${bsa.toFixed(2)} m²`}
+          summaries={<>
+            <SummaryCard label="Status" value={status} accent={bsa >= normalMin && bsa <= normalMax ? "text-green-500" : "text-amber-500"} />
+            <SummaryCard label="BMI (approx)" value={`${bmiApprox.toFixed(1)}`} sub="kg/m²" />
+          </>}
+          tip={`BSA ${bsa.toFixed(2)} m² using ${formulas[formula].name} formula. Normal adult range is 1.5–2.2 m². Used for drug dosing in oncology.`}
+        >
+          <BreakdownRow label="Height" value={`${h} cm`} dot="bg-purple-400" />
+          <BreakdownRow label="Weight" value={`${w} kg`} dot="bg-blue-400" />
+          <BreakdownRow label="Formula" value={formulas[formula].name} dot="bg-amber-400" />
+          <BreakdownRow label="Normal Adult Range" value="1.5–2.2 m²" dot="bg-green-400" />
+          <BreakdownRow label="BSA Result" value={`${bsa.toFixed(2)} m²`} dot="bg-pink-400" bold />
+          <BreakdownRow label="Status" value={status} dot="bg-orange-400" accent={bsa >= normalMin && bsa <= normalMax ? "text-green-400" : "text-amber-400"} />
+        </ResultPanel>
       }
     />
   );
@@ -322,24 +388,26 @@ function WaterIntakeCalculator() {
   const [climate, setClimate] = useState("temperate");
 
   const w = parseFloat(weight) || 70;
-  const activityFactors = { sedentary: 30, moderate: 35, active: 40, intense: 45 };
-  const climateFactors = { cold: 0.9, temperate: 1.0, hot: 1.2, humid: 1.3 };
+  const activityFactors: Record<string, number> = { sedentary: 30, moderate: 35, active: 40, intense: 45 };
+  const climateFactors: Record<string, number> = { cold: 0.9, temperate: 1.0, hot: 1.2, humid: 1.3 };
 
-  const baseIntake = w * activityFactors[activityLevel as keyof typeof activityFactors];
-  const adjustedIntake = baseIntake * climateFactors[climate as keyof typeof climateFactors];
+  const baseIntake = w * activityFactors[activityLevel];
+  const adjustedIntake = baseIntake * climateFactors[climate];
   const glasses = Math.ceil(adjustedIntake / 250);
+  const liters = adjustedIntake / 1000;
+  const bottles = adjustedIntake / 500;
 
   return (
     <DesktopToolGrid
       inputs={
         <InputPanel title="Water Intake" icon={Droplets} iconColor="bg-blue-500">
-          <InputField label="Weight (kg)" value={weight} onChange={setWeight} type="number" />
+          <InputField label="Weight (kg)" value={weight} onChange={setWeight} type="number" suffix="kg" />
           <div>
             <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Activity Level</label>
             <div className="grid grid-cols-2 gap-2">
               {Object.keys(activityFactors).map((level) => (
                 <button key={level} onClick={() => setActivityLevel(level)}
-                  className={`p-2 rounded-lg text-sm capitalize ${activityLevel === level ? "bg-blue-500 text-white" : "bg-muted text-muted-foreground"}`}
+                  className={`p-2.5 rounded-xl text-sm font-medium capitalize ${activityLevel === level ? "bg-blue-500 text-white" : "bg-muted text-muted-foreground"}`}
                   data-testid={`button-activity-${level}`}>
                   {level}
                 </button>
@@ -351,7 +419,7 @@ function WaterIntakeCalculator() {
             <div className="grid grid-cols-2 gap-2">
               {Object.keys(climateFactors).map((c) => (
                 <button key={c} onClick={() => setClimate(c)}
-                  className={`p-2 rounded-lg text-sm capitalize ${climate === c ? "bg-blue-500 text-white" : "bg-muted text-muted-foreground"}`}
+                  className={`p-2.5 rounded-xl text-sm font-medium capitalize ${climate === c ? "bg-blue-500 text-white" : "bg-muted text-muted-foreground"}`}
                   data-testid={`button-climate-${c}`}>
                   {c}
                 </button>
@@ -361,12 +429,22 @@ function WaterIntakeCalculator() {
         </InputPanel>
       }
       results={
-        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Daily Intake</p>
-          <ResultDisplay label="Recommended" value={`${Math.round(adjustedIntake)} mL`} highlight color="text-blue-400" />
-          <ResultDisplay label="Glasses (250 mL each)" value={`${glasses} glasses`} />
-          <ResultDisplay label="Liters" value={`${(adjustedIntake / 1000).toFixed(1)} L`} />
-        </div>
+        <ResultPanel
+          label="Daily Water Intake"
+          primary={`${Math.round(adjustedIntake)} mL`}
+          summaries={<>
+            <SummaryCard label="Glasses (250 mL)" value={`${glasses} glasses`} accent="text-blue-500" />
+            <SummaryCard label="Bottles (500 mL)" value={`${fmt(bottles, 1)} bottles`} />
+          </>}
+          tip={`A ${activityLevel} ${w} kg person in a ${climate} climate needs ~${liters.toFixed(1)} L/day. Spread intake evenly — aim for a glass every 1–2 hours.`}
+        >
+          <BreakdownRow label="Body Weight" value={`${w} kg`} dot="bg-blue-400" />
+          <BreakdownRow label="Activity Level" value={activityLevel.charAt(0).toUpperCase() + activityLevel.slice(1)} dot="bg-cyan-400" />
+          <BreakdownRow label="Climate" value={climate.charAt(0).toUpperCase() + climate.slice(1)} dot="bg-sky-400" />
+          <BreakdownRow label="Base Intake" value={`${Math.round(baseIntake)} mL`} dot="bg-amber-400" />
+          <BreakdownRow label="Climate Adjustment" value={`×${climateFactors[climate]}`} dot="bg-purple-400" />
+          <BreakdownRow label="Recommended" value={`${liters.toFixed(1)} L / ${Math.round(adjustedIntake)} mL`} dot="bg-green-500" bold />
+        </ResultPanel>
       }
     />
   );
@@ -381,6 +459,7 @@ function PeriodCyclePredictor() {
     if (!lastPeriod) return null;
     const lmp = new Date(lastPeriod);
     const cycle = parseInt(cycleLength) || 28;
+    const pLen = parseInt(periodLength) || 5;
 
     const nextPeriod = new Date(lmp);
     nextPeriod.setDate(nextPeriod.getDate() + cycle);
@@ -394,29 +473,46 @@ function PeriodCyclePredictor() {
     const fertileEnd = new Date(ovulation);
     fertileEnd.setDate(fertileEnd.getDate() + 1);
 
-    return { nextPeriod, ovulation, fertileStart, fertileEnd };
+    const periodEnd = new Date(lmp);
+    periodEnd.setDate(periodEnd.getDate() + pLen);
+
+    const daysUntilNext = Math.round((nextPeriod.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+
+    return { nextPeriod, ovulation, fertileStart, fertileEnd, periodEnd, daysUntilNext, cycle, pLen };
   };
 
   const dates = calculateDates();
+  const fmtDate = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
   return (
     <DesktopToolGrid
       inputs={
         <InputPanel title="Period Cycle Predictor" icon={Activity} iconColor="bg-pink-500">
-          <InputField label="Last Period Start" value={lastPeriod} onChange={setLastPeriod} type="date" />
-          <InputField label="Cycle Length (days)" value={cycleLength} onChange={setCycleLength} type="number" />
-          <InputField label="Period Length (days)" value={periodLength} onChange={setPeriodLength} type="number" />
+          <InputField label="Last Period Start Date" value={lastPeriod} onChange={setLastPeriod} type="date" />
+          <InputField label="Cycle Length (days)" value={cycleLength} onChange={setCycleLength} type="number" suffix="days" />
+          <InputField label="Period Length (days)" value={periodLength} onChange={setPeriodLength} type="number" suffix="days" />
         </InputPanel>
       }
       results={
         dates ? (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-            className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
-            <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Predictions</p>
-            <ResultDisplay label="Next Period" value={dates.nextPeriod.toLocaleDateString()} highlight color="text-pink-400" />
-            <ResultDisplay label="Ovulation" value={dates.ovulation.toLocaleDateString()} color="text-purple-400" />
-            <ResultDisplay label="Fertile Window" value={`${dates.fertileStart.toLocaleDateString()} – ${dates.fertileEnd.toLocaleDateString()}`} />
-            <p className="text-xs text-muted-foreground mt-4">This is an estimate. Consult a healthcare provider for accurate tracking.</p>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <ResultPanel
+              label="Next Period"
+              primary={fmtDate(dates.nextPeriod)}
+              primarySub={dates.daysUntilNext >= 0 ? `in ${dates.daysUntilNext} days` : `${Math.abs(dates.daysUntilNext)} days ago`}
+              summaries={<>
+                <SummaryCard label="Ovulation" value={fmtDate(dates.ovulation)} accent="text-pink-500" />
+                <SummaryCard label="Cycle Length" value={`${dates.cycle} days`} />
+              </>}
+              tip="This is an estimate based on average cycle patterns. Consult a healthcare provider for accurate tracking and medical advice."
+            >
+              <BreakdownRow label="Last Period Start" value={fmtDate(new Date(lastPeriod))} dot="bg-pink-400" />
+              <BreakdownRow label="Period End (est.)" value={fmtDate(dates.periodEnd)} dot="bg-rose-400" />
+              <BreakdownRow label="Ovulation Day" value={fmtDate(dates.ovulation)} dot="bg-purple-400" bold />
+              <BreakdownRow label="Fertile Window Start" value={fmtDate(dates.fertileStart)} dot="bg-amber-400" />
+              <BreakdownRow label="Fertile Window End" value={fmtDate(dates.fertileEnd)} dot="bg-orange-400" />
+              <BreakdownRow label="Next Period" value={fmtDate(dates.nextPeriod)} dot="bg-green-500" bold />
+            </ResultPanel>
           </motion.div>
         ) : (
           <div className="bg-card rounded-2xl border border-border shadow-sm p-5 flex items-center justify-center min-h-[200px]">
@@ -432,6 +528,7 @@ function VisionConverter() {
   const [sphereOD, setSphereOD] = useState("-2.00");
   const [cylinderOD, setCylinderOD] = useState("-0.50");
   const [axisOD, setAxisOD] = useState("180");
+  const [mode, setMode] = useState<"minus" | "plus">("minus");
 
   const sphere = parseFloat(sphereOD) || 0;
   const cylinder = parseFloat(cylinderOD) || 0;
@@ -441,23 +538,42 @@ function VisionConverter() {
   const newCylinder = -cylinder;
   const newAxis = axis <= 90 ? axis + 90 : axis - 90;
 
+  const fmtD = (n: number) => (n >= 0 ? `+${n.toFixed(2)}` : n.toFixed(2));
+  const seLabel = (n: number) => Math.abs(n) < 0.01 ? "Plano" : Math.abs(n) > 6 ? "High" : Math.abs(n) > 3 ? "Moderate" : "Mild";
+
   return (
     <DesktopToolGrid
       inputs={
         <InputPanel title="Vision Prescription" icon={Eye} iconColor="bg-indigo-500">
           <p className="text-sm text-muted-foreground">Convert between plus and minus cylinder notation</p>
-          <InputField label="Sphere (D)" value={sphereOD} onChange={setSphereOD} type="number" step={0.25} />
-          <InputField label="Cylinder (D)" value={cylinderOD} onChange={setCylinderOD} type="number" step={0.25} />
-          <InputField label="Axis (degrees)" value={axisOD} onChange={setAxisOD} type="number" min={1} max={180} />
+          <ModeSelector
+            modes={[{ id: "minus", label: "Minus Cylinder" }, { id: "plus", label: "Plus Cylinder" }]}
+            active={mode}
+            onChange={v => setMode(v as "minus" | "plus")}
+          />
+          <InputField label="Sphere (D)" value={sphereOD} onChange={setSphereOD} type="number" step={0.25} suffix="D" />
+          <InputField label="Cylinder (D)" value={cylinderOD} onChange={setCylinderOD} type="number" step={0.25} suffix="D" />
+          <InputField label="Axis (degrees)" value={axisOD} onChange={setAxisOD} type="number" min={1} max={180} suffix="°" />
         </InputPanel>
       }
       results={
-        <div className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Converted</p>
-          <ResultDisplay label="Sphere" value={newSphere >= 0 ? `+${newSphere.toFixed(2)}` : newSphere.toFixed(2)} highlight color="text-indigo-400" />
-          <ResultDisplay label="Cylinder" value={newCylinder >= 0 ? `+${newCylinder.toFixed(2)}` : newCylinder.toFixed(2)} />
-          <ResultDisplay label="Axis" value={`${newAxis}°`} />
-        </div>
+        <ResultPanel
+          label="Converted Prescription"
+          primary={`${fmtD(newSphere)} / ${fmtD(newCylinder)} × ${newAxis}°`}
+          summaries={<>
+            <SummaryCard label="New Sphere" value={fmtD(newSphere)} accent="text-indigo-500" />
+            <SummaryCard label="New Cylinder" value={fmtD(newCylinder)} />
+          </>}
+          tip={`Converted to ${mode === "minus" ? "plus" : "minus"} cylinder form. Both notations are optically equivalent — the axis shifts by 90° when transposing.`}
+        >
+          <BreakdownRow label="Original Sphere" value={fmtD(sphere)} dot="bg-indigo-400" />
+          <BreakdownRow label="Original Cylinder" value={fmtD(cylinder)} dot="bg-blue-400" />
+          <BreakdownRow label="Original Axis" value={`${axis}°`} dot="bg-purple-400" />
+          <BreakdownRow label="Converted Sphere" value={fmtD(newSphere)} dot="bg-green-500" bold />
+          <BreakdownRow label="Converted Cylinder" value={fmtD(newCylinder)} dot="bg-amber-400" bold />
+          <BreakdownRow label="Converted Axis" value={`${newAxis}°`} dot="bg-orange-400" />
+          <BreakdownRow label="Power Severity" value={seLabel(sphere)} dot="bg-pink-400" />
+        </ResultPanel>
       }
     />
   );
