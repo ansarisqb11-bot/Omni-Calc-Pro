@@ -16,7 +16,7 @@ import {
   Weight,
   GlassWater,
 } from "lucide-react";
-import { DesktopToolGrid, InputPanel } from "@/components/ToolCard";
+import { DesktopToolGrid, InputPanel, ResultPanel, SummaryCard, BreakdownRow } from "@/components/ToolCard";
 import { PageWrapper } from "@/components/PageWrapper";
 
 type ToolType = "unit-price" | "ratio" | "speed" | "age" | "percentage" | "profit-loss" | "time-work" | "average" | "mixture" | "rate" | "basic" | "volume" | "length" | "weight" | "milk-water";
@@ -318,10 +318,17 @@ function UnitPriceSolver() {
         </InputPanel>
       }
       results={
-        <SolverCard>
+        <ResultPanel
+          label={mode === "find-price" ? "Total Cost" : "You Can Buy"}
+          primary={result.value}
+          summaries={<>
+            <SummaryCard label="Unit Price" value={`${currency}${fmt((parseFloat(price)||0)/(parseFloat(qty)||1))}`} accent="text-orange-500" />
+            <SummaryCard label={mode === "find-price" ? "For Quantity" : "With Budget"} value={mode === "find-price" ? `${requiredQty} ${unit}` : `${currency}${budget}`} />
+          </>}
+          tip={`Unit price = ${currency}${fmt((parseFloat(price)||0)/(parseFloat(qty)||1))} per ${unit.replace(/s$/,"")}. Buying in larger quantities usually lowers cost per unit.`}
+        >
           <StepsDisplay steps={result.steps} />
-          <ResultBox label={mode === "find-price" ? "Total Cost" : "You Can Buy"} value={result.value} />
-        </SolverCard>
+        </ResultPanel>
       }
     />
   );
@@ -431,10 +438,17 @@ function RatioSolver() {
         </InputPanel>
       }
       results={
-        <SolverCard>
+        <ResultPanel
+          label="Result"
+          primary={result.value}
+          summaries={<>
+            <SummaryCard label="Ratio" value={`${ratioA} : ${ratioB}`} accent="text-orange-500" />
+            <SummaryCard label="Mode" value={mode === "divide" ? "Divide Amount" : mode === "find-part" ? "Find Part" : "Workers/Days"} />
+          </>}
+          tip={mode === "workers" ? `${workers1} workers × ${days1} days = ${parseFloat(workers1)*parseFloat(days1)} worker-days total.` : `In a ${ratioA}:${ratioB} ratio, every ${parseFloat(ratioA)+parseFloat(ratioB)} parts = ${ratioA} of A and ${ratioB} of B.`}
+        >
           <StepsDisplay steps={result.steps} />
-          <ResultBox label="Result" value={result.value} />
-        </SolverCard>
+        </ResultPanel>
       }
     />
   );
@@ -660,10 +674,17 @@ function SpeedSolver() {
         </InputPanel>
       }
       results={
-        <SolverCard>
+        <ResultPanel
+          label={mode === "find-distance" ? "Distance" : mode === "find-speed" ? "Speed" : mode === "find-time" ? "Time" : mode === "relative" ? "Relative Speeds" : mode === "average-speed" ? "Average Speed" : mode === "train" ? "Crossing Time" : "Stream Speeds"}
+          primary={result.value}
+          summaries={<>
+            <SummaryCard label="Speed" value={`${speed} ${speedUnit}`} accent="text-orange-500" />
+            <SummaryCard label={mode === "boat" ? "Stream Speed" : mode === "train" ? "Train Length" : "Distance"} value={mode === "boat" ? `${streamSpeed} ${speedUnit}` : mode === "train" ? `${trainLength} m` : `${distance} ${distUnit}`} />
+          </>}
+          tip={mode === "boat" ? `Downstream = ${parseFloat(speed)+parseFloat(streamSpeed)} ${speedUnit}, Upstream = ${Math.abs(parseFloat(speed)-parseFloat(streamSpeed))} ${speedUnit}.` : `Distance = Speed × Time. Rearrange to find any of the three variables.`}
+        >
           <StepsDisplay steps={result.steps} />
-          <ResultBox label="Result" value={result.value} />
-        </SolverCard>
+        </ResultPanel>
       }
     />
   );
@@ -767,10 +788,17 @@ function AgeSolver() {
         </InputPanel>
       }
       results={
-        <SolverCard>
+        <ResultPanel
+          label="Age Result"
+          primary={result.value}
+          summaries={<>
+            <SummaryCard label="Known Age" value={`${age} yrs`} accent="text-orange-500" />
+            <SummaryCard label={mode === "after-years" ? "Years Ahead" : mode === "find-age" ? "Multiplier" : "Age Difference"} value={mode === "after-years" ? `${years} yrs` : mode === "find-age" ? `${multiplier}×` : `${difference} yrs`} />
+          </>}
+          tip={mode === "find-age" ? `If Person A is ${age} yrs, Person B = ${age} × ${multiplier} = ${parseFloat(age)*parseFloat(multiplier)} yrs.` : mode === "age-diff" ? `Age difference stays constant throughout life.` : `Ages always increase by the same number of years.`}
+        >
           <StepsDisplay steps={result.steps} />
-          <ResultBox label="Result" value={result.value} />
-        </SolverCard>
+        </ResultPanel>
       }
     />
   );
@@ -876,10 +904,17 @@ function PercentageSolver() {
         </InputPanel>
       }
       results={
-        <SolverCard>
+        <ResultPanel
+          label="Percentage Result"
+          primary={result.value}
+          summaries={<>
+            <SummaryCard label="Base Value" value={`${currency}${mode === "find-original" ? finalValue : value}`} accent="text-orange-500" />
+            <SummaryCard label="Percentage" value={`${percentage}%`} />
+          </>}
+          tip={mode === "find-pct" ? `${percentage}% of ${currency}${value} = ${currency}${fmt((parseFloat(percentage)/100)*(parseFloat(value)||0))}.` : mode === "increase" ? `After ${percentage}% increase, divide by ${fmt(1+parseFloat(percentage)/100,4)} to reverse.` : mode === "decrease" ? `After ${percentage}% decrease, the value reduces by ${currency}${fmt((parseFloat(percentage)/100)*(parseFloat(value)||0))}.` : `Original = Final ÷ (1 + %) — reverse-engineer from the increased value.`}
+        >
           <StepsDisplay steps={result.steps} />
-          <ResultBox label="Result" value={result.value} />
-        </SolverCard>
+        </ResultPanel>
       }
     />
   );
@@ -992,10 +1027,17 @@ function ProfitLossSolver() {
         </InputPanel>
       }
       results={
-        <SolverCard>
+        <ResultPanel
+          label={mode === "find-pl" ? (parseFloat(sp)>=parseFloat(cp) ? "Profit" : "Loss") : mode === "find-sp" ? "Selling Price" : "Cost Price"}
+          primary={result.value}
+          summaries={<>
+            <SummaryCard label="Cost Price" value={`${currency}${mode === "find-cp" ? "?" : cp}`} accent="text-orange-500" />
+            <SummaryCard label="Selling Price" value={`${currency}${mode === "find-sp" ? "?" : sp}`} />
+          </>}
+          tip={mode === "find-pl" ? `Profit % is always on Cost Price. SP > CP = Profit; SP < CP = Loss.` : mode === "find-sp" ? `SP = CP × (1 ${plType === "profit" ? "+" : "-"} %/100). ${plType === "profit" ? "More than CP = profit." : "Less than CP = loss."}` : `CP = SP ÷ (1 ${plType === "profit" ? "+" : "-"} %/100). Work backwards from selling price.`}
+        >
           <StepsDisplay steps={result.steps} />
-          <ResultBox label="Result" value={result.value} />
-        </SolverCard>
+        </ResultPanel>
       }
     />
   );
@@ -1108,10 +1150,17 @@ function TimeWorkSolver() {
         </InputPanel>
       }
       results={
-        <SolverCard>
+        <ResultPanel
+          label={mode === "combined" ? "Together They Finish In" : mode === "find-individual" ? "B Alone Finishes In" : "Time to Fill Tank"}
+          primary={result.value}
+          summaries={<>
+            <SummaryCard label={mode === "pipes" ? "Fill Pipe" : "Person A"} value={mode === "pipes" ? `${fillTime} hrs` : `${daysA} days`} accent="text-orange-500" />
+            <SummaryCard label={mode === "pipes" ? "Leak/Empty" : mode === "combined" ? "Person B" : "Together"} value={mode === "pipes" ? `${leakTime} hrs` : mode === "combined" ? `${daysB} days` : `${togetherDays} days`} />
+          </>}
+          tip={mode === "combined" ? `Combined rate = 1/${daysA} + 1/${daysB} = ${fmt(1/parseFloat(daysA)+1/parseFloat(daysB),4)} work/day.` : mode === "pipes" ? `Net rate = fill rate − drain rate. If drain > fill, tank never fills.` : `B's rate = (together rate) − (A's rate). Then B alone = 1 ÷ B's rate.`}
+        >
           <StepsDisplay steps={result.steps} />
-          <ResultBox label="Result" value={result.value} />
-        </SolverCard>
+        </ResultPanel>
       }
     />
   );
@@ -1232,10 +1281,21 @@ function AverageSolver() {
         </InputPanel>
       }
       results={
-        <SolverCard>
+        <ResultPanel
+          label={mode === "find-avg" ? "Average" : mode === "find-missing" ? "Missing Number" : mode === "new-avg" ? "New Average" : "Count"}
+          primary={result.value}
+          summaries={(() => {
+            const nums = (mode !== "find-count") ? numbers.split(",").map(n => parseFloat(n.trim())).filter(n => !isNaN(n)) : [];
+            const sum = nums.reduce((a,b) => a+b, 0);
+            return <>
+              <SummaryCard label={mode === "find-count" ? "Total Sum" : "Sum of Numbers"} value={mode === "find-count" ? total : fmt(sum)} accent="text-orange-500" />
+              <SummaryCard label="Count" value={mode === "find-count" ? "—" : mode === "new-avg" ? `${nums.length+1}` : `${nums.length}`} />
+            </>;
+          })()}
+          tip={mode === "find-avg" ? `Average = Sum ÷ Count. A quick check: result should be between the smallest and largest values.` : mode === "find-missing" ? `Required sum = Target avg × total count. Missing = required − known sum.` : mode === "new-avg" ? `Adding a number above the current avg raises the average; below lowers it.` : `Count = Total ÷ Average. Useful for finding how many items make up a total.`}
+        >
           <StepsDisplay steps={result.steps} />
-          <ResultBox label="Result" value={result.value} />
-        </SolverCard>
+        </ResultPanel>
       }
     />
   );
@@ -1359,10 +1419,17 @@ function MixtureSolver() {
         </InputPanel>
       }
       results={
-        <SolverCard>
+        <ResultPanel
+          label={mode === "find-mix-price" ? "Mixture Price" : mode === "find-ratio" ? "Mix Ratio (A:B)" : "New Price After Dilution"}
+          primary={result.value}
+          summaries={<>
+            <SummaryCard label="Price A" value={`${currency}${priceA}`} accent="text-orange-500" />
+            <SummaryCard label={mode === "find-ratio" ? "Target Price" : "Price B"} value={mode === "find-ratio" ? `${currency}${mixPrice}` : `${currency}${priceB}`} />
+          </>}
+          tip={mode === "find-ratio" ? `Alligation cross: ratio = |cheap vs target| : |dear vs target|. The cheaper item gets the larger share.` : mode === "dilution" ? `Adding a zero-cost item dilutes the price proportionally.` : `Mixture price = total cost ÷ total quantity. Weighted average of all components.`}
+        >
           <StepsDisplay steps={result.steps} />
-          <ResultBox label="Result" value={result.value} />
-        </SolverCard>
+        </ResultPanel>
       }
     />
   );
@@ -1461,10 +1528,17 @@ function RateSolver() {
         </InputPanel>
       }
       results={
-        <SolverCard>
+        <ResultPanel
+          label={mode === "find-rate" ? "Rate" : mode === "find-total" ? "Total" : "Time / Quantity"}
+          primary={result.value}
+          summaries={<>
+            <SummaryCard label="Unit" value={unitLabel} accent="text-orange-500" />
+            <SummaryCard label={mode === "find-rate" ? "Over" : mode === "find-total" ? "At Rate" : "Total"} value={mode === "find-rate" ? `${timeQty}` : mode === "find-total" ? `${rate} ${unitLabel}` : totalVal} />
+          </>}
+          tip={`Rate × Time = Total. Know any two, find the third. Rate = ${mode === "find-rate" ? "?" : rate} ${unitLabel}.`}
+        >
           <StepsDisplay steps={result.steps} />
-          <ResultBox label="Result" value={result.value} />
-        </SolverCard>
+        </ResultPanel>
       }
     />
   );
@@ -1585,10 +1659,17 @@ function BasicSolver() {
         </InputPanel>
       }
       results={
-        <SolverCard>
+        <ResultPanel
+          label={mode === "grouping" ? "Groups" : mode === "sharing" ? "Each Gets" : mode === "multiplication" ? "Total" : "Other Factor"}
+          primary={result.value}
+          summaries={<>
+            <SummaryCard label={mode === "multiplication" ? "Groups" : "Total"} value={mode === "multiplication" ? numGroups : total} accent="text-orange-500" />
+            <SummaryCard label={mode === "multiplication" ? "Per Group" : mode === "sharing" ? "People" : mode === "reverse" ? "Known Factor" : "Group Size"} value={mode === "multiplication" ? perGroup : mode === "sharing" ? groupSize : mode === "reverse" ? factor : groupSize} />
+          </>}
+          tip={mode === "grouping" ? `${total} ÷ ${groupSize} = ${fmt(parseFloat(total)/parseFloat(groupSize))} groups. Remainder means some items won't fill a full group.` : mode === "sharing" ? `${total} shared equally among ${groupSize} = ${fmt(parseFloat(total)/parseFloat(groupSize))} each.` : mode === "multiplication" ? `${numGroups} groups × ${perGroup} each = ${fmt(parseFloat(numGroups)*parseFloat(perGroup))} total.` : `Result ÷ Factor = Other factor. Division is the reverse of multiplication.`}
+        >
           <StepsDisplay steps={result.steps} />
-          <ResultBox label="Answer" value={result.value} />
-        </SolverCard>
+        </ResultPanel>
       }
     />
   );
@@ -1773,10 +1854,17 @@ function VolumeSolver() {
         </InputPanel>
       }
       results={
-        <SolverCard>
+        <ResultPanel
+          label={mode === "convert" ? "Converted Volume" : mode === "price-per-vol" ? "Cost for Volume" : mode === "reverse-vol" ? "Volume You Can Get" : mode === "containers" ? "Containers Needed" : "Mixed Total Volume"}
+          primary={result.value}
+          summaries={<>
+            <SummaryCard label="From Unit" value={fromUnit.toUpperCase()} accent="text-orange-500" />
+            <SummaryCard label={mode === "mix" ? "Liquid A + B" : mode === "containers" ? "Container Size" : "To Unit"} value={mode === "mix" ? `${mixQtyA}+${mixQtyB}` : mode === "containers" ? `${containerVol} ${containerUnit}` : toUnit.toUpperCase()} />
+          </>}
+          tip={mode === "convert" ? `All volume units convert via liters as the base. 1 L = 1000 mL = 0.001 m³.` : mode === "price-per-vol" ? `Unit price = total price ÷ total volume. Then multiply by required volume.` : mode === "containers" ? `Containers = total volume ÷ container size. Any remainder needs one more container.` : `Mix volumes by converting all to liters first, then convert total to target unit.`}
+        >
           <StepsDisplay steps={result.steps} />
-          <ResultBox label="Answer" value={result.value} />
-        </SolverCard>
+        </ResultPanel>
       }
     />
   );
@@ -1955,10 +2043,17 @@ function LengthSolver() {
         </InputPanel>
       }
       results={
-        <SolverCard>
+        <ResultPanel
+          label={mode === "convert" ? "Converted Length" : mode === "price-per-len" ? "Cost for Length" : mode === "reverse-len" ? "Length You Can Buy" : mode === "cut-pieces" ? "Pieces You Can Cut" : "Perimeter"}
+          primary={result.value}
+          summaries={<>
+            <SummaryCard label="From Unit" value={fromUnit.toUpperCase()} accent="text-orange-500" />
+            <SummaryCard label={mode === "cut-pieces" ? "Each Piece" : mode === "perimeter" ? "Sides" : "To Unit"} value={mode === "cut-pieces" ? `${pieceLen} ${pieceUnit}` : mode === "perimeter" ? `${perimSides} × ${perimLen} ${perimUnit}` : toUnit.toUpperCase()} />
+          </>}
+          tip={mode === "convert" ? `Length units convert via meters. 1 m = 100 cm = 3.281 ft = 0.001 km.` : mode === "cut-pieces" ? `Pieces = total material ÷ piece size. Check for leftover — it can't form a full piece.` : mode === "perimeter" ? `Perimeter = number of sides × length of one side (for regular polygons).` : `Unit price = total price ÷ total length. Then apply to required quantity or budget.`}
+        >
           <StepsDisplay steps={result.steps} />
-          <ResultBox label="Answer" value={result.value} />
-        </SolverCard>
+        </ResultPanel>
       }
     />
   );
@@ -2136,10 +2231,17 @@ function WeightSolver() {
         </InputPanel>
       }
       results={
-        <SolverCard>
+        <ResultPanel
+          label={mode === "convert" ? "Converted Weight" : mode === "price-per-wt" ? "Cost for Weight" : mode === "reverse-wt" ? "Weight You Can Buy" : mode === "pack" ? "Packs Needed" : "Mixed Total Weight"}
+          primary={result.value}
+          summaries={<>
+            <SummaryCard label="From Unit" value={fromUnit.toUpperCase()} accent="text-orange-500" />
+            <SummaryCard label={mode === "pack" ? "Pack Size" : mode === "mix" ? "Item A + B" : "To Unit"} value={mode === "pack" ? `${packWt} ${packUnit}` : mode === "mix" ? `${mixWtA}+${mixWtB}` : toUnit.toUpperCase()} />
+          </>}
+          tip={mode === "convert" ? `Weight units convert via grams. 1 kg = 1000 g = 2.205 lbs. 1 ton = 1000 kg.` : mode === "pack" ? `Packs = total weight ÷ pack size. Any fraction means one extra pack needed.` : mode === "mix" ? `Add all weights after converting to a common unit, then convert to target unit.` : `Unit price = total price ÷ total weight. Apply to required weight or budget.`}
+        >
           <StepsDisplay steps={result.steps} />
-          <ResultBox label="Answer" value={result.value} />
-        </SolverCard>
+        </ResultPanel>
       }
     />
   );
@@ -2503,18 +2605,20 @@ function MilkWaterSolver() {
         </InputPanel>
       }
       results={
-        <SolverCard>
+        <ResultPanel
+          label={result.lines[0]?.label ?? "Result"}
+          primary={result.lines[0]?.value ?? "—"}
+          summaries={<>
+            <SummaryCard label="Mode" value={mode.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase())} accent="text-orange-500" />
+            <SummaryCard label="Unit" value={unit.toUpperCase()} />
+          </>}
+          tip={mode === "ratio-to-qty" ? `Milk + Water = Total. Adjust ratio parts to change proportions.` : mode === "find-water-added" ? `Adding water reduces concentration. More water = lower milk %.` : mode === "profit-check" ? `Selling adulterated milk as pure is profit-by-dilution. Profit = (selling price − cost) × total volume.` : `Milk % = milk volume ÷ total volume × 100. Cross-check all inputs for consistency.`}
+        >
           <StepsDisplay steps={result.steps} />
-          {result.lines.map((line, i) => (
-            <div key={i} className="flex justify-between items-center p-3 bg-muted/30 rounded-xl">
-              <span className="text-sm font-semibold text-muted-foreground">{line.label}</span>
-              <div className="text-right">
-                <span className={`text-lg font-bold ${i === 0 ? "text-sky-400" : "text-foreground"}`} data-testid={`result-${i}`}>{line.value}</span>
-                {line.sub && <div className="text-xs text-muted-foreground">{line.sub}</div>}
-              </div>
-            </div>
+          {result.lines.slice(1).map((line, i) => (
+            <BreakdownRow key={i} label={line.label} value={line.value + (line.sub ? ` (${line.sub})` : "")} />
           ))}
-        </SolverCard>
+        </ResultPanel>
       }
     />
   );
